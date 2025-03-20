@@ -1,14 +1,20 @@
+import 'package:agapp/screens/home.dart';
 import 'package:agapp/screens/login.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+Future<void> main() async {
+ WidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? token = prefs.getString('token');
+
+  runApp(MyApp(initialRoute: token != null ? Home() : Login()));}
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+ final Widget initialRoute;
 
+  const MyApp({Key? key, required this.initialRoute}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -30,7 +36,8 @@ class MyApp extends StatelessWidget {
         ),
       ),
       debugShowCheckedModeBanner: false,
-      home: const Login(), // Set HomePage as the start page
+      home: initialRoute,
+
     );
   }
 }
