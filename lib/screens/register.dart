@@ -1,10 +1,9 @@
 // ignore_for_file: use_build_context_synchronously, avoid_print
 
-import 'package:agapp/constant.dart';
+import 'package:agapp/controllers/authentication.dart';
 import 'package:agapp/screens/login.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:get/get.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -19,71 +18,22 @@ class _RegisterState extends State<Register> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController passwordConfirmationController =
       TextEditingController();
+  final AuthenticationController _authenticationController = Get.put(
+    AuthenticationController(),
+  );
 
   bool _obscurePassword = true;
   bool isLoading = false;
 
-  // Laravel registration API URL
+  void registerUser() async {
+    await _authenticationController.register(
+      username: userNameController.text.trim(),
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+      password_confirmation: passwordConfirmationController.text.trim(),
+      context: context, // Pass context for navigation
 
-  // Register function to send data to Laravel API
-  register() async {
-    setState(() {
-      isLoading = true; // Show loading indicator
-    });
-
-    // Collect data from text fields
-    var data = {
-      'email': emailController.text,
-      'username': userNameController.text,
-      'password': passwordController.text,
-      'password_confirmation': passwordConfirmationController.text,
-    };
-
-    // Send POST request to Laravel API
-    try {
-      final response = await http.post(
-        Uri.parse(registerURL),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(data),
-      );
-
-      print('Response status: ${response.statusCode}'); // Print status code
-      print(
-        'Response body: ${response.body}',
-      ); // Print response body for debugging
-
-      if (response.statusCode == 201) {
-        // Successful registration
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Registration successful!')));
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => Login(),
-          ), // Replace with your login screen
-        );
-      } else {
-        // Registration failed
-        var errorResponse = json.decode(response.body);
-        print('Error Response: $errorResponse'); // Print error response
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorResponse['message'] ?? 'Registration failed'),
-          ),
-        );
-      }
-    } catch (e) {
-      // Handle errors (e.g., no internet connection)
-      print('Error occurred: $e'); // Print error in the console
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('An error occurred: $e')));
-    } finally {
-      setState(() {
-        isLoading = false; // Hide loading indicator
-      });
-    }
+    );
   }
 
   @override
@@ -103,120 +53,216 @@ class _RegisterState extends State<Register> {
             Image.asset("assets/logo.png", height: 120),
             const SizedBox(height: 20),
             // Email field
-            TextField(
-              maxLength: 40,
-              cursorColor: Colors.white,
-              style: TextStyle(color: Colors.white),
-              keyboardType: TextInputType.emailAddress,
-              controller: emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                labelStyle: TextStyle(color: Colors.white),
-                prefixIcon: Icon(Icons.mail, color: Colors.white),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
+            Obx(
+              
+              () => TextField(
+                maxLength: 40,
+                cursorColor: Colors.white,
+                style: TextStyle(color: Colors.white),
+                keyboardType: TextInputType.emailAddress,
+                controller: emailController,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  labelStyle: const TextStyle(color: Colors.white),
+                  helperText:
+                      _authenticationController.errors['email'] ??
+                      _authenticationController.errors['email'],
+                  helperStyle: TextStyle(
+                    color:
+                        _authenticationController.errors['email'] != null
+                            ? Colors.red
+                            : Colors.white,
+                  ),
+                  prefixIcon: const Icon(Icons.mail, color: Colors.white),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color:
+                          _authenticationController.errors['email'] != null
+                              ? Colors.red // If there's an error, set border to red
+                              : Colors.white, // Otherwise, keep it white
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color:
+                          _authenticationController.errors['email'] != null
+                              ? Colors.red // If there's an error, set border to red
+                              : Colors.white, // Otherwise, keep it white
+                    ),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 5,),
             // Username field
-            TextField(
-              maxLength: 20,
-              cursorColor: Colors.white,
-              style: TextStyle(color: Colors.white),
-              controller: userNameController,
-              decoration: const InputDecoration(
-                labelText: 'Username',
-                labelStyle: TextStyle(color: Colors.white),
-                prefixIcon: Icon(Icons.person, color: Colors.white),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
+            Obx(
+              () => TextField(
+                maxLength: 20,
+                cursorColor: Colors.white,
+                style: TextStyle(color: Colors.white),
+                controller: userNameController,
+                decoration: InputDecoration(
+                  labelText: 'Username',
+                  labelStyle: TextStyle(color: Colors.white),
+                  helperText:
+                      _authenticationController.errors['username'] ??
+                      _authenticationController.errors['username'],
+                  helperStyle: TextStyle(
+                    color:
+                        _authenticationController.errors['username'] != null
+                            ? Colors.red
+                            : Colors.white,
+                  ),
+                  prefixIcon: Icon(Icons.person, color: Colors.white),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color:
+                          _authenticationController.errors['username'] != null
+                              ? Colors.red // If there's an error, set border to red
+                              : Colors.white, // Otherwise, keep it white
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color:
+                          _authenticationController.errors['username'] != null
+                              ? Colors.red // If there's an error, set border to red
+                              : Colors.white, // Otherwise, keep it white
+                    ),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 10),
+             SizedBox(height: 5,),
             // Password field
-            TextField(
-              maxLength: 20,
-              cursorColor: Colors.white,
-              style: TextStyle(color: Colors.white),
-              controller: passwordController,
-              obscureText: _obscurePassword,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                labelStyle: TextStyle(color: Colors.white),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
+            Obx(
+              () => TextField(
+                maxLength: 25,
+                cursorColor: Colors.white,
+                style: TextStyle(color: Colors.white),
+                controller: passwordController,
+                obscureText: _obscurePassword,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  labelStyle: TextStyle(color: Colors.white),
+                  helperText:
+                      _authenticationController.errors['password'] ??
+                      _authenticationController.errors['password'],
+                  helperStyle: TextStyle(
+                    color:
+                        _authenticationController.errors['password'] != null
+                            ? Colors.red
+                            : Colors.white,
                   ),
-                  color: Colors.white,
-                  onPressed: () {
-                    setState(() {
-                      _obscurePassword = !_obscurePassword;
-                    });
-                  },
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    color: Colors.white,
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color:
+                          _authenticationController.errors['password'] != null
+                              ? Colors
+                                  .red // If there's an error, set border to red
+                              : Colors.white, // Otherwise, keep it white
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color:
+                          _authenticationController.errors['password'] != null
+                              ? Colors
+                                  .red // If there's an error, set border to red
+                              : Colors.white, // Otherwise, keep it white
+                    ),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 5,),
             // Password confirmation field
-            TextField(
-              maxLength: 20,
-              cursorColor: Colors.white,
-              style: TextStyle(color: Colors.white),
-              controller: passwordConfirmationController,
-              obscureText: _obscurePassword,
-              decoration: InputDecoration(
-                labelText: 'Password Confirmation',
-                labelStyle: TextStyle(color: Colors.white),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
+            Obx(
+              () => TextField(
+                maxLength: 20,
+                cursorColor: Colors.white,
+                style: TextStyle(color: Colors.white),
+                controller: passwordConfirmationController,
+                obscureText: _obscurePassword,
+                decoration: InputDecoration(
+                  labelText: 'Password Confirmation',
+                  labelStyle: TextStyle(color: Colors.white),
+                  helperText:
+                      _authenticationController.errors['password'] ??
+                      _authenticationController.errors['password'],
+                  helperStyle: TextStyle(
+                    color:
+                        _authenticationController.errors['password'] != null
+                            ? Colors.red
+                            : Colors.white,
                   ),
-                  color: Colors.white,
-                  onPressed: () {
-                    setState(() {
-                      _obscurePassword = !_obscurePassword;
-                    });
-                  },
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    color: Colors.white,
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color:
+                          _authenticationController.errors['password'] != null
+                              ? Colors
+                                  .red // If there's an error, set border to red
+                              : Colors.white, // Otherwise, keep it white
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color:
+                          _authenticationController.errors['password'] != null
+                              ? Colors
+                                  .red // If there's an error, set border to red
+                              : Colors.white, // Otherwise, keep it white
+                    ),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 10),
-            // Register button
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 90,
-                  vertical: 15,
-                ),
-              ),
-              onPressed: isLoading ? null : () => register(),
-              child:
-                  isLoading
-                      ? CircularProgressIndicator(color: Colors.white)
-                      : Text('Register', style: TextStyle(fontSize: 15)),
-            ),
+            SizedBox(height: 5,),
+            Obx(() {
+              return _authenticationController.isLoading.value
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 90,
+                        vertical: 15,
+                      ),
+                    ),
+                    onPressed: registerUser,
+                    child:
+                        isLoading
+                            ? CircularProgressIndicator(color: Colors.white)
+                            : Text('Register', style: TextStyle(fontSize: 15)),
+                  );
+            }),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
