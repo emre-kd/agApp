@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:agapp/controllers/authentication.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:sidebarx/sidebarx.dart';
 
 void main() {
@@ -26,6 +27,7 @@ class Home extends StatelessWidget {
         primaryColor: primaryColor,
         canvasColor: canvasColor,
         scaffoldBackgroundColor: scaffoldBackgroundColor,
+        textTheme: GoogleFonts.tekturTextTheme(),
       ),
       home: Builder(
         builder: (context) {
@@ -40,11 +42,11 @@ class Home extends StatelessWidget {
                       toolbarHeight: 50, // Set height to 400
                       leading: IconButton(
                         onPressed: () {
-                         if (!Platform.isAndroid && !Platform.isIOS) {
-                          _controller.setExtended(true);
-                         }
+                          if (!Platform.isAndroid && !Platform.isIOS) {
+                            _controller.setExtended(true);
+                          }
                           _key.currentState?.openDrawer();
-                                             },
+                        },
                         icon: Icon(
                           Icons.circle,
                           color: Colors.white,
@@ -70,8 +72,7 @@ class Home extends StatelessWidget {
                     )
                     : null,
             drawer: ExampleSidebarX(controller: _controller),
-            body: 
-            Row(
+            body: Row(
               children: [
                 if (!isSmallScreen) ExampleSidebarX(controller: _controller),
                 Expanded(
@@ -80,6 +81,53 @@ class Home extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+            floatingActionButton: FloatingActionButton(
+              onPressed: () {},
+              backgroundColor: Colors.blue,
+              child: Icon(Icons.add, color: Colors.white, size: 25,),
+
+            ),
+            floatingActionButtonLocation:
+          
+            FloatingActionButtonLocation.endFloat,
+
+  
+            bottomNavigationBar: Container(
+              height: 50,
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: Colors.white.withOpacity(0.1), width: 1), // Top border
+                ),
+              ),
+              child: BottomAppBar(
+                shape: CircularNotchedRectangle(),
+                color: Colors.black,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(Icons.home, color: Colors.white),
+                    ),
+                    SizedBox(width: 40),
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(Icons.search_rounded, color: Colors.white),
+                    ),
+                    SizedBox(width: 40),
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(Icons.people, color: Colors.white),
+                    ),
+                    SizedBox(width: 40),
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(Icons.email_outlined, color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
             ),
           );
         },
@@ -104,13 +152,15 @@ class ExampleSidebarX extends StatelessWidget {
       controller: _controller,
 
       theme: SidebarXTheme(
-        textStyle: TextStyle(color: Colors.white),
-        selectedTextStyle: const TextStyle(color: Colors.white),
-
+        textStyle: GoogleFonts.tektur(color: Colors.white, fontSize: 16),
+        selectedTextStyle: GoogleFonts.tektur(
+          color: Colors.white,
+          fontSize: 16,
+        ),
         itemTextPadding: const EdgeInsets.only(left: 30),
         selectedItemTextPadding: const EdgeInsets.only(left: 30),
         selectedItemDecoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withOpacity(0.1),
         ),
 
         iconTheme: IconThemeData(color: Colors.white, size: 30),
@@ -154,7 +204,6 @@ class _ScreensExample extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return AnimatedBuilder(
       animation: controller,
       builder: (context, child) {

@@ -33,6 +33,7 @@ class MyApp extends StatelessWidget {
           bodySmall: GoogleFonts.tektur(),
           labelLarge: GoogleFonts.tektur(),
           labelSmall: GoogleFonts.tektur(),
+          
         ),
       ),
       debugShowCheckedModeBanner: false,
