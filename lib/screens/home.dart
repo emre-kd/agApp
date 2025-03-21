@@ -1,3 +1,7 @@
+// ignore_for_file: deprecated_member_use
+
+import 'dart:io';
+
 import 'package:agapp/controllers/authentication.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -9,7 +13,6 @@ void main() {
 
 class Home extends StatelessWidget {
   Home({Key? key}) : super(key: key);
-
 
   final _controller = SidebarXController(selectedIndex: 0, extended: true);
   final _key = GlobalKey<ScaffoldState>();
@@ -23,37 +26,52 @@ class Home extends StatelessWidget {
         primaryColor: primaryColor,
         canvasColor: canvasColor,
         scaffoldBackgroundColor: scaffoldBackgroundColor,
-        textTheme: const TextTheme(
-          headlineSmall: TextStyle(
-            color: Colors.white,
-            fontSize: 46,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
       ),
       home: Builder(
         builder: (context) {
           final isSmallScreen = MediaQuery.of(context).size.width < 600;
           return Scaffold(
             key: _key,
+            drawerScrimColor: Colors.transparent,
             appBar:
                 isSmallScreen
                     ? AppBar(
-                      backgroundColor: canvasColor,
-                      title: Text(_getTitleByIndex(_controller.selectedIndex)),
+                      backgroundColor: Colors.black,
+                      toolbarHeight: 50, // Set height to 400
                       leading: IconButton(
                         onPressed: () {
-                          // if (!Platform.isAndroid && !Platform.isIOS) {
-                          //   _controller.setExtended(true);
-                          // }
+                         if (!Platform.isAndroid && !Platform.isIOS) {
+                          _controller.setExtended(true);
+                         }
                           _key.currentState?.openDrawer();
-                        },
-                        icon: const Icon(Icons.menu),
+                                             },
+                        icon: Icon(
+                          Icons.circle,
+                          color: Colors.white,
+                        ), // Left-sided circle icon
+                      ), // Left-sided circle icon
+                      title: Center(
+                        child: Image.asset(
+                          'assets/logo.png',
+                          height: 50,
+                        ), // Center image
                       ),
+                      actions: [
+                        IconButton(
+                          onPressed: () {
+                            // Action for the three-dot menu
+                          },
+                          icon: Icon(
+                            Icons.more_vert,
+                            color: Colors.white,
+                          ), // Right-sided three-dot icon
+                        ),
+                      ],
                     )
                     : null,
             drawer: ExampleSidebarX(controller: _controller),
-            body: Row(
+            body: 
+            Row(
               children: [
                 if (!isSmallScreen) ExampleSidebarX(controller: _controller),
                 Expanded(
@@ -71,55 +89,37 @@ class Home extends StatelessWidget {
 }
 
 class ExampleSidebarX extends StatelessWidget {
-   ExampleSidebarX({Key? key, required SidebarXController controller})
+  ExampleSidebarX({Key? key, required SidebarXController controller})
     : _controller = controller,
       super(key: key);
 
   final SidebarXController _controller;
-  final AuthenticationController _authenticationController = Get.put( AuthenticationController(),);
+  final AuthenticationController _authenticationController = Get.put(
+    AuthenticationController(),
+  );
 
   @override
   Widget build(BuildContext context) {
     return SidebarX(
       controller: _controller,
+
       theme: SidebarXTheme(
-        margin: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: canvasColor,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        hoverColor: scaffoldBackgroundColor,
-        textStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+        textStyle: TextStyle(color: Colors.white),
         selectedTextStyle: const TextStyle(color: Colors.white),
-        hoverTextStyle: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w500,
-        ),
+
         itemTextPadding: const EdgeInsets.only(left: 30),
         selectedItemTextPadding: const EdgeInsets.only(left: 30),
-        itemDecoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: canvasColor),
-        ),
         selectedItemDecoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: actionColor.withOpacity(0.37)),
-          gradient: const LinearGradient(
-            colors: [accentCanvasColor, canvasColor],
-          ),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.28), blurRadius: 30),
-          ],
+          color: Colors.white.withOpacity(0.2),
         ),
-        iconTheme: IconThemeData(
-          color: Colors.white.withOpacity(0.7),
-          size: 20,
-        ),
-        selectedIconTheme: const IconThemeData(color: Colors.white, size: 20),
+
+        iconTheme: IconThemeData(color: Colors.white, size: 30),
+        selectedIconTheme: const IconThemeData(color: Colors.white, size: 30),
+        decoration: BoxDecoration(color: Colors.black),
       ),
       extendedTheme: const SidebarXTheme(
-        width: 200,
-        decoration: BoxDecoration(color: canvasColor),
+        width: 350,
+        decoration: BoxDecoration(color: Colors.black),
       ),
       footerDivider: divider,
       headerBuilder: (context, extended) {
@@ -127,47 +127,22 @@ class ExampleSidebarX extends StatelessWidget {
           height: 100,
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Image.asset('assets/images/avatar.png'),
+            child: Image.asset('assets/logo.png'),
           ),
         );
       },
       items: [
+        const SidebarXItem(icon: Icons.home, label: 'Home'),
+
+        const SidebarXItem(icon: Icons.person, label: 'Profile'),
+        const SidebarXItem(icon: Icons.settings, label: 'Settings'),
+
         SidebarXItem(
-          icon: Icons.home,
-          label: 'Home',
-          onTap: () {
-            debugPrint('Home');
-          },
+          icon: Icons.logout,
+          label: 'Logout',
+          onTap: () => _authenticationController.logout(context),
         ),
-        const SidebarXItem(icon: Icons.search, label: 'Search'),
-        const SidebarXItem(icon: Icons.people, label: 'People'),
-        SidebarXItem(
-          icon: Icons.favorite,
-          label: 'Favorites',
-          selectable: false,
-          onTap: () => _showDisabledAlert(context),
-        ),
-        const SidebarXItem(iconWidget: FlutterLogo(size: 20), label: 'Flutter'),
-        const SidebarXItem(iconWidget: FlutterLogo(size: 20), label: 'Flutter'),
-
-        const SidebarXItem(iconWidget: FlutterLogo(size: 20), label: 'Flutter'),
-
-
-         SidebarXItem(icon: Icons.logout , label: 'Logout',   onTap: () => _authenticationController.logout(context),
-),
       ],
-    );
-  }
-
-  void _showDisabledAlert(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Item disabled for selecting',
-          style: TextStyle(color: Colors.black),
-        ),
-        backgroundColor: Colors.white,
-      ),
     );
   }
 }
@@ -183,28 +158,28 @@ class _ScreensExample extends StatelessWidget {
     return AnimatedBuilder(
       animation: controller,
       builder: (context, child) {
-        final pageTitle = _getTitleByIndex(controller.selectedIndex);
         switch (controller.selectedIndex) {
           case 0:
             return ListView.builder(
-              padding: const EdgeInsets.only(top: 10),
               itemBuilder:
                   (context, index) => Container(
-                    height: 100,
+                    height: 300,
                     width: double.infinity,
-                    margin: const EdgeInsets.only(
-                      bottom: 10,
-                      right: 10,
-                      left: 10,
-                    ),
+
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
                       color: Theme.of(context).canvasColor,
                       boxShadow: const [BoxShadow()],
+                      border: Border(
+                        top: BorderSide(color: Colors.white.withOpacity(0.1)),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Text("Top Border Example"),
                     ),
                   ),
             );
-              case 1:
+          case 1:
             return ListView.builder(
               padding: const EdgeInsets.only(top: 10),
               itemBuilder:
@@ -224,38 +199,17 @@ class _ScreensExample extends StatelessWidget {
                   ),
             );
           default:
-            return Text(pageTitle, style: theme.textTheme.headlineSmall);
+            return Text('deneme');
         }
       },
     );
   }
 }
 
-String _getTitleByIndex(int index) {
-  switch (index) {
-    case 0:
-      return 'Home';
-    case 1:
-      return 'Search';
-    case 2:
-      return 'People';
-    case 3:
-      return 'Favorites';
-    case 4:
-      return 'Custom iconWidget';
-    case 5:
-      return 'Profile';
-    case 6:
-      return 'Settings';
-    default:
-      return 'Not found page';
-  }
-}
+const primaryColor = Colors.black;
+const canvasColor = Colors.black;
+const scaffoldBackgroundColor = Colors.black;
+const accentCanvasColor = Color.fromARGB(255, 0, 0, 0);
 
-const primaryColor = Color(0xFF685BFF);
-const canvasColor = Color(0xFF2E2E48);
-const scaffoldBackgroundColor = Color(0xFF464667);
-const accentCanvasColor = Color(0xFF3E3E61);
-const white = Colors.white;
-final actionColor = const Color(0xFF5F5FA7).withOpacity(0.6);
-final divider = Divider(color: white.withOpacity(0.3), height: 1);
+final actionColor = const Color.fromARGB(255, 0, 0, 0).withOpacity(1);
+final divider = Divider(color: const Color.fromARGB(31, 0, 0, 0), height: 1);
