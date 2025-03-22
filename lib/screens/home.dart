@@ -2,6 +2,9 @@
 
 import 'dart:io';
 
+import 'package:agapp/screens/post.dart';
+import 'package:agapp/screens/profile.dart';
+import 'package:agapp/screens/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sidebarx/sidebarx.dart';
@@ -74,11 +77,7 @@ class Home extends StatelessWidget {
             body: Row(
               children: [
                 if (!isSmallScreen) ExampleSidebarX(controller: _controller),
-                Expanded(
-                  child: Center(
-                    child: _ScreensExample(controller: _controller),
-                  ),
-                ),
+                Expanded(child: _ScreensExample(controller: _controller)),
               ],
             ),
             floatingActionButton: FloatingActionButton(
@@ -134,12 +133,45 @@ class Home extends StatelessWidget {
   }
 }
 
-
-
 class _ScreensExample extends StatelessWidget {
-  const _ScreensExample({Key? key, required this.controller}) : super(key: key);
+  _ScreensExample({Key? key, required this.controller}) : super(key: key);
 
   final SidebarXController controller;
+  final List<Map<String, String>> posts = [
+    {
+      'profileImage': 'https://example.com/profile1.jpg',
+      'name': 'John Doe',
+      'username': '@johndoe',
+      'timeAgo': '2h ago',
+      'content': 'Lorem ipsum dolor sit amet.',
+      'postImage': 'https://example.com/post1.jpg',
+    },
+    {
+      'profileImage': 'https://example.com/profile2.jpg',
+      'name': 'Jane Doe',
+      'username': '@janedoe',
+      'timeAgo': '5h ago',
+      'content': 'Another post content.',
+      'postImage': 'https://example.com/post2.jpg',
+    },
+
+    {
+      'profileImage': 'https://example.com/profile2.jpg',
+      'name': 'Jane Doe',
+      'username': '@janedoe',
+      'timeAgo': '5h ago',
+      'content': 'Another post content.',
+      'postImage': 'https://example.com/post2.jpg',
+    },
+       {
+      'profileImage': 'https://example.com/profile2.jpg',
+      'name': 'Jane Doe',
+      'username': '@janedoe',
+      'timeAgo': '5h ago',
+      'content': 'Another post content.',
+      'postImage': 'https://example.com/post2.jpg',
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -149,43 +181,25 @@ class _ScreensExample extends StatelessWidget {
         switch (controller.selectedIndex) {
           case 0:
             return ListView.builder(
-              itemBuilder:
-                  (context, index) => Container(
-                    height: 300,
-                    width: double.infinity,
+              itemCount: posts.length,
+              itemBuilder: (context, index) {
+                final post = posts[index];
+                return Post(
+                  profileImage: post['profileImage']!,
+                  name: post['name']!,
+                  username: post['username']!,
+                  timeAgo: post['timeAgo']!,
+                  content: post['content']!,
+                  postImage: post['postImage']!,
+                );
+              },
+            );
 
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).canvasColor,
-                      boxShadow: const [BoxShadow()],
-                      border: Border(
-                        top: BorderSide(color: Colors.white.withOpacity(0.1)),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Text("Top Border Example"),
-                    ),
-                  ),
-            );
           case 1:
-            return ListView.builder(
-              padding: const EdgeInsets.only(top: 10),
-              itemBuilder:
-                  (context, index) => Container(
-                    height: 100,
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(
-                      bottom: 10,
-                      right: 10,
-                      left: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: Theme.of(context).canvasColor,
-                      boxShadow: const [BoxShadow()],
-                    ),
-                  ),
-            );
+            return const Profile();
+          case 2:
+            return const Settings();
+
           default:
             return Text('deneme');
         }
