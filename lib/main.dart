@@ -9,6 +9,8 @@ Future<void> main() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String? token = prefs.getString('token');
 
+  debugPrint('Token: $token'); // Print token to debug console
+
   runApp(MyApp(initialRoute: token != null ? Home() : Login()));}
 
 class MyApp extends StatelessWidget {

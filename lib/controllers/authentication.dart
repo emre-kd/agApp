@@ -1,7 +1,8 @@
-// ignore_for_file: non_constant_identifier_names, use_build_context_synchronously
+// ignore_for_file: non_constant_identifier_names, use_build_context_synchronously, avoid_print
 
 import 'dart:convert';
 import 'package:agapp/constant.dart';
+import 'package:agapp/models/user.dart';
 import 'package:agapp/screens/home.dart';
 import 'package:agapp/screens/login.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,33 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AuthenticationController extends GetxController {
   final isLoading = false.obs;
   final errors = <String, String>{}.obs;
+  var user = Rx<User>(User()); // Store user data
+
+  Future<void> getUserDetails() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    if (token != null) {
+      try {
+        var response = await http.get(
+          Uri.parse(userDetailsURL),
+          headers: {'Authorization': 'Bearer $token'},
+        );
+
+        print("Response Body: ${response.body}");
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          user.value = User.fromJson(data); // Update user with API data
+          print("User data: ${user.value}");
+        } else {
+          print("Error: ${response.body}");
+        }
+      } catch (e) {
+        print("Error fetching user details: $e");
+      }
+    }
+  }
 
   Future register({
     required String username,
@@ -40,11 +68,13 @@ class AuthenticationController extends GetxController {
 
       if (response.statusCode == 201) {
         debugPrint("Registration Successful: $responseData");
-        
+
         String token = responseData['token']; // Ensure your API returns a token
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
-        
+
+        await getUserDetails();
+
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => Home()), // Navigate to Home
@@ -101,6 +131,8 @@ class AuthenticationController extends GetxController {
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
 
+        await getUserDetails();
+
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => Home()),
@@ -156,9 +188,10 @@ class AuthenticationController extends GetxController {
       );
       var responseData = json.decode(response.body);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 401) {
         debugPrint("Logout Successful");
         await prefs.remove('token');
+
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => Login()),

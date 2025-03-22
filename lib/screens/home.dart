@@ -2,11 +2,10 @@
 
 import 'dart:io';
 
-import 'package:agapp/controllers/authentication.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sidebarx/sidebarx.dart';
+import 'package:agapp/screens/sidebar.dart';
 
 void main() {
   runApp(Home());
@@ -85,19 +84,18 @@ class Home extends StatelessWidget {
             floatingActionButton: FloatingActionButton(
               onPressed: () {},
               backgroundColor: Colors.blue,
-              child: Icon(Icons.add, color: Colors.white, size: 25,),
-
+              child: Icon(Icons.add, color: Colors.white, size: 25),
             ),
-            floatingActionButtonLocation:
-          
-            FloatingActionButtonLocation.endFloat,
+            floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
 
-  
             bottomNavigationBar: Container(
               height: 50,
               decoration: BoxDecoration(
                 border: Border(
-                  top: BorderSide(color: Colors.white.withOpacity(0.1), width: 1), // Top border
+                  top: BorderSide(
+                    color: Colors.white.withOpacity(0.1),
+                    width: 1,
+                  ), // Top border
                 ),
               ),
               child: BottomAppBar(
@@ -136,66 +134,7 @@ class Home extends StatelessWidget {
   }
 }
 
-class ExampleSidebarX extends StatelessWidget {
-  ExampleSidebarX({Key? key, required SidebarXController controller})
-    : _controller = controller,
-      super(key: key);
 
-  final SidebarXController _controller;
-  final AuthenticationController _authenticationController = Get.put(
-    AuthenticationController(),
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    return SidebarX(
-      controller: _controller,
-
-      theme: SidebarXTheme(
-        textStyle: GoogleFonts.tektur(color: Colors.white, fontSize: 16),
-        selectedTextStyle: GoogleFonts.tektur(
-          color: Colors.white,
-          fontSize: 16,
-        ),
-        itemTextPadding: const EdgeInsets.only(left: 30),
-        selectedItemTextPadding: const EdgeInsets.only(left: 30),
-        selectedItemDecoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.1),
-        ),
-
-        iconTheme: IconThemeData(color: Colors.white, size: 30),
-        selectedIconTheme: const IconThemeData(color: Colors.white, size: 30),
-        decoration: BoxDecoration(color: Colors.black),
-      ),
-      extendedTheme: const SidebarXTheme(
-        width: 350,
-        decoration: BoxDecoration(color: Colors.black),
-      ),
-      footerDivider: divider,
-      headerBuilder: (context, extended) {
-        return SizedBox(
-          height: 100,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Image.asset('assets/logo.png'),
-          ),
-        );
-      },
-      items: [
-        const SidebarXItem(icon: Icons.home, label: 'Home'),
-
-        const SidebarXItem(icon: Icons.person, label: 'Profile'),
-        const SidebarXItem(icon: Icons.settings, label: 'Settings'),
-
-        SidebarXItem(
-          icon: Icons.logout,
-          label: 'Logout',
-          onTap: () => _authenticationController.logout(context),
-        ),
-      ],
-    );
-  }
-}
 
 class _ScreensExample extends StatelessWidget {
   const _ScreensExample({Key? key, required this.controller}) : super(key: key);

@@ -1,33 +1,17 @@
 class User {
-  int? id;
   String? name;
   String? username;
-  String? image;
   String? email;
-  String? token;
+  String? image;
 
-  User({
-    this.id,
-    this.name,
-    this.username,
-    this.image,
-    this.email,
-    this.token
+  User({this.name, this.username, this.email, this.image});
 
-
-  });
-
-  // Function to conver json data ta user model
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['user']['id'],
-      name: json['user']['name'],
-      username: json['user']['username'],
-      image: json['user']['image'],
-      email: json['user']['email'],
-      token: json['token']
-
+      name: json['name'],
+      username: json['username'],
+      email: json['email'],
+      image: json['image'],
     );
   }
-
 }
