@@ -80,18 +80,20 @@ class Post extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.comment),
+                   IconButton(
+                  icon: const Icon(Icons.chat_bubble_outline, color: Colors.white,),
+                  onPressed: () {},
+                ),
+               
+                   IconButton(
+                  icon: const Icon(Icons.repeat ,color: Colors.white,),
                   onPressed: () {},
                 ),
                 IconButton(
-                  icon: const Icon(Icons.favorite_border),
+                  icon: const Icon(Icons.favorite_outline_rounded ,color: Colors.white,),
                   onPressed: () {},
                 ),
-                IconButton(
-                  icon: const Icon(Icons.repeat),
-                  onPressed: () {},
-                ),
+             
               ],
             ),
           ],

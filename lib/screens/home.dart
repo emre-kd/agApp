@@ -155,22 +155,7 @@ class _ScreensExample extends StatelessWidget {
       'postImage': 'https://example.com/post2.jpg',
     },
 
-    {
-      'profileImage': 'https://example.com/profile2.jpg',
-      'name': 'Jane Doe',
-      'username': '@janedoe',
-      'timeAgo': '5h ago',
-      'content': 'Another post content.',
-      'postImage': 'https://example.com/post2.jpg',
-    },
-       {
-      'profileImage': 'https://example.com/profile2.jpg',
-      'name': 'Jane Doe',
-      'username': '@janedoe',
-      'timeAgo': '5h ago',
-      'content': 'Another post content.',
-      'postImage': 'https://example.com/post2.jpg',
-    },
+ 
   ];
 
   @override
@@ -196,7 +181,7 @@ class _ScreensExample extends StatelessWidget {
             );
 
           case 1:
-            return const Profile();
+            return  Profile();
           case 2:
             return const Settings();
 
