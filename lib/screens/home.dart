@@ -15,20 +15,20 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   final List<Map<String, String>> posts = [
     {
-      'profileImage': 'https://example.com/profile1.jpg',
+      'profileImage': '',
       'name': 'John Doe',
       'username': '@johndoe',
       'timeAgo': '2h ago',
       'content': 'Lorem ipsum dolor sit amet.',
-      'postImage': 'https://example.com/post1.jpg',
+      'postImage': '',
     },
     {
-      'profileImage': 'https://example.com/profile2.jpg',
+      'profileImage': '',
       'name': 'Jane Doe',
       'username': '@janedoe',
       'timeAgo': '5h ago',
       'content': 'Another post content.',
-      'postImage': 'https://example.com/post2.jpg',
+      'postImage': '',
     },
   ];
   @override
