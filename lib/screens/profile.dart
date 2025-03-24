@@ -4,7 +4,14 @@ import 'package:agapp/screens/home.dart';
 import 'package:agapp/screens/post.dart';
 import 'package:flutter/material.dart';
 
-class Profile extends StatelessWidget {
+class Profile extends StatefulWidget {
+  const Profile({super.key});
+
+  @override
+  State<Profile> createState() => _ProfileState();
+}
+
+class _ProfileState extends State<Profile> {
   final List<Map<String, String>> posts = [
     {
       'profileImage': '',
@@ -48,6 +55,8 @@ class Profile extends StatelessWidget {
     },
   ];
 
+  bool _obscurePassword = true;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,7 +97,348 @@ class Profile extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(right: 10.0, top: 10.0),
                 child: OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    showModalBottomSheet(
+                      backgroundColor: Colors.black,
+                      context: context,
+                      isScrollControlled:
+                          true, // Allows the modal to take custom height
+                      builder: (BuildContext context) {
+                        return FractionallySizedBox(
+                          heightFactor: 1.0, // Makes the modal full-screen
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                // Header with back button
+                                ListTile(
+                                  leading: Icon(
+                                    Icons.arrow_back,
+                                    color: Colors.white,
+                                  ),
+                                  title: const Text(
+                                    'Edit Profile',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  onTap: () {
+                                    Navigator.pop(context); // Close the modal
+                                  },
+                                ),
+                                // Cover image
+                                Center(
+                                  child: Stack(
+                                    children: [
+                                      Container(
+                                        width: double.infinity,
+                                        height: 150,
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                            color: Colors.black,
+                                            width: 2,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          child: Image.asset(
+                                            'assets/default-cover.png', // Replace with your cover image
+                                            fit: BoxFit.fill,
+                                            errorBuilder: (
+                                              context,
+                                              error,
+                                              stackTrace,
+                                            ) {
+                                              return Container(
+                                                color: Colors.grey[800],
+                                                child: const Center(
+                                                  child: Text(
+                                                    'Cover Image',
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 20,
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        bottom: 10,
+                                        right: 10,
+                                        child: Container(
+                                          decoration: const BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Colors.blue,
+                                          ),
+                                          child: IconButton(
+                                            icon: const Icon(
+                                              Icons.camera_alt,
+                                              color: Colors.white,
+                                              size: 20,
+                                            ),
+                                            onPressed: () {
+                                              // Add logic to change cover image
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                // Profile image
+                                Stack(
+                                  children: [
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Colors.white,
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: const CircleAvatar(
+                                        radius: 50,
+                                        backgroundColor: Colors.grey,
+                                        child: Icon(
+                                          Icons.person,
+                                          size: 50,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                    Positioned(
+                                      bottom: 0,
+                                      right: 0,
+                                      child: Container(
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.blue,
+                                        ),
+                                        child: IconButton(
+                                          icon: const Icon(
+                                            Icons.camera_alt,
+                                            color: Colors.white,
+                                            size: 20,
+                                          ),
+                                          onPressed: () {},
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 20),
+
+                                // Name input field
+                                const SizedBox(height: 8),
+                                TextField(
+                                  maxLength: 20,
+                                  cursorColor: Colors.white,
+                                  style: TextStyle(color: Colors.white),
+
+                                  // controller: userNameController,
+                                    controller: TextEditingController(
+                                    text: 'Emre Karadereli',
+                                  ), 
+                                  
+                                  decoration: InputDecoration(
+                                    labelText: 'Name',
+                                    prefixStyle: TextStyle(color: Colors.white),
+                                    labelStyle: TextStyle(color: Colors.white),
+                                    //  helperText: _authenticationController.errors['username'] ?? _authenticationController.errors['username'],
+                                    helperStyle: TextStyle(
+                                      //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
+                                      color: Colors.white,
+                                    ),
+                                    counterStyle: TextStyle(
+                                      //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
+                                      color: Colors.white,
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.person,
+                                      //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
+                                      color: Colors.white,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 8),
+                                TextField(
+                                  maxLength: 20,
+                                  cursorColor: Colors.white,
+                                  style: TextStyle(color: Colors.white),
+                                  controller: TextEditingController(
+                                    text: 'myUserName',
+                                  ), // Pr
+                                  // controller: userNameController,
+                                  decoration: InputDecoration(
+                                    labelText: 'Username',
+                                    prefixStyle: TextStyle(color: Colors.white),
+                                    labelStyle: TextStyle(color: Colors.white),
+                                    //  helperText: _authenticationController.errors['username'] ?? _authenticationController.errors['username'],
+                                    helperStyle: TextStyle(
+                                      //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
+                                      color: Colors.white,
+                                    ),
+                                    counterStyle: TextStyle(
+                                      //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
+                                      color: Colors.white,
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.person,
+                                      //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
+                                      color: Colors.white,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+
+                                const SizedBox(height: 8),
+                                TextField(
+                                  maxLength: 20,
+                                  cursorColor: Colors.white,
+                                  style: TextStyle(color: Colors.white),
+                                  obscureText: _obscurePassword,
+
+                                  // controller: userNameController,
+                               
+                                  decoration: InputDecoration(
+                                    labelText: 'Password',
+                                    labelStyle: TextStyle(color: Colors.white),
+                                    //  helperText: _authenticationController.errors['username'] ?? _authenticationController.errors['username'],
+                                    helperStyle: TextStyle(
+                                      //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
+                                      color: Colors.white,
+                                    ),
+                                    counterStyle: TextStyle(
+                                      //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
+                                      color: Colors.white,
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.person,
+                                      //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
+                                      color: Colors.white,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+                                const Spacer(),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    
+                                    OutlinedButton(
+                                      onPressed: () {},
+                                      style: OutlinedButton.styleFrom(
+                                        backgroundColor: Colors.blue,
+                                        side: const BorderSide(
+                                          color: Colors.transparent,
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 40,
+                                          vertical: 15,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'Save',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ),
+                                    OutlinedButton(
+                                      onPressed: () {
+                                        Navigator.pop(
+                                          context,
+                                        ); // Close the modal without saving
+                                      },
+                                      style: OutlinedButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                        side: const BorderSide(
+                                          color: Colors.transparent,
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 40,
+                                          vertical: 15,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'Cancel',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 20),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Colors.white, width: 1),
                     backgroundColor: Colors.transparent,
@@ -120,9 +470,7 @@ class Profile extends StatelessWidget {
                           fit: BoxFit.fill,
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
-                              color:
-                                  Colors
-                                      .grey[800], 
+                              color: Colors.grey[800],
                               child: const Center(
                                 child: Text(
                                   'Failed to load default image',
