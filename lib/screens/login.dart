@@ -22,12 +22,11 @@ class _LoginState extends State<Login> {
   bool _obscurePassword = true; // For toggling password visibility
 
   // Functions
-
   void loginUser() async {
     await _authenticationController.login(
       username: userNameController.text.trim(),
       password: passwordController.text.trim(),
-      context: context, // Pass context for navigation
+      context: context, 
     );
   }
 

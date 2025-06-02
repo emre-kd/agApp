@@ -1,8 +1,12 @@
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use, avoid_print, use_build_context_synchronously
 
 import 'package:agapp/screens/home.dart';
 import 'package:agapp/screens/post.dart';
 import 'package:flutter/material.dart';
+import 'package:agapp/controllers/authentication.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -12,50 +16,70 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
+  final AuthenticationController _authenticationController = Get.put(
+    AuthenticationController(),
+  );
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController userNameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController createdAtController = TextEditingController();
+
+  void getUserInfo() async {
+    await _authenticationController.getUserDetails();
+    nameController.text =
+        _authenticationController.user.value.name ?? 'AgalıkName';
+    userNameController.text =
+        _authenticationController.user.value.username ?? 'AgalıkUserName';
+    emailController.text =
+        _authenticationController.user.value.email ?? 'AgalıkEmail';
+    createdAtController.text =
+        _authenticationController.user.value.email ?? '29.10.1923';
+  }
+
+  Future<String?> getTokenFromStorage() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
+  }
+
+  void updateOnPressed() async {
+    String? token = await getTokenFromStorage();
+
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('You must be logged in to update profile.')),
+      );
+      return;
+    }
+
+    await _authenticationController.updateUser(
+      name: nameController.text.trim(),
+      email: emailController.text.trim(),
+      username: userNameController.text.trim(),
+      password: passwordController.text.trim(),
+      token: token,
+      context: context,
+    );
+  }
+
   final List<Map<String, String>> posts = [
     {
       'profileImage': '',
-      'name': 'John Doe',
+      'name': 'John Doe 2',
       'username': '@johndoe',
       'timeAgo': '2h ago',
       'content': 'Lorem ipsum dolor sit amet.',
       'postImage': '',
     },
-    {
-      'profileImage': '',
-      'name': 'Jane Doe',
-      'username': '@janedoe',
-      'timeAgo': '5h ago',
-      'content': 'Another post content.',
-      'postImage': '',
-    },
-    {
-      'profileImage': '',
-      'name': 'Jane Doe',
-      'username': '@janedoe',
-      'timeAgo': '5h ago',
-      'content': 'Another post content.',
-      'postImage': '',
-    },
-    {
-      'profileImage': '',
-      'name': 'Jane Doe',
-      'username': '@janedoe',
-      'timeAgo': '5h ago',
-      'content': 'Another post content.',
-      'postImage': '',
-    },
-    {
-      'profileImage': '',
-      'name': 'Jane Doe',
-      'username': '@janedoe',
-      'timeAgo': '5h ago',
-      'content': 'Another post content.',
-      'postImage': '',
-    },
   ];
 
-  bool _obscurePassword = true;
+  final bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    getUserInfo();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -247,39 +271,59 @@ class _ProfileState extends State<Profile> {
                                   cursorColor: Colors.white,
                                   style: TextStyle(color: Colors.white),
 
-                                  // controller: userNameController,
-                                    controller: TextEditingController(
-                                    text: 'Emre Karadereli',
-                                  ), 
-                                  
+                                  controller: nameController,
                                   decoration: InputDecoration(
                                     labelText: 'Name',
                                     prefixStyle: TextStyle(color: Colors.white),
                                     labelStyle: TextStyle(color: Colors.white),
-                                    //  helperText: _authenticationController.errors['username'] ?? _authenticationController.errors['username'],
+                                    helperText:
+                                        _authenticationController
+                                            .errors['name'] ??
+                                        _authenticationController
+                                            .errors['name'],
                                     helperStyle: TextStyle(
-                                      //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
-                                      color: Colors.white,
+                                      color:
+                                          _authenticationController
+                                                      .errors['name'] !=
+                                                  null
+                                              ? Colors.red
+                                              : Colors.white,
                                     ),
                                     counterStyle: TextStyle(
-                                      //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
-                                      color: Colors.white,
+                                      color:
+                                          _authenticationController
+                                                      .errors['name'] !=
+                                                  null
+                                              ? Colors.red
+                                              : Colors.white,
                                     ),
                                     prefixIcon: Icon(
                                       Icons.person,
-                                      //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
-                                      color: Colors.white,
+                                      color:
+                                          _authenticationController
+                                                      .errors['name'] !=
+                                                  null
+                                              ? Colors.red
+                                              : Colors.white,
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderSide: BorderSide(
-                                        //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
-                                        color: Colors.white,
+                                        color:
+                                            _authenticationController
+                                                        .errors['name'] !=
+                                                    null
+                                                ? Colors.red
+                                                : Colors.white,
                                       ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderSide: BorderSide(
-                                        //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
-                                        color: Colors.white,
+                                        color:
+                                            _authenticationController
+                                                        .errors['name'] !=
+                                                    null
+                                                ? Colors.red
+                                                : Colors.white,
                                       ),
                                     ),
                                   ),
@@ -290,43 +334,127 @@ class _ProfileState extends State<Profile> {
                                   maxLength: 20,
                                   cursorColor: Colors.white,
                                   style: TextStyle(color: Colors.white),
-                                  controller: TextEditingController(
-                                    text: 'myUserName',
-                                  ), // Pr
-                                  // controller: userNameController,
+                                  controller: userNameController,
                                   decoration: InputDecoration(
                                     labelText: 'Username',
                                     prefixStyle: TextStyle(color: Colors.white),
                                     labelStyle: TextStyle(color: Colors.white),
-                                    //  helperText: _authenticationController.errors['username'] ?? _authenticationController.errors['username'],
+                                    helperText:
+                                        _authenticationController
+                                            .errors['username'] ??
+                                        _authenticationController
+                                            .errors['username'],
                                     helperStyle: TextStyle(
-                                      //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
-                                      color: Colors.white,
+                                      color:
+                                          _authenticationController
+                                                      .errors['username'] !=
+                                                  null
+                                              ? Colors.red
+                                              : Colors.white,
                                     ),
                                     counterStyle: TextStyle(
-                                      //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
-                                      color: Colors.white,
+                                      color:
+                                          _authenticationController
+                                                      .errors['username'] !=
+                                                  null
+                                              ? Colors.red
+                                              : Colors.white,
                                     ),
                                     prefixIcon: Icon(
                                       Icons.person,
-                                      //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
-                                      color: Colors.white,
+                                      color:
+                                          _authenticationController
+                                                      .errors['username'] !=
+                                                  null
+                                              ? Colors.red
+                                              : Colors.white,
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderSide: BorderSide(
-                                        //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
-                                        color: Colors.white,
+                                        color:
+                                            _authenticationController
+                                                        .errors['username'] !=
+                                                    null
+                                                ? Colors.red
+                                                : Colors.white,
                                       ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderSide: BorderSide(
-                                        //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
-                                        color: Colors.white,
+                                        color:
+                                            _authenticationController
+                                                        .errors['username'] !=
+                                                    null
+                                                ? Colors.red
+                                                : Colors.white,
                                       ),
                                     ),
                                   ),
                                 ),
 
+                                const SizedBox(height: 8),
+                                TextField(
+                                  maxLength: 50,
+                                  cursorColor: Colors.white,
+                                  style: TextStyle(color: Colors.white),
+
+                                  controller: emailController,
+                                  decoration: InputDecoration(
+                                    labelText: 'Email',
+                                    prefixStyle: TextStyle(color: Colors.white),
+                                    labelStyle: TextStyle(color: Colors.white),
+                                    helperText:
+                                        _authenticationController
+                                            .errors['email'] ??
+                                        _authenticationController
+                                            .errors['email'],
+                                    helperStyle: TextStyle(
+                                      color:
+                                          _authenticationController
+                                                      .errors['email'] !=
+                                                  null
+                                              ? Colors.red
+                                              : Colors.white,
+                                    ),
+                                    counterStyle: TextStyle(
+                                      color:
+                                          _authenticationController
+                                                      .errors['email'] !=
+                                                  null
+                                              ? Colors.red
+                                              : Colors.white,
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.person,
+                                      color:
+                                          _authenticationController
+                                                      .errors['email'] !=
+                                                  null
+                                              ? Colors.red
+                                              : Colors.white,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color:
+                                            _authenticationController
+                                                        .errors['email'] !=
+                                                    null
+                                                ? Colors.red
+                                                : Colors.white,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color:
+                                            _authenticationController
+                                                        .errors['email'] !=
+                                                    null
+                                                ? Colors.red
+                                                : Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
 
                                 const SizedBox(height: 8),
                                 TextField(
@@ -335,35 +463,58 @@ class _ProfileState extends State<Profile> {
                                   style: TextStyle(color: Colors.white),
                                   obscureText: _obscurePassword,
 
-                                  // controller: userNameController,
-                               
+                                  controller: passwordController,
                                   decoration: InputDecoration(
                                     labelText: 'Password',
                                     labelStyle: TextStyle(color: Colors.white),
-                                    //  helperText: _authenticationController.errors['username'] ?? _authenticationController.errors['username'],
+                                    helperText:
+                                        _authenticationController
+                                            .errors['password'] ??
+                                        _authenticationController
+                                            .errors['password'],
                                     helperStyle: TextStyle(
-                                      //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
-                                      color: Colors.white,
+                                      color:
+                                          _authenticationController
+                                                      .errors['password'] !=
+                                                  null
+                                              ? Colors.red
+                                              : Colors.white,
                                     ),
                                     counterStyle: TextStyle(
-                                      //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
-                                      color: Colors.white,
+                                      color:
+                                          _authenticationController
+                                                      .errors['password'] !=
+                                                  null
+                                              ? Colors.red
+                                              : Colors.white,
                                     ),
                                     prefixIcon: Icon(
                                       Icons.person,
-                                      //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
-                                      color: Colors.white,
+                                      color:
+                                          _authenticationController
+                                                      .errors['password'] !=
+                                                  null
+                                              ? Colors.red
+                                              : Colors.white,
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderSide: BorderSide(
-                                        //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
-                                        color: Colors.white,
+                                        color:
+                                            _authenticationController
+                                                        .errors['password'] !=
+                                                    null
+                                                ? Colors.red
+                                                : Colors.white,
                                       ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderSide: BorderSide(
-                                        //color: _authenticationController.errors['username'] != null  ? Colors.red : Colors.white,
-                                        color: Colors.white,
+                                        color:
+                                            _authenticationController
+                                                        .errors['password'] !=
+                                                    null
+                                                ? Colors.red
+                                                : Colors.white,
                                       ),
                                     ),
                                   ),
@@ -374,9 +525,10 @@ class _ProfileState extends State<Profile> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceEvenly,
                                   children: [
-                                    
                                     OutlinedButton(
-                                      onPressed: () {},
+                                      onPressed: () async {
+                                        updateOnPressed();
+                                      },
                                       style: OutlinedButton.styleFrom(
                                         backgroundColor: Colors.blue,
                                         side: const BorderSide(
@@ -522,13 +674,16 @@ class _ProfileState extends State<Profile> {
                   const SizedBox(height: 10), // Space for the profile picture
                   // Name and verified badge
                   Row(
-                    children: const [
-                      Text(
-                        'EMRE',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                    children: [
+                      Obx(
+                        () => Text(
+                          _authenticationController.user.value.name ??
+                              'Default Name',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       /* SizedBox(width: 5),
@@ -539,17 +694,36 @@ class _ProfileState extends State<Profile> {
                       ), */
                     ],
                   ),
-                  const Text(
-                    '@bocukurtwitter',
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
-                  ),
+                  Obx(
+                    () => Text(
+                      '@${_authenticationController.user.value.username ?? 'Default UserName'}',
 
+                      style: TextStyle(color: Colors.grey, fontSize: 16),
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   // Joined date
-                  const Text(
-                    'Temmuz 2021 tarihinde katıldı',
-                    style: TextStyle(color: Colors.grey, fontSize: 14),
-                  ),
+                  Obx(() {
+                    final createdAtString =
+                        _authenticationController.user.value.createdAt;
+
+                    String formattedDate = 'Unknown date';
+                    if (createdAtString != null && createdAtString.isNotEmpty) {
+                      try {
+                        final dateTime = DateTime.parse(createdAtString);
+                        formattedDate = DateFormat.yMMMMd(
+                          'en_US',
+                        ).format(dateTime); // Example: June 2, 2025
+                      } catch (e) {
+                        formattedDate = 'Invalid date';
+                      }
+                    }
+
+                    return Text(
+                      'Joined $formattedDate',
+                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                    );
+                  }),
                   const SizedBox(height: 10),
                   // Follower/Following counts
                   Row(

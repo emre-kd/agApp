@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:agapp/constant.dart';
 import 'package:agapp/models/user.dart';
 import 'package:agapp/screens/home.dart';
+import 'package:agapp/screens/profile.dart';
 import 'package:agapp/screens/login.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -13,8 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AuthenticationController extends GetxController {
   final isLoading = false.obs;
   final errors = <String, String>{}.obs;
-  var user = Rx<User>(User()); // Store user data
-
+  var user = Rx<User>(User());
   Future<void> getUserDetails() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
@@ -23,10 +23,13 @@ class AuthenticationController extends GetxController {
       try {
         var response = await http.get(
           Uri.parse(userDetailsURL),
-          headers: {'Authorization': 'Bearer $token'},
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          },
         );
 
-        print("Response Body: ${response.body}");
+        print("Token: $token");
 
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
@@ -39,6 +42,84 @@ class AuthenticationController extends GetxController {
         print("Error fetching user details: $e");
       }
     }
+  }
+
+  Future<bool> updateUser({
+  required String name,
+  required String email,
+  required String username,
+  required String password,
+  required String token,
+  required BuildContext context,
+}) async {
+  try {
+    isLoading.value = true;
+     errors.clear();
+
+    final response = await http.put(
+      Uri.parse(updateUserURL),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'name': name,
+        'username': username,
+        'email': email,
+        'password': password.isEmpty ? null : password,
+      }),
+    );
+
+    final responseData = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Profile updated successfully!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+        Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => Profile()),
+        (route) => false,
+      );
+
+      return true;
+    } else if (response.statusCode == 401) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Unauthorized. Please login again."),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } else if (response.statusCode == 422) {
+   Map<String, dynamic> errorMessages = responseData['errors'];
+        errorMessages.forEach((key, value) {
+          errors[key] = value[0];
+        });
+     
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Server error. Please try again later."),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Something went wrong. Check your connection."),
+        backgroundColor: Colors.red,
+      ),
+    );
+    debugPrint("Exception: ${e.toString()}");
+  } finally {
+    isLoading.value = false;
+  }
+  return false;
+   
   }
 
   Future register({

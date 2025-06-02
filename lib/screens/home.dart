@@ -16,7 +16,7 @@ class _HomeState extends State<Home> {
   final List<Map<String, String>> posts = [
     {
       'profileImage': '',
-      'name': 'John Doe',
+      'name': 'John Doe 2',
       'username': '@johndoe',
       'timeAgo': '2h ago',
       'content': 'Lorem ipsum dolor sit amet.',
@@ -24,7 +24,7 @@ class _HomeState extends State<Home> {
     },
     {
       'profileImage': '',
-      'name': 'Jane Doe',
+      'name': 'Jane Doe 2',
       'username': '@janedoe',
       'timeAgo': '5h ago',
       'content': 'Another post content.',
