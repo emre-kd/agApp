@@ -45,81 +45,83 @@ class AuthenticationController extends GetxController {
   }
 
   Future<bool> updateUser({
-  required String name,
-  required String email,
-  required String username,
-  required String password,
-  required String token,
-  required BuildContext context,
-}) async {
-  try {
-    isLoading.value = true;
-     errors.clear();
+    required String name,
+    required String email,
+    required String username,
+    required String password,
 
-    final response = await http.put(
-      Uri.parse(updateUserURL),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'name': name,
-        'username': username,
-        'email': email,
-        'password': password.isEmpty ? null : password,
-      }),
-    );
+    required String token,
+    required BuildContext context,
+  }) async {
+    try {
+      isLoading.value = true;
+      errors.clear();
 
-    final responseData = jsonDecode(response.body);
+      var response = await http.put(
+        Uri.parse(updateUserURL),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'name': name,
+          'username': username,
+          'email': email,
+    
 
-    if (response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Profile updated successfully!"),
-          backgroundColor: Colors.green,
-        ),
+          'password': password.isEmpty ? null : password,
+        }),
       );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Profile updated successfully!"),
+            backgroundColor: Colors.green,
+          ),
+        );
         Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => Profile()),
-        (route) => false,
-      );
-
-      return true;
-    } else if (response.statusCode == 401) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Unauthorized. Please login again."),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } else if (response.statusCode == 422) {
-   Map<String, dynamic> errorMessages = responseData['errors'];
+          context,
+          MaterialPageRoute(builder: (context) => Profile()),
+          (route) => false,
+        );
+        return true;
+      } else if (response.statusCode == 401) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Unauthorized. Please login again."),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return false; // ✅ explicitly return false
+      } else if (response.statusCode == 422) {
+        Map<String, dynamic> errorMessages = responseData['errors'];
         errorMessages.forEach((key, value) {
           errors[key] = value[0];
         });
-     
-    } else {
+        return false; // ✅ explicitly return false
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Server error. Please try again later."),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return false; // ✅ explicitly return false
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Server error. Please try again later."),
+          content: Text("Something went wrong. Check your connection."),
           backgroundColor: Colors.red,
         ),
       );
+      return false; // ✅ explicitly return false
+    } finally {
+      isLoading.value = false;
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Something went wrong. Check your connection."),
-        backgroundColor: Colors.red,
-      ),
-    );
-    debugPrint("Exception: ${e.toString()}");
-  } finally {
-    isLoading.value = false;
-  }
-  return false;
-   
   }
 
   Future register({
