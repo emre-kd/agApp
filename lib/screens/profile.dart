@@ -10,6 +10,8 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../constant.dart';
+
 class Profile extends StatefulWidget {
   const Profile({super.key});
   @override
@@ -41,6 +43,9 @@ class _ProfileState extends State<Profile> {
         _authenticationController.user.value.email ?? 'AgalıkEmail';
     createdAtController.text =
         _authenticationController.user.value.createdAt ?? '29.10.1923';
+    createdAtController.text = _authenticationController.user.value.image ?? '';
+    createdAtController.text =
+        _authenticationController.user.value.coverImage ?? '';
   }
 
   Future<String?> getTokenFromStorage() async {
@@ -62,6 +67,7 @@ class _ProfileState extends State<Profile> {
       email: emailController.text.trim(),
       username: userNameController.text.trim(),
       password: passwordController.text.trim(),
+
       token: token,
       context: context,
     );
@@ -86,6 +92,20 @@ class _ProfileState extends State<Profile> {
 
   @override
   Widget build(BuildContext context) {
+    final String? userImage = _authenticationController.user.value.image;
+    final String? imageUrl =
+        userImage != null ? '$baseNormalURL/storage/$userImage' : null;
+
+    final String? userCoverImage =
+        _authenticationController.user.value.coverImage;
+    final String? coverImageUrl =
+        userCoverImage != null
+            ? '$baseNormalURL/storage/$userCoverImage'
+            : null;
+            
+
+    print(coverImageUrl);
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: CustomScrollView(
@@ -684,21 +704,21 @@ class _ProfileState extends State<Profile> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.asset(
-                    'assets/default-cover.png',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[800],
-                        child: const Center(
-                          child: Text(
-                            'Failed to load default image',
-                            style: TextStyle(color: Colors.white, fontSize: 20),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                 coverImageUrl != null
+                  ? Image.network(
+                      coverImageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Image.asset(
+                          'assets/default-cover.png', // your default local image
+                          fit: BoxFit.cover,
+                        );
+                      },
+                    )
+                  : Image.asset(
+                      'assets/default-cover.png',
+                      fit: BoxFit.cover,
+                    ),// or a placeholder
                   Positioned(
                     left: 20,
                     bottom: 5,
@@ -707,14 +727,19 @@ class _ProfileState extends State<Profile> {
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 1),
                       ),
-                      child: const CircleAvatar(
+                      child: CircleAvatar(
                         radius: 50,
                         backgroundColor: Colors.grey,
-                        child: Icon(
-                          Icons.person,
-                          size: 50,
-                          color: Colors.white,
-                        ),
+                        backgroundImage:
+                            imageUrl != null ? NetworkImage(imageUrl) : null,
+                        child:
+                            imageUrl == null
+                                ? const Icon(
+                                  Icons.person,
+                                  size: 50,
+                                  color: Colors.white,
+                                )
+                                : null,
                       ),
                     ),
                   ),

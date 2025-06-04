@@ -1,6 +1,7 @@
 // ignore_for_file: non_constant_identifier_names, use_build_context_synchronously, avoid_print
 
 import 'dart:convert';
+import 'dart:io';
 import 'package:agapp/constant.dart';
 import 'package:agapp/models/user.dart';
 import 'package:agapp/screens/home.dart';
@@ -49,7 +50,8 @@ class AuthenticationController extends GetxController {
     required String email,
     required String username,
     required String password,
-
+    File? profileImage, 
+    File? coverImage,  
     required String token,
     required BuildContext context,
   }) async {
