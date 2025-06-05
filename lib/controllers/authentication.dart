@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:agapp/constant.dart';
 import 'package:agapp/models/user.dart';
 import 'package:agapp/screens/home.dart';
-import 'package:agapp/screens/profile.dart';
 import 'package:agapp/screens/login.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -46,85 +45,109 @@ class AuthenticationController extends GetxController {
   }
 
   Future<bool> updateUser({
-    required String name,
-    required String email,
-    required String username,
-    required String password,
-    File? profileImage, 
-    File? coverImage,  
-    required String token,
-    required BuildContext context,
-  }) async {
-    try {
-      isLoading.value = true;
-      errors.clear();
+  required String name,
+  required String email,
+  required String username,
+  required String password,
+  File? profileImage,
+  File? coverImage,
+  required String token,
+  required BuildContext context,
+}) async {
+  try {
+    isLoading.value = true;
+    errors.clear();
 
-      var response = await http.put(
-        Uri.parse(updateUserURL),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'name': name,
-          'username': username,
-          'email': email,
-    
+    // Create a multipart request instead of JSON for handling file uploads
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse(updateUserURL),
+    );
+    request.fields['_method'] = 'PUT';
 
-          'password': password.isEmpty ? null : password,
-        }),
+
+    // Set headers
+    request.headers['Authorization'] = 'Bearer $token';
+
+    // Add text fields
+    request.fields['name'] = name;
+    request.fields['username'] = username;
+    request.fields['email'] = email;
+    if (password.isNotEmpty) {
+      request.fields['password'] = password;
+    }
+
+    // Add file fields if they exist
+    if (profileImage != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'image',
+          profileImage.path,
+          filename: 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg',
+        ),
       );
+    }
+    if (coverImage != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'cover_image',
+          coverImage.path,
+          filename: 'cover_${DateTime.now().millisecondsSinceEpoch}.jpg',
+        ),
+      );
+    }
 
-      final responseData = jsonDecode(response.body);
+    // Send the request
+    var streamedResponse = await request.send();
+    var response = await http.Response.fromStream(streamedResponse);
+    final responseData = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Profile updated successfully!"),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => Profile()),
-          (route) => false,
-        );
-        return true;
-      } else if (response.statusCode == 401) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Unauthorized. Please login again."),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return false; // ✅ explicitly return false
-      } else if (response.statusCode == 422) {
-        Map<String, dynamic> errorMessages = responseData['errors'];
-        errorMessages.forEach((key, value) {
-          errors[key] = value[0];
-        });
-        return false; // ✅ explicitly return false
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Server error. Please try again later."),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return false; // ✅ explicitly return false
-      }
-    } catch (e) {
+    if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Something went wrong. Check your connection."),
+          content: Text("Profile updated successfully!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+      return true;
+    } else if (response.statusCode == 401) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Unauthorized. Please login again."),
           backgroundColor: Colors.red,
         ),
       );
-      return false; // ✅ explicitly return false
-    } finally {
-      isLoading.value = false;
+      return false;
+    } else if (response.statusCode == 422) {
+      Map<String, dynamic> errorMessages = responseData['errors'];
+      errorMessages.forEach((key, value) {
+        errors[key] = value[0];
+      });
+      return false;
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Server error. Please try again later."),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return false;
     }
+  } catch (e, stackTrace) {
+    debugPrint('❌ Exception in updateUser: $e');
+    debugPrint('🔍 StackTrace: $stackTrace');
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Something went wrong. Check your connection."),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return false;
+  } finally {
+    isLoading.value = false;
   }
+}
 
   Future register({
     required String username,
@@ -304,3 +327,5 @@ class AuthenticationController extends GetxController {
     }
   }
 }
+
+

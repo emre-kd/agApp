@@ -4,7 +4,6 @@ import 'package:agapp/screens/profile.dart';
 
 import 'package:flutter/material.dart';
 
-
 class Home extends StatefulWidget {
   const Home({super.key});
 
@@ -36,19 +35,32 @@ class _HomeState extends State<Home> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: Appbar(),
-      body: ListView.builder(
-        itemCount: posts.length,
-        itemBuilder: (context, index) {
-          final post = posts[index];
-          return Post(
-            profileImage: post['profileImage']!,
-            name: post['name']!,
-            username: post['username']!,
-            timeAgo: post['timeAgo']!,
-            content: post['content']!,
-            postImage: post['postImage']!,
+      body: RefreshIndicator(
+             color: Colors.white, // Refresh indicator color
+              backgroundColor: Colors.black.withOpacity(0.8), // Background color
+        onRefresh: () async {
+          // Optional: Add a short delay to simulate refresh effect
+          await Future.delayed(Duration(milliseconds: 500));
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => Home()),
           );
         },
+        child: ListView.builder(
+          itemCount: posts.length,
+          itemBuilder: (context, index) {
+            final post = posts[index];
+            return Post(
+              profileImage: post['profileImage']!,
+              name: post['name']!,
+              username: post['username']!,
+              timeAgo: post['timeAgo']!,
+              content: post['content']!,
+              postImage: post['postImage']!,
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {},
@@ -77,10 +89,8 @@ class _HomeState extends State<Home> {
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => Home(),
-                    ), 
-                    (route) => false, 
+                    MaterialPageRoute(builder: (context) => Home()),
+                    (route) => false,
                   );
                 },
                 icon: Icon(Icons.home, color: Colors.white),
@@ -92,23 +102,22 @@ class _HomeState extends State<Home> {
               ),
               SizedBox(width: 40),
               IconButton(
-                onPressed: () {},
-                icon: Icon(Icons.person_add , color: Colors.white),
-              ),
-                   SizedBox(width: 40),
-               IconButton(
                 onPressed: () {
-                    Navigator.pushAndRemoveUntil(
+       
+                },
+                icon: Icon(Icons.person_add, color: Colors.white),
+              ),
+              SizedBox(width: 40),
+              IconButton(
+                onPressed: () {
+                  Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => Profile(),
-                    ), 
-                    (route) => false, 
+                    MaterialPageRoute(builder: (context) => Profile()),
+                    (route) => false,
                   );
                 },
-                icon: Icon(Icons.person , color: Colors.white),
+                icon: Icon(Icons.person, color: Colors.white),
               ),
-             
             ],
           ),
         ),
