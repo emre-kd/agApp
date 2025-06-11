@@ -189,7 +189,7 @@ class _UpdateProfileState extends State<UpdateProfile> {
       print(responseData); // In fetchUserData
 
       if (response.statusCode == 200) {
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => Profile()),
         );
@@ -245,7 +245,7 @@ class _UpdateProfileState extends State<UpdateProfile> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pushReplacement(
+            Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => Profile()),
             );
@@ -257,7 +257,7 @@ class _UpdateProfileState extends State<UpdateProfile> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => UpdateProfile()),
               );
@@ -348,8 +348,7 @@ class _UpdateProfileState extends State<UpdateProfile> {
                                   child:
                                       _profileImage == null &&
                                               (userData['image'] == null ||
-                                                  userData['image']
-                                                      is! String)
+                                                  userData['image'] is! String)
                                           ? const Icon(
                                             Icons.person,
                                             size: 80,
@@ -582,15 +581,36 @@ class _UpdateProfileState extends State<UpdateProfile> {
                       // Update Button
                       ElevatedButton(
                         onPressed: isUpdating ? null : _updateProfile,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                                    side: const BorderSide(color: Colors.white, width: 1.5),
+
+                          ),
+                          disabledBackgroundColor: Colors.grey[800],
+                          disabledForegroundColor: Colors.white70,
+                        ),
                         child:
                             isUpdating
-                                ? const CircularProgressIndicator(
-                                  color: Colors.white,
+                                ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
                                 )
-                                : const Text('Update Profile'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
+                                : const Text(
+                                  'Update Profile',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
                       ),
                     ],
                   ),

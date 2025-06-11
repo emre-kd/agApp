@@ -158,14 +158,12 @@ class _ProfileState extends State<Profile> {
                     child: SizedBox(
                       child: FloatingActionButton(
                         onPressed: () {
-                          if (Navigator.canPop(context)) {
-                            Navigator.pop(context);
-                          } else {
-                            Navigator.pushReplacement(
+                        
+                            Navigator.push(
                               context,
                               MaterialPageRoute(builder: (context) => Home()),
                             );
-                          }
+                    
                         },
                         backgroundColor: Colors.black.withOpacity(0.2),
                         elevation: 0,
@@ -185,7 +183,7 @@ class _ProfileState extends State<Profile> {
                       padding: const EdgeInsets.only(right: 10.0, top: 10.0),
                       child: OutlinedButton(
                         onPressed: () {
-                          Navigator.pushReplacement(
+                          Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => UpdateProfile(),

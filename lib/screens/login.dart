@@ -35,13 +35,7 @@ class _LoginState extends State<Login> {
     return Scaffold(
       backgroundColor: Colors.black,
 
-      appBar: AppBar(
-        title: Text('AgApp'),
-        centerTitle: true,
 
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-      ),
       body: Padding(
         padding: const EdgeInsets.only(top: 100, right: 15, left: 15),
         child: Column(
