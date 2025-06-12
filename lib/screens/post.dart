@@ -1,3 +1,4 @@
+import 'package:agapp/constant.dart';
 import 'package:flutter/material.dart';
 
 class Post extends StatelessWidget {
@@ -20,82 +21,78 @@ class Post extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: Colors.grey, width: 0.5)),
-        color: Colors.black,
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
-      ),
+    return Card(
+      color: Colors.black,
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        
-        padding: const EdgeInsets.all(15.0),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Profile Section
+            /// User Info Row
             Row(
               children: [
                 CircleAvatar(
-                  radius: 20,
-                  backgroundImage: NetworkImage(profileImage),
+                  backgroundImage:
+                      profileImage.isNotEmpty
+                          ? NetworkImage('$baseNormalURL/$profileImage')
+                          : const AssetImage('assets/default-profile.png')
+                              as ImageProvider,
+                  radius: 22,
                 ),
                 const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(name, style: const TextStyle(color: Colors.white)),
-                      Text(username, style: const TextStyle(color: Colors.grey)),
-                    ],
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      username,
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.6),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                Text(
+                  timeAgo,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.4),
+                    fontSize: 12,
                   ),
                 ),
-                Text(timeAgo, style: const TextStyle(color: Colors.white)),
-                IconButton(
-                  icon: const Icon(Icons.more_vert, color: Colors.white,),
-                  onPressed: () {},
-                ),
               ],
             ),
             const SizedBox(height: 10),
-            // Post Content
-            Text(
-              content,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold , color: Colors.white),
-              textAlign: TextAlign.left,
-            ),
-            const SizedBox(height: 10),
-            // Post Image
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                postImage,
-                width: double.infinity,
-                fit: BoxFit.cover,
+
+            /// Post Content
+            if (content.isNotEmpty)
+              Text(
+                content,
+                style: const TextStyle(color: Colors.white, fontSize: 14),
               ),
-            ),
             const SizedBox(height: 10),
-            // Action Buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                   IconButton(
-                  icon: const Icon(Icons.chat_bubble_outline, color: Colors.white,),
-                  onPressed: () {},
+
+            /// Post Image (if any)
+            if (postImage.isNotEmpty)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
+                  '$baseNormalURL/$postImage',
+
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  errorBuilder: (_, __, ___) => const SizedBox(),
                 ),
-               
-                   IconButton(
-                  icon: const Icon(Icons.repeat ,color: Colors.white,),
-                  onPressed: () {},
-                ),
-                IconButton(
-                  icon: const Icon(Icons.favorite_outline_rounded ,color: Colors.white,),
-                  onPressed: () {},
-                ),
-             
-              ],
-            ),
+              ),
           ],
         ),
       ),

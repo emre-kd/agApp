@@ -169,6 +169,8 @@ class AuthenticationController extends GetxController {
       );
 
       var responseData = json.decode(response.body);
+           debugPrint("Error: ${response.statusCode} - $responseData");
+
 
       if (response.statusCode == 201) {
         debugPrint("Registration Successful: $responseData");
