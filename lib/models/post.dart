@@ -1,29 +1,38 @@
-class PostModel {
+class Post {
+  final int id; // Post ID
   final String text;
   final String media;
   final String createdAt;
   final String name;
   final String username;
   final String profileImage;
+  final int userId; 
 
-  PostModel({
+  Post({
+    required this.id,
     required this.text,
     required this.media,
     required this.createdAt,
     required this.name,
     required this.username,
     required this.profileImage,
+    required this.userId,
+
   });
 
-  factory PostModel.fromJson(Map<String, dynamic> json) {
+  factory Post.fromJson(Map<String, dynamic> json) {
     final user = json['user'] ?? {};
-    return PostModel(
+    return Post(
+      id: json['id'] ?? '',
       text: json['text'] ?? '',
       media: json['media'] ?? '',
       createdAt: json['created_at'] ?? '',
       name: user['name'] ?? '',
       username: user['username'] ?? '',
       profileImage: user['image'] ?? '',
+      userId: user['id'] ?? '',
+   
+
     );
   }
 }

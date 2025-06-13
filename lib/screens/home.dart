@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:agapp/constant.dart';
+import 'package:agapp/screens/post.dart' show PostWidget;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:http/http.dart' as http;
@@ -8,7 +9,6 @@ import 'package:http/http.dart' as http;
 import 'package:agapp/models/post.dart';
 import 'package:agapp/screens/layouts/appbar.dart';
 import 'package:agapp/screens/layouts/add_post.dart';
-import 'package:agapp/screens/post.dart';
 import 'package:agapp/screens/profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -22,7 +22,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   bool _isFabVisible = true;
   bool _isLoading = true;
-  List<PostModel> posts = [];
+  List<Post> posts = [];
 
   @override
   void initState() {
@@ -49,7 +49,7 @@ class _HomeState extends State<Home> {
         final List<dynamic> postJson = data['posts'];
 
         setState(() {
-          posts = postJson.map((json) => PostModel.fromJson(json)).toList();
+          posts = postJson.map((json) => Post.fromJson(json)).toList();
           _isLoading = false;
         });
       } else {
@@ -84,11 +84,11 @@ class _HomeState extends State<Home> {
           onRefresh: fetchPosts,
           child:
               _isLoading
-                  ? Center(
+                  ? const Center(
                     child: CircularProgressIndicator(color: Colors.white),
                   )
                   : posts.isEmpty
-                  ? Center(
+                  ? const Center(
                     child: Text(
                       'Topluluğunuzda hiç gönderi yok',
                       style: TextStyle(color: Colors.white, fontSize: 16),
@@ -97,14 +97,11 @@ class _HomeState extends State<Home> {
                   : ListView.builder(
                     itemCount: posts.length,
                     itemBuilder: (context, index) {
-                      final post = posts[index];
-                      return Post(
-                        profileImage: post.profileImage,
-                        name: post.name,
-                        username: post.username,
-                        timeAgo: post.createdAt,
-                        content: post.text,
-                        postImage: post.media,
+                      final post =
+                          posts[index]; // Assuming posts is List<post_model.Post>
+                      return PostWidget(
+                        post: post, // Pass the entire Post model
+                        parentScreen: 'home'
                       );
                     },
                   ),

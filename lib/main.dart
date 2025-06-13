@@ -1,5 +1,6 @@
 import 'package:agapp/screens/home.dart';
 import 'package:agapp/screens/login.dart';
+import 'package:agapp/screens/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,8 +20,6 @@ class MyApp extends StatelessWidget {
 
   const MyApp({Key? key, required this.initialRoute}) : super(key: key);
   @override
-
-  
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(
@@ -42,6 +41,10 @@ class MyApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       home: initialRoute,
+      routes: {
+        '/home': (context) => const Home(),
+        '/profile': (context) => const Profile(),
+      },
     );
   }
 }

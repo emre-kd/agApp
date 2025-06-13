@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use, avoid_print, use_build_context_synchronously, no_leading_underscores_for_local_identifiers
 import 'dart:convert';
 
+import 'package:agapp/models/post.dart';
 import 'package:agapp/screens/home.dart';
 import 'package:agapp/screens/post.dart';
 import 'package:agapp/screens/update-profile.dart';
@@ -20,7 +21,9 @@ class Profile extends StatefulWidget {
 
 class _ProfileState extends State<Profile> {
   Map<String, dynamic> userData = {};
+  List<Post> posts = [];
   bool isLoading = true;
+  bool _isLoading = true;
   String errorMessage = '';
   Map<String, String> errors = {};
   bool isUpdating = false;
@@ -41,6 +44,7 @@ class _ProfileState extends State<Profile> {
     _createdAtController = TextEditingController();
     _passwordController = TextEditingController();
     fetchUserData();
+    fetchUserPosts();
   }
 
   @override
@@ -110,16 +114,37 @@ class _ProfileState extends State<Profile> {
     }
   }
 
-  final List<Map<String, String>> posts = [
-    {
-      'profileImage': '',
-      'name': 'John Doe 2',
-      'username': '@johndoe',
-      'timeAgo': '2h ago',
-      'content': 'Lorem ipsum dolor sit amet.',
-      'postImage': '',
-    },
-  ];
+  Future<void> fetchUserPosts() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    const url = fetchUserPostURL;
+    String? token = prefs.getString('token');
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List<dynamic> postJson = data['posts'];
+
+        setState(() {
+          posts = postJson.map((json) => Post.fromJson(json)).toList();
+          _isLoading = false;
+        });
+      } else {
+        print('Error: ${response.statusCode}');
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      print('Fetch error: $e');
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -158,12 +183,10 @@ class _ProfileState extends State<Profile> {
                     child: SizedBox(
                       child: FloatingActionButton(
                         onPressed: () {
-                        
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => Home()),
-                            );
-                    
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => Home()),
+                          );
                         },
                         backgroundColor: Colors.black.withOpacity(0.2),
                         elevation: 0,
@@ -344,15 +367,10 @@ class _ProfileState extends State<Profile> {
                 SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final post = posts[index];
-                    return Post(
-                      key: ValueKey(post['id'] ?? index), // Ensure unique key
-                      profileImage: post['profileImage']!,
-                      name: post['name']!,
-                      username: post['username']!,
-                      timeAgo: post['timeAgo']!,
-                      content: post['content']!,
-                      postImage: post['postImage']!,
-                    );
+                    return PostWidget(
+                      post: post,
+                      parentScreen: 'profile'
+                      );
                   }, childCount: posts.length),
                 ),
               ],
