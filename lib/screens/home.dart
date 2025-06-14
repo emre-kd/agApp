@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:agapp/constant.dart';
 import 'package:agapp/screens/post.dart' show PostWidget;
+import 'package:agapp/screens/search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:http/http.dart' as http;
@@ -160,7 +161,12 @@ class _HomeState extends State<Home> {
                       ),
                       SizedBox(width: 40),
                       IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                          context, 
+                          MaterialPageRoute(builder: (_) => Search()),
+                          );
+                        },
                         icon: Icon(Icons.search_rounded, color: Colors.white),
                       ),
                       SizedBox(width: 40),
