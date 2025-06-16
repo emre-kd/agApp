@@ -145,7 +145,7 @@ class _PostWidgetState extends State<PostWidget> {
                             ? const Icon(
                               Icons.person,
                               color: Colors.black,
-                              size: 35,
+                             
                             )
                             : null, // Show icon only if no image
                   ),
