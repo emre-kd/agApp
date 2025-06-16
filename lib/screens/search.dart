@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:agapp/constant.dart';
+import 'package:agapp/screens/searched_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -314,13 +315,10 @@ class _SearchState extends State<Search> {
                             style: TextStyle(color: Colors.grey[600]),
                           ),
                           onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Seçildi: @${user.username}',
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                                backgroundColor: Colors.black,
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => SearchedProfile(userId : user.id),
                               ),
                             );
                           },

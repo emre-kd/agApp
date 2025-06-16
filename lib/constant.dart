@@ -8,6 +8,7 @@ const registerURL = '$baseURL/register';
 const logoutURL = '$baseURL/logout';
 
 const userDetailsURL = '$baseURL/getUser';
+const getSearchedUserDetailsURL = '$baseURL/getSearchedUser';
 const usersDetailsURL = '$baseURL/getUsers';
 const updateUserURL = '$baseURL/updateUser';
 
