@@ -41,7 +41,7 @@ class _PostWidgetState extends State<PostWidget> {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-     /* print('User ID: ${data['id']}');
+      /* print('User ID: ${data['id']}');
       print('User Community ID: ${data['community_id']}');
       print('User Name: ${data['name']}');
       print('User Email: ${data['email']}');
@@ -136,9 +136,18 @@ class _PostWidgetState extends State<PostWidget> {
                             ? NetworkImage(
                               '$baseNormalURL/${widget.post.profileImage}',
                             )
-                            : const AssetImage('assets/default-profile.png')
-                                as ImageProvider,
+                            : null, // No background image if profileImage is empty
                     radius: 22,
+                    backgroundColor:
+                        Colors.white, // Background color for fallback
+                    child:
+                        widget.post.profileImage.isEmpty
+                            ? const Icon(
+                              Icons.person,
+                              color: Colors.black,
+                              size: 35,
+                            )
+                            : null, // Show icon only if no image
                   ),
                   const SizedBox(width: 10),
                   Column(
@@ -342,7 +351,6 @@ class _PostWidgetState extends State<PostWidget> {
                             size: 22,
                           ),
                           SizedBox(width: 6),
-                         
                         ],
                       ),
                     ),
@@ -357,7 +365,6 @@ class _PostWidgetState extends State<PostWidget> {
                         children: const [
                           Icon(Icons.repeat, color: Colors.white, size: 22),
                           SizedBox(width: 6),
-                         
                         ],
                       ),
                     ),
@@ -376,7 +383,6 @@ class _PostWidgetState extends State<PostWidget> {
                             size: 22,
                           ),
                           SizedBox(width: 6),
-                         
                         ],
                       ),
                     ),

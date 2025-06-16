@@ -20,19 +20,17 @@ class Post {
 
   });
 
-  factory Post.fromJson(Map<String, dynamic> json) {
-    final user = json['user'] ?? {};
-    return Post(
-      id: json['id'] ?? '',
-      text: json['text'] ?? '',
-      media: json['media'] ?? '',
-      createdAt: json['created_at'] ?? '',
-      name: user['name'] ?? '',
-      username: user['username'] ?? '',
-      profileImage: user['image'] ?? '',
-      userId: user['id'] ?? '',
-   
-
-    );
-  }
+ factory Post.fromJson(Map<String, dynamic> json) {
+  final user = json['user'] ?? {};
+  return Post(
+    id: json['id'] is int ? json['id'] : int.parse(json['id']?.toString() ?? '0'), // Convert to int
+    text: json['text']?.toString() ?? '',
+    media: json['media']?.toString() ?? '',
+    createdAt: json['created_at']?.toString() ?? '',
+    name: user['name']?.toString() ?? '',
+    username: user['username']?.toString() ?? '',
+    profileImage: user['image']?.toString() ?? '',
+    userId: user['id'] is int ? user['id'] : int.parse(user['id']?.toString() ?? '0'), // Convert to int
+  );
+}
 }

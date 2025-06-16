@@ -205,7 +205,7 @@ class _SearchState extends State<Search> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text(
           'Kullanıcıları Bul',
@@ -222,25 +222,25 @@ class _SearchState extends State<Search> {
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               controller: _searchController,
-              style: const TextStyle(color: Colors.black),
+              style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 hintText: 'Kullanıcı adı veya isimle ara...',
                 hintStyle: TextStyle(color: Colors.grey[600]),
-                prefixIcon: const Icon(Icons.search, color: Colors.black),
+                prefixIcon: const Icon(Icons.search, color: Colors.white),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.0),
-                  borderSide: const BorderSide(color: Colors.black),
+                  borderSide: const BorderSide(color: Colors.white),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.0),
-                  borderSide: const BorderSide(color: Colors.black),
+                  borderSide: const BorderSide(color: Colors.white),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.0),
-                  borderSide: const BorderSide(color: Colors.black, width: 2),
+                  borderSide: const BorderSide(color: Colors.white, width: 2),
                 ),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: Colors.black,
               ),
             ),
           ),
@@ -249,20 +249,20 @@ class _SearchState extends State<Search> {
             child:
                 _isLoading
                     ? const Center(
-                      child: CircularProgressIndicator(color: Colors.black),
+                      child: CircularProgressIndicator(color: Colors.white),
                     )
                     : _errorMessage != null
                     ? Center(
                       child: Text(
                         _errorMessage!,
-                        style: const TextStyle(color: Colors.black),
+                        style: const TextStyle(color: Colors.white),
                       ),
                     )
                     : _searchResults.isEmpty
                     ? const Center(
                       child: Text(
                         'Kullanıcı bulunamadı',
-                        style: TextStyle(color: Colors.black),
+                        style: TextStyle(color: Colors.white),
                       ),
                     )
                     : ListView.builder(
@@ -280,7 +280,7 @@ class _SearchState extends State<Search> {
                             child: Padding(
                               padding: EdgeInsets.all(16.0),
                               child: CircularProgressIndicator(
-                                color: Colors.black,
+                                color: Colors.white,
                               ),
                             ),
                           );
@@ -296,15 +296,15 @@ class _SearchState extends State<Search> {
                                     backgroundColor: Colors.grey[300],
                                   )
                                   : CircleAvatar(
-                                    backgroundColor: Colors.black,
+                                    backgroundColor: Colors.white,
                                     child: Icon(
                                       Icons.person,
-                                      color: Colors.white,
+                                      color: Colors.black,
                                     ),
                                   ),
                           title: Text(
                             user.name,
-                            style: const TextStyle(color: Colors.black),
+                            style: const TextStyle(color: Colors.white),
                           ),
                           subtitle: Text(
                             '@${user.username}',

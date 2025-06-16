@@ -12,6 +12,7 @@ const getSearchedUserDetailsURL = '$baseURL/getSearchedUser';
 const usersDetailsURL = '$baseURL/getUsers';
 const updateUserURL = '$baseURL/updateUser';
 
+const getSearchedUserPostsURL = '$baseURL/getSearchedUserPosts';
 const storePostURL = '$baseURL/storePost';
 const fetchPostURL = '$baseURL/fetchPost';
 const fetchUserPostURL = '$baseURL/fetchUserPost';
