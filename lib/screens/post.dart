@@ -163,7 +163,7 @@ class _PostWidgetState extends State<PostWidget> {
                       Text(
                         widget.post.username,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
+                           color: Colors.white.withOpacity(0.6),
                           fontSize: 12,
                         ),
                       ),
