@@ -1,12 +1,12 @@
-import 'dart:convert';
+// ignore_for_file: use_build_context_synchronously, avoid_print
 
+import 'dart:convert';
 import 'package:agapp/constant.dart';
 import 'package:agapp/screens/post.dart' show PostWidget;
 import 'package:agapp/screens/search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:http/http.dart' as http;
-
 import 'package:agapp/models/post.dart';
 import 'package:agapp/screens/layouts/appbar.dart';
 import 'package:agapp/screens/layouts/add_post.dart';
@@ -23,14 +23,35 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   bool _isFabVisible = true;
   bool _isLoading = true;
+  bool _isLoadingMore = false; // Track loading more posts
   List<Post> posts = [];
-  int? currentUserId; // Add this to store the user ID
+  int? currentUserId;
+  int _page = 1; // Track current page
+  final int _limit = 5; // Number of posts per page
+  bool _hasMore = true; // Track if more posts are available
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    fetchUserInfo(); // Fetch user info first
+    fetchUserInfo();
     fetchPosts();
+
+    // Add listener to scroll controller for pagination
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent - 200 &&
+          !_isLoadingMore &&
+          _hasMore) {
+        fetchMorePosts();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> fetchUserInfo() async {
@@ -61,20 +82,23 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> fetchPosts() async {
+    setState(() {
+      _isLoading = true;
+      _page = 1; // Reset to first page for refresh
+      _hasMore = true; // Reset hasMore
+    });
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    const url = fetchPostURL;
     String? token = prefs.getString('token');
 
     try {
       final response = await http.get(
-        Uri.parse(url),
+        Uri.parse('$fetchPostURL?page=$_page&limit=$_limit'),
         headers: {
           'Authorization': 'Bearer $token',
           'Accept': 'application/json',
         },
       );
-
-      print(response.body);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -83,6 +107,7 @@ class _HomeState extends State<Home> {
         setState(() {
           posts = postJson.map((json) => Post.fromJson(json)).toList();
           _isLoading = false;
+          _hasMore = postJson.length == _limit; // Check if more posts are available
         });
       } else {
         print('Error: ${response.statusCode}');
@@ -91,6 +116,48 @@ class _HomeState extends State<Home> {
     } catch (e) {
       print('Fetch error: $e');
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> fetchMorePosts() async {
+    if (_isLoadingMore || !_hasMore) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    // Simulate 1-second delay
+    await Future.delayed(const Duration(seconds: 1));
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    try {
+      final response = await http.get(
+        Uri.parse('$fetchPostURL?page=${_page + 1}&limit=$_limit'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List<dynamic> postJson = data['posts'];
+
+        setState(() {
+          _page++;
+          posts.addAll(postJson.map((json) => Post.fromJson(json)).toList());
+          _isLoadingMore = false;
+          _hasMore = postJson.length == _limit;
+        });
+      } else {
+        print('Error: ${response.statusCode}');
+        setState(() => _isLoadingMore = false);
+      }
+    } catch (e) {
+      print('Fetch error: $e');
+      setState(() => _isLoadingMore = false);
     }
   }
 
@@ -126,13 +193,22 @@ class _HomeState extends State<Home> {
                       ),
                     )
                   : ListView.builder(
-                      itemCount: posts.length,
+                      controller: _scrollController,
+                      itemCount: posts.length + (_isLoadingMore ? 1 : 0),
                       itemBuilder: (context, index) {
+                        if (index == posts.length) {
+                          return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: CircularProgressIndicator(color: Colors.white),
+                            ),
+                          );
+                        }
                         final post = posts[index];
                         return PostWidget(
                           post: post,
                           parentScreen: 'home',
-                          currentUserId: currentUserId, // Pass the user ID
+                          currentUserId: currentUserId,
                         );
                       },
                     ),

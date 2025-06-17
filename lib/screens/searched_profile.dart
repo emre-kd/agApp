@@ -21,8 +21,13 @@ class _SearchedProfileState extends State<SearchedProfile> {
   Map<String, dynamic> userData = {};
   List<Post> posts = [];
   bool isLoading = true;
+  bool _isLoadingMore = false; // Track loading more posts
   String errorMessage = '';
   int? currentUserId; // Store the authenticated user's ID
+  int _page = 1; // Track current page
+  final int _limit = 5; // Number of posts per page
+  bool _hasMore = true; // Track if more posts are available
+  final ScrollController _scrollController = ScrollController();
 
   // Controllers for user data display
   late TextEditingController _nameController;
@@ -37,9 +42,19 @@ class _SearchedProfileState extends State<SearchedProfile> {
     _userNameController = TextEditingController();
     _emailController = TextEditingController();
     _createdAtController = TextEditingController();
-    fetchAuthenticatedUserId(); // Fetch the authenticated user's ID
+    fetchAuthenticatedUserId();
     fetchUserData();
     fetchUserPosts();
+
+    // Add listener to scroll controller for pagination
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent - 200 &&
+          !_isLoadingMore &&
+          _hasMore) {
+        fetchMorePosts();
+      }
+    });
   }
 
   @override
@@ -48,6 +63,7 @@ class _SearchedProfileState extends State<SearchedProfile> {
     _userNameController.dispose();
     _emailController.dispose();
     _createdAtController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -70,14 +86,12 @@ class _SearchedProfileState extends State<SearchedProfile> {
 
     try {
       final response = await http.get(
-        Uri.parse(userDetailsURL), // Endpoint for authenticated user details
+        Uri.parse(userDetailsURL),
         headers: {
           'Accept': 'application/json',
           'Authorization': 'Bearer $token',
         },
       );
-
-      print(response.body);
 
       if (response.statusCode == 200) {
         final decodedResponse = json.decode(response.body);
@@ -91,7 +105,7 @@ class _SearchedProfileState extends State<SearchedProfile> {
           setState(() {
             currentUserId = fetchedId;
           });
-          await prefs.setInt('id', fetchedId); // Cache the ID
+          await prefs.setInt('id', fetchedId);
         }
       } else {
         print('Failed to fetch authenticated user ID: ${response.body}');
@@ -126,7 +140,6 @@ class _SearchedProfileState extends State<SearchedProfile> {
         },
       );
 
-      print(response.body);
       if (response.statusCode == 200) {
         final decodedResponse = json.decode(response.body);
         setState(() {
@@ -157,20 +170,28 @@ class _SearchedProfileState extends State<SearchedProfile> {
     if (token == null) {
       setState(() {
         errorMessage = 'No authentication token found';
-        isLoading = false;
+        isLoading = true;
       });
       return;
     }
 
+    setState(() {
+      isLoading = true;
+      _page = 1; // Reset to first page for refresh
+      _hasMore = true; // Reset hasMore
+    });
+
     try {
       final response = await http.get(
-        Uri.parse('$getSearchedUserPostsURL/${widget.userId}'),
+        Uri.parse('$getSearchedUserPostsURL/${widget.userId}?page=$_page&limit=$_limit'),
         headers: {
           'Authorization': 'Bearer $token',
           'Accept': 'application/json',
         },
       );
 
+
+      print(response.body);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final List<dynamic> postJson = data['posts'] ?? [];
@@ -178,6 +199,7 @@ class _SearchedProfileState extends State<SearchedProfile> {
         setState(() {
           posts = postJson.map((json) => Post.fromJson(json)).toList();
           isLoading = false;
+          _hasMore = postJson.length == _limit; // Check if more posts are available
         });
       } else {
         setState(() {
@@ -189,6 +211,52 @@ class _SearchedProfileState extends State<SearchedProfile> {
       setState(() {
         errorMessage = 'Error fetching posts: $e';
         isLoading = false;
+      });
+    }
+  }
+
+  Future<void> fetchMorePosts() async {
+    if (_isLoadingMore || !_hasMore) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    // Simulate 1-second delay
+    await Future.delayed(const Duration(seconds: 1));
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    try {
+      final response = await http.get(
+        Uri.parse('$getSearchedUserPostsURL/${widget.userId}?page=${_page + 1}&limit=$_limit'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List<dynamic> postJson = data['posts'] ?? [];
+
+        setState(() {
+          _page++;
+          posts.addAll(postJson.map((json) => Post.fromJson(json)).toList());
+          _isLoadingMore = false;
+          _hasMore = postJson.length == _limit;
+        });
+      } else {
+        setState(() {
+          errorMessage = 'Error fetching more posts: ${response.statusCode}';
+          _isLoadingMore = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Error fetching more posts: $e';
+        _isLoadingMore = false;
       });
     }
   }
@@ -218,6 +286,7 @@ class _SearchedProfileState extends State<SearchedProfile> {
               color: Colors.white,
               backgroundColor: Colors.black.withOpacity(0.8),
               child: CustomScrollView(
+                controller: _scrollController, // Attach ScrollController
                 slivers: [
                   SliverAppBar(
                     backgroundColor: Colors.black,
@@ -379,14 +448,25 @@ class _SearchedProfileState extends State<SearchedProfile> {
                           ),
                         )
                       : SliverList(
-                          delegate: SliverChildBuilderDelegate((context, index) {
-                            final post = posts[index];
-                            return PostWidget(
-                              post: post,
-                              parentScreen: 'SearchedProfile',
-                              currentUserId: currentUserId, // Pass the user ID
-                            );
-                          }, childCount: posts.length),
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              if (index == posts.length && _isLoadingMore) {
+                                return const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(16.0),
+                                    child: CircularProgressIndicator(color: Colors.white),
+                                  ),
+                                );
+                              }
+                              final post = posts[index];
+                              return PostWidget(
+                                post: post,
+                                parentScreen: 'SearchedProfile',
+                                currentUserId: currentUserId,
+                              );
+                            },
+                            childCount: posts.length + (_isLoadingMore ? 1 : 0),
+                          ),
                         ),
                 ],
               ),
