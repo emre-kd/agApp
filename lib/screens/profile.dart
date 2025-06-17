@@ -27,6 +27,7 @@ class _ProfileState extends State<Profile> {
   String errorMessage = '';
   Map<String, String> errors = {};
   bool isUpdating = false;
+  int? currentUserId; // Add this to store the user ID
 
   // Controllers
   late TextEditingController _nameController;
@@ -82,6 +83,8 @@ class _ProfileState extends State<Profile> {
         },
       );
 
+      print(response.body);
+
       if (response.statusCode == 200) {
         final decodedResponse = json.decode(response.body);
         setState(() {
@@ -98,8 +101,13 @@ class _ProfileState extends State<Profile> {
           _userNameController.text = userData['username']?.toString() ?? '';
           _emailController.text = userData['email']?.toString() ?? '';
           _createdAtController.text = userData['created_at']?.toString() ?? '';
+          currentUserId = userData['id']?.toInt(); // Store user ID
           isLoading = false;
         });
+        // Save user ID to SharedPreferences
+        if (currentUserId != null) {
+          await prefs.setInt('id', currentUserId!);
+        }
       } else {
         setState(() {
           errorMessage = 'Failed to load user data: ${response.body}';
@@ -163,10 +171,12 @@ class _ProfileState extends State<Profile> {
         : Scaffold(
           backgroundColor: Colors.black,
           body: RefreshIndicator(
-            onRefresh:
-                fetchUserData, // Trigger fetchUserData on pull-to-refresh
-            color: Colors.white, // Refresh indicator color
-            backgroundColor: Colors.black.withOpacity(0.8), // Background color
+            onRefresh: () async {
+              await fetchUserData();
+              await fetchUserPosts(); // Refresh both user data and posts
+            },
+            color: Colors.white,
+            backgroundColor: Colors.black.withOpacity(0.8),
             child: CustomScrollView(
               slivers: [
                 SliverAppBar(
@@ -283,10 +293,8 @@ class _ProfileState extends State<Profile> {
                                             '$baseNormalURL/${userData['image']}',
                                           ),
                                         )
-                                        : null, // no image if null
-                                color:
-                                    Colors
-                                        .grey[300], // light background behind the icon
+                                        : null,
+                                color: Colors.grey[300],
                               ),
                               child:
                                   userData['image'] == null
@@ -339,26 +347,6 @@ class _ProfileState extends State<Profile> {
                             fontSize: 14,
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: const [
-                            Text(
-                              '77 Follows',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                              ),
-                            ),
-                            SizedBox(width: 20),
-                            Text(
-                              '9 Takipçi',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
                         const SizedBox(height: 20),
                       ],
                     ),
@@ -369,8 +357,9 @@ class _ProfileState extends State<Profile> {
                     final post = posts[index];
                     return PostWidget(
                       post: post,
-                      parentScreen: 'profile'
-                      );
+                      parentScreen: 'profile',
+                      currentUserId: currentUserId, // Pass the user ID
+                    );
                   }, childCount: posts.length),
                 ),
               ],

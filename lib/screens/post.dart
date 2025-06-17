@@ -13,50 +13,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 class PostWidget extends StatefulWidget {
   final post_model.Post post;
   final String parentScreen;
+  final int? currentUserId; // Add this parameter
 
-  const PostWidget({Key? key, required this.post, required this.parentScreen})
-    : super(key: key);
+  const PostWidget({
+    Key? key,
+    required this.post,
+    required this.parentScreen,
+    this.currentUserId, // Make it optional
+  }) : super(key: key);
 
   @override
   State<PostWidget> createState() => _PostWidgetState();
 }
 
 class _PostWidgetState extends State<PostWidget> {
-  int? currentUserId;
-
-  @override
-  void initState() {
-    super.initState();
-    fetchUserInfo();
-  }
-
-  Future<void> fetchUserInfo() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
-
-    final response = await http.get(
-      Uri.parse(userDetailsURL),
-      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
-    );
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      /* print('User ID: ${data['id']}');
-      print('User Community ID: ${data['community_id']}');
-      print('User Name: ${data['name']}');
-      print('User Email: ${data['email']}');
-      print('User Username: ${data['username']}');
-      print('User Created At: ${data['created_at']}');
-      */
-      prefs.setInt('id', data['id']);
-      setState(() {
-        currentUserId = data['id'];
-      });
-    } else {
-      print('Failed to fetch user info');
-    }
-  }
-
   Future<void> _deletePost(int postId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
@@ -69,10 +39,7 @@ class _PostWidgetState extends State<PostWidget> {
         },
       );
 
-      print('Response: ${response.body}');
-
       if (response.statusCode == 200) {
-        // Show SnackBar immediately
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Post deleted successfully!"),
@@ -81,7 +48,6 @@ class _PostWidgetState extends State<PostWidget> {
           ),
         );
 
-        // Delay navigation to ensure SnackBar is visible
         if (widget.parentScreen == 'home') {
           Navigator.pushReplacement(
             context,
@@ -95,14 +61,12 @@ class _PostWidgetState extends State<PostWidget> {
         }
       } else {
         final error = jsonDecode(response.body)['error'] ?? 'Bir hata oluştu';
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Hata: $error')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Hata: $error')));
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Ağ hatası oluştu')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Ağ hatası oluştu')));
     }
   }
 
@@ -112,14 +76,13 @@ class _PostWidgetState extends State<PostWidget> {
       color: Colors.black,
       margin: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-
       child: Container(
         decoration: const BoxDecoration(
           border: Border(
             top: BorderSide(
               color: Color.fromARGB(255, 224, 218, 218),
               width: 0.5,
-            ), // Top border here
+            ),
           ),
         ),
         child: Padding(
@@ -127,27 +90,17 @@ class _PostWidgetState extends State<PostWidget> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// User Info Row
               Row(
                 children: [
                   CircleAvatar(
-                    backgroundImage:
-                        widget.post.profileImage.isNotEmpty
-                            ? NetworkImage(
-                              '$baseNormalURL/${widget.post.profileImage}',
-                            )
-                            : null, // No background image if profileImage is empty
+                    backgroundImage: widget.post.profileImage.isNotEmpty
+                        ? NetworkImage('$baseNormalURL/${widget.post.profileImage}')
+                        : null,
                     radius: 22,
-                    backgroundColor:
-                        Colors.white, // Background color for fallback
-                    child:
-                        widget.post.profileImage.isEmpty
-                            ? const Icon(
-                              Icons.person,
-                              color: Colors.black,
-                             
-                            )
-                            : null, // Show icon only if no image
+                    backgroundColor: Colors.white,
+                    child: widget.post.profileImage.isEmpty
+                        ? const Icon(Icons.person, color: Colors.black)
+                        : null,
                   ),
                   const SizedBox(width: 10),
                   Column(
@@ -163,7 +116,7 @@ class _PostWidgetState extends State<PostWidget> {
                       Text(
                         widget.post.username,
                         style: TextStyle(
-                           color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withOpacity(0.6),
                           fontSize: 12,
                         ),
                       ),
@@ -177,7 +130,7 @@ class _PostWidgetState extends State<PostWidget> {
                       fontSize: 12,
                     ),
                   ),
-                  if (currentUserId == widget.post.userId)
+                  if (widget.currentUserId == widget.post.userId)
                     PopupMenuButton<String>(
                       onSelected: (value) {
                         if (value == 'update') {
@@ -206,27 +159,19 @@ class _PostWidgetState extends State<PostWidget> {
                                 ),
                                 actions: [
                                   TextButton(
-                                    onPressed:
-                                        () => Navigator.of(context).pop(),
+                                    onPressed: () => Navigator.of(context).pop(),
                                     child: Text(
                                       'İptal',
                                       style: TextStyle(
-                                        color:
-                                            Theme.of(
-                                              context,
-                                            ).colorScheme.secondary,
+                                        color: Theme.of(context).colorScheme.secondary,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                   ),
                                   ElevatedButton(
                                     onPressed: () {
-                                      _deletePost(
-                                        widget.post.id,
-                                      ); // Call API to delete
-                                      Navigator.of(
-                                        context,
-                                      ).pop(); // Close dialog
+                                      _deletePost(widget.post.id);
+                                      Navigator.of(context).pop();
                                     },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.red,
@@ -261,66 +206,60 @@ class _PostWidgetState extends State<PostWidget> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       elevation: 4,
-                      itemBuilder:
-                          (BuildContext context) => [
-                            PopupMenuItem(
-                              value: 'update',
-                              child: Row(
-                                children: [
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Güncelle',
+                      itemBuilder: (BuildContext context) => [
+                        PopupMenuItem(
+                          value: 'update',
+                          child: Row(
+                            children: [
+                              const SizedBox(width: 8),
+                              Text(
+                                'Güncelle',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Text(
+                                    'Sil',
                                     style: TextStyle(
-                                      color:
-                                          Theme.of(
-                                            context,
-                                          ).colorScheme.onSurface,
+                                      color: Colors.white,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
-                            PopupMenuItem(
-                              value: 'delete',
-                              child: Row(
-                                children: [
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 8,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.red,
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: const Text(
-                                        'Sil',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                 ],
               ),
               const SizedBox(height: 10),
-
               if (widget.post.text.isNotEmpty)
                 Text(
                   widget.post.text,
                   style: const TextStyle(color: Colors.white, fontSize: 14),
                 ),
               const SizedBox(height: 10),
-
               if (widget.post.media.isNotEmpty)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
@@ -332,8 +271,6 @@ class _PostWidgetState extends State<PostWidget> {
                   ),
                 ),
               const SizedBox(height: 10),
-
-              // Like, Repost, and Comment section
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [

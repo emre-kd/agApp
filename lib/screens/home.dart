@@ -24,11 +24,40 @@ class _HomeState extends State<Home> {
   bool _isFabVisible = true;
   bool _isLoading = true;
   List<Post> posts = [];
+  int? currentUserId; // Add this to store the user ID
 
   @override
   void initState() {
     super.initState();
+    fetchUserInfo(); // Fetch user info first
     fetchPosts();
+  }
+
+  Future<void> fetchUserInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    try {
+      final response = await http.get(
+        Uri.parse(userDetailsURL),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        prefs.setInt('id', data['id']);
+        setState(() {
+          currentUserId = data['id'];
+        });
+      } else {
+        print('Failed to fetch user info: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching user info: $e');
+    }
   }
 
   Future<void> fetchPosts() async {
@@ -44,6 +73,8 @@ class _HomeState extends State<Home> {
           'Accept': 'application/json',
         },
       );
+
+      print(response.body);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -83,112 +114,109 @@ class _HomeState extends State<Home> {
           color: Colors.white,
           backgroundColor: Colors.black.withOpacity(0.8),
           onRefresh: fetchPosts,
-          child:
-              _isLoading
+          child: _isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                )
+              : posts.isEmpty
                   ? const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
-                  )
-                  : posts.isEmpty
-                  ? const Center(
-                    child: Text(
-                      'Topluluğunuzda hiç gönderi yok',
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                  )
+                      child: Text(
+                        'Topluluğunuzda hiç gönderi yok',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    )
                   : ListView.builder(
-                    itemCount: posts.length,
-                    itemBuilder: (context, index) {
-                      final post =
-                          posts[index]; // Assuming posts is List<post_model.Post>
-                      return PostWidget(
-                        post: post, // Pass the entire Post model
-                        parentScreen: 'home'
-                      );
-                    },
-                  ),
-        ),
-      ),
-      floatingActionButton:
-          _isFabVisible
-              ? FloatingActionButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    PageRouteBuilder(
-                      pageBuilder: (_, __, ___) => AddPost(),
-                      transitionsBuilder: (_, animation, __, child) {
-                        return SlideTransition(
-                          position: Tween(
-                            begin: Offset(0, 1),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: child,
+                      itemCount: posts.length,
+                      itemBuilder: (context, index) {
+                        final post = posts[index];
+                        return PostWidget(
+                          post: post,
+                          parentScreen: 'home',
+                          currentUserId: currentUserId, // Pass the user ID
                         );
                       },
                     ),
-                  );
-                },
-                backgroundColor: Colors.blue,
-                child: Icon(Icons.add, color: Colors.white, size: 25),
-              )
-              : null,
+        ),
+      ),
+      floatingActionButton: _isFabVisible
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  PageRouteBuilder(
+                    pageBuilder: (_, __, ___) => AddPost(),
+                    transitionsBuilder: (_, animation, __, child) {
+                      return SlideTransition(
+                        position: Tween(
+                          begin: Offset(0, 1),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      );
+                    },
+                  ),
+                );
+              },
+              backgroundColor: Colors.blue,
+              child: Icon(Icons.add, color: Colors.white, size: 25),
+            )
+          : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      bottomNavigationBar:
-          _isFabVisible
-              ? Container(
-                height: 60,
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(
-                      color: Colors.white.withOpacity(0.1),
-                      width: 1,
+      bottomNavigationBar: _isFabVisible
+          ? Container(
+              height: 60,
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: Colors.white.withOpacity(0.1),
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: BottomAppBar(
+                shape: CircularNotchedRectangle(),
+                color: Colors.black,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => Home()),
+                        );
+                      },
+                      icon: Icon(Icons.home, color: Colors.white),
                     ),
-                  ),
-                ),
-                child: BottomAppBar(
-                  shape: CircularNotchedRectangle(),
-                  color: Colors.black,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (_) => Home()),
-                          );
-                        },
-                        icon: Icon(Icons.home, color: Colors.white),
-                      ),
-                      SizedBox(width: 40),
-                      IconButton(
-                        onPressed: () {
-                          Navigator.push(
-                          context, 
+                    SizedBox(width: 40),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
                           MaterialPageRoute(builder: (_) => Search()),
-                          );
-                        },
-                        icon: Icon(Icons.search_rounded, color: Colors.white),
-                      ),
-                      SizedBox(width: 40),
-                      IconButton(
-                        onPressed: () {},
-                        icon: Icon(Icons.mail_outline, color: Colors.white),
-                      ),
-                      SizedBox(width: 40),
-                      IconButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => Profile()),
-                          );
-                        },
-                        icon: Icon(Icons.person, color: Colors.white),
-                      ),
-                    ],
-                  ),
+                        );
+                      },
+                      icon: Icon(Icons.search_rounded, color: Colors.white),
+                    ),
+                    SizedBox(width: 40),
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(Icons.mail_outline, color: Colors.white),
+                    ),
+                    SizedBox(width: 40),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => Profile()),
+                        );
+                      },
+                      icon: Icon(Icons.person, color: Colors.white),
+                    ),
+                  ],
                 ),
-              )
-              : null,
+              ),
+            )
+          : null,
     );
   }
 }
