@@ -163,7 +163,8 @@ class _ProfileState extends State<Profile> {
         setState(() {
           posts = postJson.map((json) => Post.fromJson(json)).toList();
           isLoading = false;
-          _hasMore = postJson.length == _limit; // Check if more posts are available
+          _hasMore =
+              postJson.length == _limit; // Check if more posts are available
         });
       } else {
         print('Error: ${response.statusCode}');
@@ -232,194 +233,210 @@ class _ProfileState extends State<Profile> {
     return isLoading
         ? const Center(child: CircularProgressIndicator())
         : Scaffold(
-            backgroundColor: Colors.black,
-            body: RefreshIndicator(
-              onRefresh: () async {
-                await fetchUserData();
-                await fetchUserPosts(); // Refresh both user data and posts
-              },
-              color: Colors.white,
-              backgroundColor: Colors.black.withOpacity(0.8),
-              child: CustomScrollView(
-                controller: _scrollController, // Attach ScrollController
-                slivers: [
-                  SliverAppBar(
-                    backgroundColor: Colors.black,
-                    expandedHeight: 60,
-                    floating: false,
-                    pinned: true,
-                    leading: Padding(
-                      padding: const EdgeInsets.only(
-                        left: 10.0,
-                        top: 7,
-                        bottom: 7,
-                      ),
-                      child: SizedBox(
-                        child: FloatingActionButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => Home()),
-                            );
-                          },
-                          backgroundColor: Colors.black.withOpacity(0.2),
-                          elevation: 0,
-                          highlightElevation: 0,
-                          hoverElevation: 0,
-                          focusElevation: 0,
-                          child: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                            size: 28,
-                          ),
+          backgroundColor: Colors.black,
+          body: RefreshIndicator(
+            onRefresh: () async {
+              await fetchUserData();
+              await fetchUserPosts(); // Refresh both user data and posts
+            },
+            color: Colors.white,
+            backgroundColor: Colors.black.withOpacity(0.8),
+            child: CustomScrollView(
+              controller: _scrollController, // Attach ScrollController
+              slivers: [
+                SliverAppBar(
+                  backgroundColor: Colors.black,
+                  expandedHeight: 60,
+                  floating: false,
+                  pinned: true,
+                  leading: Padding(
+                    padding: const EdgeInsets.only(
+                      left: 10.0,
+                      top: 7,
+                      bottom: 7,
+                    ),
+                    child: SizedBox(
+                      child: FloatingActionButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => Home()),
+                          );
+                        },
+                        backgroundColor: Colors.black.withOpacity(0.2),
+                        elevation: 0,
+                        highlightElevation: 0,
+                        hoverElevation: 0,
+                        focusElevation: 0,
+                        child: const Icon(
+                          Icons.arrow_back,
+                          color: Colors.white,
+                          size: 28,
                         ),
                       ),
                     ),
-                    actions: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 10.0, top: 10.0),
-                        child: OutlinedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => UpdateProfile(),
-                              ),
-                            );
-                          },
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.white, width: 1),
-                            backgroundColor: Colors.transparent,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 15.0,
-                              vertical: 5.0,
+                  ),
+                  actions: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10.0, top: 10.0),
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => UpdateProfile(),
                             ),
+                          );
+                        },
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.white, width: 1),
+                          backgroundColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 15.0,
+                            vertical: 5.0,
                           ),
-                          child: const Text(
-                            'Update Profile',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                        child: const Text(
+                          'Update Profile',
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SliverToBoxAdapter(
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Ink(
+                            height: 200,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: Colors.grey[300],
+                              image: DecorationImage(
+                                fit: BoxFit.cover,
+                                image:
+                                    userData['coverImage'] != null
+                                        ? NetworkImage(
+                                          '$baseNormalURL/${userData['coverImage']}',
+                                        )
+                                        : const AssetImage(
+                                              'assets/default-cover.png',
+                                            )
+                                            as ImageProvider,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                  SliverToBoxAdapter(
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Material(
+                      Positioned(
+                        bottom: -75,
+                        left: 20,
+                        child: Material(
                           color: Colors.transparent,
+                          shape: const CircleBorder(),
                           child: InkWell(
-                            borderRadius: BorderRadius.circular(10),
+                            customBorder: const CircleBorder(),
                             child: Ink(
-                              height: 200,
+                              height: 150,
+                              width: 150,
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: Colors.grey[300],
-                                image: DecorationImage(
-                                  fit: BoxFit.cover,
-                                  image: userData['coverImage'] != null
-                                      ? NetworkImage(
-                                          '$baseNormalURL/${userData['coverImage']}',
-                                        )
-                                      : const AssetImage(
-                                          'assets/default-cover.png',
-                                        ) as ImageProvider,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 4,
                                 ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          bottom: -75,
-                          left: 20,
-                          child: Material(
-                            color: Colors.transparent,
-                            shape: const CircleBorder(),
-                            child: InkWell(
-                              customBorder: const CircleBorder(),
-                              child: Ink(
-                                height: 150,
-                                width: 150,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 4,
-                                  ),
-                                  image: userData['image'] != null
-                                      ? DecorationImage(
+                                image:
+                                    userData['image'] != null
+                                        ? DecorationImage(
                                           fit: BoxFit.cover,
                                           image: NetworkImage(
                                             '$baseNormalURL/${userData['image']}',
                                           ),
                                         )
-                                      : null,
-                                  color: Colors.grey[300],
-                                ),
-                                child: userData['image'] == null
-                                    ? const Center(
+                                        : null,
+                                color: Colors.grey[300],
+                              ),
+                              child:
+                                  userData['image'] == null
+                                      ? const Center(
                                         child: Icon(
                                           Icons.person,
                                           size: 60,
                                           color: Colors.white70,
                                         ),
                                       )
-                                    : null,
-                              ),
+                                      : null,
                             ),
                           ),
                         ),
+                      ),
+                    ],
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 90),
+                        Row(
+                          children: [
+                            Text(
+                              _nameController.text,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          '@${_userNameController.text}',
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          formatCreatedAt(_createdAtController.text),
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 90),
-                          Row(
-                            children: [
-                              Text(
-                                _nameController.text,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Text(
-                            '@${_userNameController.text}',
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            formatCreatedAt(_createdAtController.text),
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                        ],
+                ),
+                posts.isEmpty
+                    ? const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: Text(
+                          'No posts available',
+                          style: TextStyle(color: Colors.grey, fontSize: 16),
+                          textAlign: TextAlign.center,
+                        ),
                       ),
-                    ),
-                  ),
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
+                    )
+                    : SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
                         if (index == posts.length && _isLoadingMore) {
                           return const Center(
                             child: Padding(
                               padding: EdgeInsets.all(16.0),
-                              child: CircularProgressIndicator(color: Colors.white),
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                              ),
                             ),
                           );
                         }
@@ -429,13 +446,11 @@ class _ProfileState extends State<Profile> {
                           parentScreen: 'profile',
                           currentUserId: currentUserId,
                         );
-                      },
-                      childCount: posts.length + (_isLoadingMore ? 1 : 0),
+                      }, childCount: posts.length + (_isLoadingMore ? 1 : 0)),
                     ),
-                  ),
-                ],
-              ),
+              ],
             ),
-          );
+          ),
+        );
   }
 }

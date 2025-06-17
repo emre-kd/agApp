@@ -102,7 +102,7 @@ class AuthenticationController extends GetxController {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("Profile updated successfully!"),
-            backgroundColor: Colors.green,
+            backgroundColor: Color.fromARGB(255, 0, 145, 230),
           ),
         );
         return true;

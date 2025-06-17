@@ -128,7 +128,9 @@ class _AddPostState extends State<AddPost> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Post created successfully!"),
-            backgroundColor: Colors.green,
+            backgroundColor: Color.fromARGB(255, 0, 145, 230),
+            
+            
           ),
         );
       } else if (response.statusCode == 401) {

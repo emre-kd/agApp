@@ -43,7 +43,7 @@ class _PostWidgetState extends State<PostWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Post deleted successfully!"),
-            backgroundColor: Colors.green,
+            backgroundColor: Color.fromARGB(255, 0, 145, 230),
             duration: Duration(seconds: 2),
           ),
         );
