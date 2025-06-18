@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:agapp/constant.dart';
+import 'package:agapp/screens/chat_list.dart';
 import 'package:agapp/screens/post.dart' show PostWidget;
 import 'package:agapp/screens/search.dart';
 import 'package:flutter/material.dart';
@@ -380,7 +381,12 @@ class _HomeState extends State<Home> {
                       ),
                       SizedBox(width: 40),
                       IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => ChatList()),
+                          );
+                        },
                         icon: Icon(Icons.mail_outline, color: Colors.white),
                       ),
                       SizedBox(width: 40),
