@@ -41,7 +41,9 @@ class ChatList extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => Chat(userName: user['name']),
+                  builder: (context) => Chat
+                  (userId: user['id'],
+                  userName: 'sdsadfas',),
                 ),
               );
             },

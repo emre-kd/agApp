@@ -11,8 +11,9 @@ import '../constant.dart';
 
 class SearchedProfile extends StatefulWidget {
   final int userId; // Required userId to fetch specific user data
+  final String userName; // Required userId to fetch specific user data
 
-  const SearchedProfile({super.key, required this.userId});
+  const SearchedProfile({super.key, required this.userId, required this.userName});
 
   @override
   _SearchedProfileState createState() => _SearchedProfileState();
@@ -424,7 +425,8 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                   MaterialPageRoute(
                                     builder:
                                         (context) => Chat(
-                                          userName: _nameController.text,
+                                           userId: widget.userId.toString(),
+                                           userName: _nameController.text,
                                         ),
                                   ),
                                 );

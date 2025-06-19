@@ -98,7 +98,7 @@ class _PostWidgetState extends State<PostWidget> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => SearchedProfile(userId : widget.post.userId),
+                                builder: (_) => SearchedProfile(userId : widget.post.userId, userName : widget.post.name),
                               ),
                             );
                           },
@@ -122,7 +122,7 @@ class _PostWidgetState extends State<PostWidget> {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => SearchedProfile(userId : widget.post.userId),
+                                builder: (_) => SearchedProfile(userId : widget.post.userId, userName : widget.post.name),
                               ),
                             );
                         },
@@ -139,7 +139,7 @@ class _PostWidgetState extends State<PostWidget> {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => SearchedProfile(userId : widget.post.userId),
+                                builder: (_) => SearchedProfile(userId : widget.post.userId, userName : widget.post.name),
                               ),
                             );
                         },

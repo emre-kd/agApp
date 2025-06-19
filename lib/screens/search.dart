@@ -318,7 +318,7 @@ class _SearchState extends State<Search> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => SearchedProfile(userId : user.id),
+                                builder: (_) => SearchedProfile(userId : user.id, userName : user.name),
                               ),
                             );
                           },

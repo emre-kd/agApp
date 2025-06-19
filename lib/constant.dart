@@ -1,7 +1,7 @@
 
 
-const baseURL = 'http://192.168.1.102:8000/api';
-const baseNormalURL = 'http://192.168.1.102:8000';
+const baseURL = 'http://192.168.1.104:8000/api';
+const baseNormalURL = 'http://192.168.1.104:8000';
 
 const loginURL = '$baseURL/login';
 const registerURL = '$baseURL/register';
@@ -17,3 +17,6 @@ const storePostURL = '$baseURL/storePost';
 const fetchPostURL = '$baseURL/fetchPost';
 const fetchUserPostURL = '$baseURL/fetchUserPost';
 const deleteUserPostURL = '$baseURL/deleteUserPost';
+
+const storeMessage = '$baseURL/storeMessage';
+const indexMessage = '$baseURL/indexMessage';
