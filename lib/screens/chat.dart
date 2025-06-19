@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import '../constant.dart';
@@ -39,7 +40,7 @@ class Chat extends StatefulWidget {
   final String userId;
   final String userName;
 
-  const Chat({super.key, required this.userId , required this.userName});
+  const Chat({super.key, required this.userId, required this.userName});
 
   @override
   State<Chat> createState() => _ChatState();
@@ -50,15 +51,25 @@ class _ChatState extends State<Chat> {
   final ScrollController _scrollController = ScrollController();
   List<Message> messages = [];
   bool isLoading = false;
+  bool isLoadingNew = false;
   int currentPage = 1;
   bool hasMore = true;
   final int perPage = 20;
+  Timer? _pollingTimer;
 
   @override
   void initState() {
     super.initState();
-    print('Chat initialized with userId: ${widget.userId}');
+    print('Chat initialized with userId: ${widget.userId}, userName: ${widget.userName}');
     _fetchMessages();
+
+    // Start polling every 15 seconds for new messages
+    _pollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (!isLoading && !isLoadingNew) {
+        _checkForNewMessages();
+      }
+    });
+
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
               _scrollController.position.maxScrollExtent * 0.8 &&
@@ -67,6 +78,84 @@ class _ChatState extends State<Chat> {
         _fetchMessages();
       }
     });
+  }
+
+  Future<void> _checkForNewMessages() async {
+    if (isLoadingNew) return;
+
+    setState(() {
+      isLoadingNew = true;
+    });
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+    if (token == null) {
+      print('No token found, skipping new messages check');
+      setState(() {
+        isLoadingNew = false;
+      });
+      return;
+    }
+
+    try {
+      final url = '$indexMessage?reciever_id=${widget.userId}&page=1&per_page=$perPage';
+      print('Checking for new messages: $url');
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      print('New messages response: ${response.statusCode}, ${response.body}');
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        final List<dynamic> messageData = jsonData['data']['data'] ?? [];
+
+        final newMessages = messageData.map((json) => Message.fromJson(json)).toList();
+
+        // Filter out duplicates based on message ID
+        final existingMessageIds = messages.map((m) => m.id).toSet();
+        final uniqueNewMessages =
+            newMessages.where((newMsg) => !existingMessageIds.contains(newMsg.id)).toList();
+
+        if (uniqueNewMessages.isNotEmpty && mounted) {
+          print('Found ${uniqueNewMessages.length} new messages');
+          setState(() {
+            messages.insertAll(0, uniqueNewMessages);
+            isLoadingNew = false;
+          });
+
+          // Show notification
+     
+
+          // Scroll to the bottom to show the latest message
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _scrollController.animateTo(
+              0,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          });
+        } else {
+          print('No new messages found');
+          setState(() {
+            isLoadingNew = false;
+          });
+        }
+      } else {
+        print('Error checking new messages: ${response.statusCode}, ${response.body}');
+        setState(() {
+          isLoadingNew = false;
+        });
+      }
+    } catch (e) {
+      print('Error checking new messages: $e');
+      setState(() {
+        isLoadingNew = false;
+      });
+    }
   }
 
   Future<void> _fetchMessages() async {
@@ -86,12 +175,22 @@ class _ChatState extends State<Chat> {
       return;
     }
 
-     SharedPreferences prefs = await SharedPreferences.getInstance();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
+    if (token == null) {
+      print('No token found, cannot fetch messages');
+      setState(() {
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Authentication error, please log in again')),
+      );
+      return;
+    }
 
     try {
       final url = '$indexMessage?reciever_id=${widget.userId}&page=$currentPage&per_page=$perPage';
-      print('Request URL: $url');
+      print('Fetching messages: $url');
       final response = await http.get(
         Uri.parse(url),
         headers: {
@@ -99,7 +198,7 @@ class _ChatState extends State<Chat> {
           'Accept': 'application/json',
         },
       );
-      print('Response: ${response.body}');
+      print('Fetch messages response: ${response.statusCode}, ${response.body}');
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
@@ -136,6 +235,7 @@ class _ChatState extends State<Chat> {
         );
       }
     } catch (e) {
+      print('Error fetching messages: $e');
       setState(() {
         isLoading = false;
       });
@@ -150,6 +250,12 @@ class _ChatState extends State<Chat> {
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Authentication error, please log in again')),
+      );
+      return;
+    }
 
     try {
       final response = await http.post(
@@ -166,12 +272,20 @@ class _ChatState extends State<Chat> {
         }),
       );
 
-      print('Response: ${response.body}');
+      print('Send message response: ${response.statusCode}, ${response.body}');
       if (response.statusCode == 201) {
         final jsonData = jsonDecode(response.body);
         setState(() {
           messages.insert(0, Message.fromJson(jsonData['data']));
           _controller.clear();
+        });
+        // Scroll to the bottom after sending
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollController.animateTo(
+            0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -179,6 +293,7 @@ class _ChatState extends State<Chat> {
         );
       }
     } catch (e) {
+      print('Error sending message: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
@@ -187,8 +302,10 @@ class _ChatState extends State<Chat> {
 
   @override
   void dispose() {
+    print('Disposing Chat widget');
     _controller.dispose();
     _scrollController.dispose();
+    _pollingTimer?.cancel();
     super.dispose();
   }
 
@@ -196,7 +313,7 @@ class _ChatState extends State<Chat> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.userName}'),
+        title: Text(widget.userName),
         backgroundColor: Colors.blue,
       ),
       body: Column(
