@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:agapp/constant.dart';
 import 'package:agapp/screens/home.dart';
 import 'package:agapp/screens/profile.dart';
+import 'package:agapp/screens/searched_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:agapp/models/post.dart' as post_model;
 import 'package:http/http.dart' as http;
@@ -92,32 +93,62 @@ class _PostWidgetState extends State<PostWidget> {
             children: [
               Row(
                 children: [
-                  CircleAvatar(
-                    backgroundImage: widget.post.profileImage.isNotEmpty
-                        ? NetworkImage('$baseNormalURL/${widget.post.profileImage}')
-                        : null,
-                    radius: 22,
-                    backgroundColor: Colors.white,
-                    child: widget.post.profileImage.isEmpty
-                        ? const Icon(Icons.person, color: Colors.black)
-                        : null,
+                  GestureDetector(
+                  onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => SearchedProfile(userId : widget.post.userId),
+                              ),
+                            );
+                          },
+                    child: CircleAvatar(
+                      backgroundImage: widget.post.profileImage.isNotEmpty
+                          ? NetworkImage('$baseNormalURL/${widget.post.profileImage}')
+                          : null,
+                      radius: 22,
+                      backgroundColor: Colors.white,
+                      child: widget.post.profileImage.isEmpty
+                          ? const Icon(Icons.person, color: Colors.black)
+                          : null,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        widget.post.name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                      GestureDetector(
+                         onTap: (){
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => SearchedProfile(userId : widget.post.userId),
+                              ),
+                            );
+                        },
+                        child: Text(
+                          widget.post.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                      Text(
-                        widget.post.username,
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
-                          fontSize: 12,
+                      GestureDetector(
+                        onTap: (){
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => SearchedProfile(userId : widget.post.userId),
+                              ),
+                            );
+                        },
+                        child: Text(
+                          widget.post.username,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.6),
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                     ],
