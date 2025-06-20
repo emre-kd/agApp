@@ -27,7 +27,7 @@ class _ChatListState extends State<ChatList> {
   }
 
   void _startPolling() {
-    _pollingTimer = Timer.periodic(const Duration(seconds: 60), (timer) async {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 15), (timer) async {
       await _fetchConversations();
     });
   }

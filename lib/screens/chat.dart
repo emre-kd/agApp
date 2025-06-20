@@ -28,8 +28,14 @@ class Message {
     return Message(
       id: json['id'] is String ? int.parse(json['id']) : json['id'],
       text: json['text'] ?? '',
-      senderId: json['sender_id'] is String ? int.parse(json['sender_id']) : json['sender_id'],
-      receiverId: json['receiver_id'] is String ? int.parse(json['receiver_id']) : json['receiver_id'],
+      senderId:
+          json['sender_id'] is String
+              ? int.parse(json['sender_id'])
+              : json['sender_id'],
+      receiverId:
+          json['receiver_id'] is String
+              ? int.parse(json['receiver_id'])
+              : json['receiver_id'],
       communityId: json['community_id'],
       createdAt: json['created_at'] ?? '',
     );
@@ -60,7 +66,9 @@ class _ChatState extends State<Chat> {
   @override
   void initState() {
     super.initState();
-    print('Chat initialized with userId: ${widget.userId}, userName: ${widget.userName}');
+    print(
+      'Chat initialized with userId: ${widget.userId}, userName: ${widget.userName}',
+    );
     _fetchMessages();
 
     // Start polling every 15 seconds for new messages
@@ -94,11 +102,19 @@ class _ChatState extends State<Chat> {
       setState(() {
         isLoadingNew = false;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No token found. Please log in.'),
+          backgroundColor: Colors.black87,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
       return;
     }
 
     try {
-      final url = '$indexMessage?receiver_id=${widget.userId}&page=1&per_page=$perPage';
+      final url =
+          '$indexMessage?receiver_id=${widget.userId}&page=1&per_page=$perPage';
       print('Checking for new messages: $url');
       final response = await http.get(
         Uri.parse(url),
@@ -113,12 +129,15 @@ class _ChatState extends State<Chat> {
         final jsonData = jsonDecode(response.body);
         final List<dynamic> messageData = jsonData['data']['data'] ?? [];
 
-        final newMessages = messageData.map((json) => Message.fromJson(json)).toList();
+        final newMessages =
+            messageData.map((json) => Message.fromJson(json)).toList();
 
         // Filter out duplicates based on message ID
         final existingMessageIds = messages.map((m) => m.id).toSet();
         final uniqueNewMessages =
-            newMessages.where((newMsg) => !existingMessageIds.contains(newMsg.id)).toList();
+            newMessages
+                .where((newMsg) => !existingMessageIds.contains(newMsg.id))
+                .toList();
 
         if (uniqueNewMessages.isNotEmpty && mounted) {
           print('Found ${uniqueNewMessages.length} new messages');
@@ -126,9 +145,6 @@ class _ChatState extends State<Chat> {
             messages.insertAll(0, uniqueNewMessages);
             isLoadingNew = false;
           });
-
-          // Show notification
-     
 
           // Scroll to the bottom to show the latest message
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -145,7 +161,9 @@ class _ChatState extends State<Chat> {
           });
         }
       } else {
-        print('Error checking new messages: ${response.statusCode}, ${response.body}');
+        print(
+          'Error checking new messages: ${response.statusCode}, ${response.body}',
+        );
         setState(() {
           isLoadingNew = false;
         });
@@ -155,6 +173,13 @@ class _ChatState extends State<Chat> {
       setState(() {
         isLoadingNew = false;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.black87,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
@@ -170,7 +195,11 @@ class _ChatState extends State<Chat> {
         isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid receiver ID')),
+        const SnackBar(
+          content: Text('Invalid receiver ID'),
+          backgroundColor: Colors.black87,
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       return;
     }
@@ -183,13 +212,18 @@ class _ChatState extends State<Chat> {
         isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Authentication error, please log in again')),
+        const SnackBar(
+          content: Text('Authentication error, please log in again'),
+          backgroundColor: Colors.black87,
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       return;
     }
 
     try {
-      final url = '$indexMessage?receiver_id=${widget.userId}&page=$currentPage&per_page=$perPage';
+      final url =
+          '$indexMessage?receiver_id=${widget.userId}&page=$currentPage&per_page=$perPage';
       print('Fetching messages: $url');
       final response = await http.get(
         Uri.parse(url),
@@ -198,7 +232,9 @@ class _ChatState extends State<Chat> {
           'Accept': 'application/json',
         },
       );
-      print('Fetch messages response: ${response.statusCode}, ${response.body}');
+      print(
+        'Fetch messages response: ${response.statusCode}, ${response.body}',
+      );
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
@@ -206,32 +242,40 @@ class _ChatState extends State<Chat> {
         final totalPages = jsonData['data']['last_page'] ?? 1;
 
         setState(() {
-          messages.addAll(messageData.map((json) => Message.fromJson(json)).toList());
+          messages.addAll(
+            messageData.map((json) => Message.fromJson(json)).toList(),
+          );
           currentPage++;
           hasMore = currentPage <= totalPages && messageData.isNotEmpty;
           isLoading = false;
         });
 
-        if (messages.isEmpty && currentPage == 2) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No messages found')),
-          );
-        }
+       
       } else if (response.statusCode == 422) {
         final jsonData = jsonDecode(response.body);
-        final errors = jsonData['errors']?['receiver_id']?.join(', ') ?? 'Invalid receiver ID';
+        final errors =
+            jsonData['errors']?['receiver_id']?.join(', ') ??
+            'Invalid receiver ID';
         setState(() {
           isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Validation error: $errors')),
+          SnackBar(
+            content: Text('Validation error: $errors'),
+            backgroundColor: Colors.black87,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       } else {
         setState(() {
           isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load messages: ${response.statusCode}')),
+          SnackBar(
+            content: Text('Failed to load messages: ${response.statusCode}'),
+            backgroundColor: Colors.black87,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     } catch (e) {
@@ -240,7 +284,11 @@ class _ChatState extends State<Chat> {
         isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.black87,
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
   }
@@ -252,7 +300,11 @@ class _ChatState extends State<Chat> {
     String? token = prefs.getString('token');
     if (token == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Authentication error, please log in again')),
+        const SnackBar(
+          content: Text('Authentication error, please log in again'),
+          backgroundColor: Colors.black87,
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       return;
     }
@@ -289,13 +341,21 @@ class _ChatState extends State<Chat> {
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send message: ${response.statusCode}')),
+          SnackBar(
+            content: Text('Failed to send message: ${response.statusCode}'),
+            backgroundColor: Colors.black87,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     } catch (e) {
       print('Error sending message: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.black87,
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
   }
@@ -312,55 +372,95 @@ class _ChatState extends State<Chat> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(widget.userName),
-        backgroundColor: Colors.blue,
+        title: Text(
+          widget.userName,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: Colors.black,
+        elevation: 1,
+        shadowColor: Colors.grey[800],
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
       ),
       body: Column(
         children: [
           Expanded(
-            child: messages.isEmpty && !isLoading
-                ? const Center(
-                    child: Text(
-                      'No messages yet. Start the conversation!',
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
+            child:
+                messages.isEmpty && !isLoading
+                    ? const Center(
+                      child: Text(
+                        'No messages yet. Start the conversation!',
+                        style: TextStyle(fontSize: 16, color: Colors.white54),
+                      ),
+                    )
+                    : ListView.builder(
+                      controller: _scrollController,
+                      reverse: true,
+                      padding: const EdgeInsets.all(8.0),
+                      itemCount: messages.length + (isLoading ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == messages.length) {
+                          return const Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          );
+                        }
+                        final message = messages[index];
+                        final isSent =
+                            message.senderId.toString() != widget.userId;
+                        return Align(
+                          alignment:
+                              isSent
+                                  ? Alignment.centerRight
+                                  : Alignment.centerLeft,
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(vertical: 4.0),
+                            padding: const EdgeInsets.all(12.0),
+                            decoration: BoxDecoration(
+                              color:
+                                  isSent ? Colors.grey[900] : Colors.grey[800],
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            child: Column(
+                              crossAxisAlignment:
+                                  isSent
+                                      ? CrossAxisAlignment.end
+                                      : CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  message.text,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                Text(
+                                  DateFormat(
+                                    'HH:mm',
+                                  ).format(DateTime.parse(message.createdAt)),
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white38,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  )
-                : ListView.builder(
-                    controller: _scrollController,
-                    reverse: true,
-                    padding: const EdgeInsets.all(8.0),
-                    itemCount: messages.length + (isLoading ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == messages.length) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      final message = messages[index];
-                      final isSent = message.senderId.toString() != widget.userId;
-                      return Align(
-                        alignment: isSent ? Alignment.centerRight : Alignment.centerLeft,
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(vertical: 4.0),
-                          padding: const EdgeInsets.all(12.0),
-                          decoration: BoxDecoration(
-                            color: isSent ? Colors.blue[100] : Colors.grey[200],
-                            borderRadius: BorderRadius.circular(12.0),
-                          ),
-                          child: Column(
-                            crossAxisAlignment:
-                                isSent ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                            children: [
-                              Text(message.text),
-                              Text(
-                                DateFormat('HH:mm').format(DateTime.parse(message.createdAt)),
-                                style: const TextStyle(fontSize: 10, color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -371,15 +471,29 @@ class _ChatState extends State<Chat> {
                     controller: _controller,
                     decoration: InputDecoration(
                       hintText: 'Type a message...',
+                      hintStyle: const TextStyle(color: Colors.white54),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20.0),
+                        borderSide: const BorderSide(color: Colors.white),
                       ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20.0),
+                        borderSide: const BorderSide(color: Colors.white54),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20.0),
+                        borderSide: const BorderSide(color: Colors.white),
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey[900],
                     ),
+                    style: const TextStyle(color: Colors.white),
                     onSubmitted: (_) => _sendMessage(),
                   ),
                 ),
+                const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(Icons.send),
+                  icon: const Icon(Icons.send, color: Colors.white),
                   onPressed: _sendMessage,
                 ),
               ],
