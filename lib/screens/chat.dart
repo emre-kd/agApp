@@ -29,7 +29,7 @@ class Message {
       id: json['id'] is String ? int.parse(json['id']) : json['id'],
       text: json['text'] ?? '',
       senderId: json['sender_id'] is String ? int.parse(json['sender_id']) : json['sender_id'],
-      receiverId: json['reciever_id'] is String ? int.parse(json['reciever_id']) : json['reciever_id'],
+      receiverId: json['receiver_id'] is String ? int.parse(json['receiver_id']) : json['receiver_id'],
       communityId: json['community_id'],
       createdAt: json['created_at'] ?? '',
     );
@@ -98,7 +98,7 @@ class _ChatState extends State<Chat> {
     }
 
     try {
-      final url = '$indexMessage?reciever_id=${widget.userId}&page=1&per_page=$perPage';
+      final url = '$indexMessage?receiver_id=${widget.userId}&page=1&per_page=$perPage';
       print('Checking for new messages: $url');
       final response = await http.get(
         Uri.parse(url),
@@ -189,7 +189,7 @@ class _ChatState extends State<Chat> {
     }
 
     try {
-      final url = '$indexMessage?reciever_id=${widget.userId}&page=$currentPage&per_page=$perPage';
+      final url = '$indexMessage?receiver_id=${widget.userId}&page=$currentPage&per_page=$perPage';
       print('Fetching messages: $url');
       final response = await http.get(
         Uri.parse(url),
@@ -219,7 +219,7 @@ class _ChatState extends State<Chat> {
         }
       } else if (response.statusCode == 422) {
         final jsonData = jsonDecode(response.body);
-        final errors = jsonData['errors']?['reciever_id']?.join(', ') ?? 'Invalid receiver ID';
+        final errors = jsonData['errors']?['receiver_id']?.join(', ') ?? 'Invalid receiver ID';
         setState(() {
           isLoading = false;
         });
@@ -267,7 +267,7 @@ class _ChatState extends State<Chat> {
         },
         body: jsonEncode({
           'text': _controller.text,
-          'reciever_id': widget.userId,
+          'receiver_id': widget.userId,
           'community_id': null,
         }),
       );

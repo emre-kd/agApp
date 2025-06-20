@@ -1,55 +1,254 @@
-import 'package:agapp/screens/chat.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'package:agapp/constant.dart' show getConversations, baseNormalURL;
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:agapp/screens/chat.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-// Dummy user data
-final List<Map<String, dynamic>> dummyUsers = [
-  {'name': 'Alice', 'lastMessage': 'Hey, how are you?', 'time': '10:30 AM'},
-  {'name': 'Bob', 'lastMessage': 'See you tomorrow!', 'time': 'Yesterday'},
-  {'name': 'Charlie', 'lastMessage': 'Can you send the files?', 'time': '9:15 AM'},
-  {'name': 'David', 'lastMessage': 'Thanks for the update.', 'time': 'Monday'},
-];
-
-class ChatList extends StatelessWidget {
+class ChatList extends StatefulWidget {
   const ChatList({super.key});
+
+  @override
+  _ChatListState createState() => _ChatListState();
+}
+
+class _ChatListState extends State<ChatList> {
+  List<dynamic>? conversations;
+  late Timer _pollingTimer;
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchConversations(); // Initial fetch
+    _startPolling(); // Start polling
+  }
+
+  void _startPolling() {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 60), (timer) async {
+      await _fetchConversations();
+    });
+  }
+
+  Future<void> _fetchConversations() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    if (token == null) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'No token found. Please log in.';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No token found. Please log in.'),
+          backgroundColor: Colors.white70,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse(getConversations),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          conversations = data['conversations'] ?? [];
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          conversations = [];
+          _isLoading = false;
+          _errorMessage = 'Failed to load conversations.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        conversations = [];
+        _isLoading = false;
+        _errorMessage = 'Error: $e';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.white70,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _pollingTimer.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Chats'),
-        backgroundColor: Colors.blue,
+        title: const Text(
+          'Chats',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: Colors.black,
+        elevation: 1,
+        shadowColor: Colors.grey[800],
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
       ),
-      body: ListView.builder(
-        itemCount: dummyUsers.length,
-        itemBuilder: (context, index) {
-          final user = dummyUsers[index];
-          return ListTile(
-            leading: CircleAvatar(
-              child: Text(user['name'][0]),
-            ),
-            title: Text(user['name']),
-            subtitle: Text(
-              user['lastMessage'],
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            trailing: Text(
-              user['time'],
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => Chat
-                  (userId: user['id'],
-                  userName: 'sdsadfas',),
+      body:
+          _isLoading
+              ? const Center(
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
                 ),
-              );
-            },
-          );
-        },
-      ),
+              )
+              : _errorMessage != null
+              ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _errorMessage!,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextButton(
+                      onPressed: _fetchConversations,
+                      child: const Text(
+                        'Retry',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+              : conversations!.isEmpty
+              ? const Center(
+                child: Text(
+                  'No conversations found',
+                  style: TextStyle(color: Colors.white54, fontSize: 16),
+                ),
+              )
+              : RefreshIndicator(
+                color: Colors.white,
+                backgroundColor: Colors.black,
+                onRefresh: _fetchConversations,
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  itemCount: conversations!.length,
+                  itemBuilder: (context, index) {
+                    final convo = conversations![index];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      child: Card(
+                        elevation: 0,
+                        color: Colors.grey[900],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          leading: CircleAvatar(
+                            radius: 24,
+                            backgroundColor: Colors.grey[800],
+                            backgroundImage:
+                                convo['image'] != null
+                                    ? NetworkImage(
+                                      '$baseNormalURL/${convo['image']}',
+                                    )
+                                    : null,
+                            child:
+                                convo['image'] == null
+                                    ? Text(
+                                      convo['name']?[0] ?? '?',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    )
+                                    : null,
+                          ),
+                          title: Text(
+                            convo['name'] ?? 'Unknown',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                          subtitle: Text(
+                            convo['last_message'] ?? '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 14,
+                            ),
+                          ),
+                          trailing: Text(
+                            convo['created_at'] ?? '',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.white38,
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => Chat(
+                                      userId: convo['user_id'].toString(),
+                                      userName: convo['name'],
+                          
+                                    ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
     );
   }
 }
