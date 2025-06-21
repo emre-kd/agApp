@@ -13,7 +13,11 @@ class SearchedProfile extends StatefulWidget {
   final int userId; // Required userId to fetch specific user data
   final String userName; // Required userId to fetch specific user data
 
-  const SearchedProfile({super.key, required this.userId, required this.userName});
+  const SearchedProfile({
+    super.key,
+    required this.userId,
+    required this.userName,
+  });
 
   @override
   _SearchedProfileState createState() => _SearchedProfileState();
@@ -143,6 +147,8 @@ class _SearchedProfileState extends State<SearchedProfile> {
         },
       );
 
+      print(response.body);
+
       if (response.statusCode == 200) {
         final decodedResponse = json.decode(response.body);
         setState(() {
@@ -155,7 +161,7 @@ class _SearchedProfileState extends State<SearchedProfile> {
         });
       } else {
         setState(() {
-          errorMessage = 'Failed to load user data: ${response.body}';
+          errorMessage = 'Failed to load user data: ${response.statusCode}';
           isLoading = false;
         });
       }
@@ -195,7 +201,6 @@ class _SearchedProfileState extends State<SearchedProfile> {
         },
       );
 
-      print(response.body);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final List<dynamic> postJson = data['posts'] ?? [];
@@ -418,25 +423,26 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            IconButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) => Chat(
-                                           userId: widget.userId.toString(),
-                                           userName: _nameController.text,
-                                        ),
-                                  ),
-                                );
-                              },
-                              icon: const Icon(
-                                Icons.chat,
-                                color: Colors.white,
-                                size: 24,
+                            if (currentUserId != widget.userId)
+                              IconButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) => Chat(
+                                            userId: widget.userId.toString(),
+                                            userName: _nameController.text,
+                                          ),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(
+                                  Icons.chat,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
                               ),
-                            ),
                           ],
                         ),
                         Text(

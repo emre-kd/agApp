@@ -44,7 +44,7 @@ class _PostWidgetState extends State<PostWidget> {
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Post deleted successfully!"),
+            content: Text("Post başarıyla silindi!"),
             backgroundColor: Color.fromARGB(255, 0, 145, 230),
             duration: Duration(seconds: 2),
           ),
@@ -178,7 +178,7 @@ class _PostWidgetState extends State<PostWidget> {
                             );
                           },
                           child: Text(
-                            '@${widget.post.username}',
+                            '${widget.post.username}',
                             style: TextStyle(
                               color: Colors.grey[400],
                               fontSize: 13,
@@ -331,7 +331,7 @@ class _PostWidgetState extends State<PostWidget> {
                   Icon(Icons.delete, color: Colors.grey[300], size: 20),
                   const SizedBox(width: 8),
                   Text(
-                    'Delete Post',
+                    'Sil',
                     style: TextStyle(color: Colors.grey[300], fontSize: 14),
                   ),
                 ],
@@ -358,7 +358,7 @@ class _PostWidgetState extends State<PostWidget> {
                 Icon(Icons.warning_rounded, color: Colors.red[400], size: 40),
                 const SizedBox(height: 16),
                 const Text(
-                  'Delete Post?',
+                  'Post silinsin mi ?',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -367,7 +367,7 @@ class _PostWidgetState extends State<PostWidget> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'This action cannot be undone. The post will be permanently deleted.',
+                  'Bu eylem geri alınamaz. Gönderi kalıcı olarak silinecektir.',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.grey[400], fontSize: 14),
                 ),
@@ -388,7 +388,7 @@ class _PostWidgetState extends State<PostWidget> {
                         ),
                       ),
                       child: Text(
-                        'Cancel',
+                        'İptal',
                         style: TextStyle(color: Colors.grey[300]),
                       ),
                     ),
@@ -407,7 +407,8 @@ class _PostWidgetState extends State<PostWidget> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const Text('Delete'),
+                      child: const Text('Sil', style: TextStyle(color: Colors.white),),
+                      
                     ),
                   ],
                 ),

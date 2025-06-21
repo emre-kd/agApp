@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:agapp/constant.dart';
+import 'package:agapp/controllers/authentication.dart';
 import 'package:agapp/screens/chat_list.dart';
 import 'package:agapp/screens/post.dart' show PostWidget;
 import 'package:agapp/screens/search.dart';
@@ -10,10 +11,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:http/http.dart' as http;
 import 'package:agapp/models/post.dart';
-import 'package:agapp/screens/layouts/appbar.dart';
 import 'package:agapp/screens/layouts/add_post.dart';
 import 'package:agapp/screens/profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:get/get.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -23,12 +24,16 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  final AuthenticationController _authenticationController = Get.put(
+    AuthenticationController(),
+  );
   bool _isFabVisible = true;
   bool _isLoading = true;
   bool _isLoadingMore = false;
   List<Post> posts = [];
   List<Post> _pendingNewPosts = []; // Store new posts until user loads them
   int? currentUserId;
+  String? communityName; // New state variable for community name
   int _page = 1;
   final int _limit = 5;
   bool _hasMore = true;
@@ -83,6 +88,9 @@ class _HomeState extends State<Home> {
         prefs.setInt('id', data['id']);
         setState(() {
           currentUserId = data['id'];
+          communityName = data['community']?['name'] ?? 'Unknown Community';
+
+          print(communityName);
         });
       } else {
         print('Failed to fetch user info: ${response.statusCode}');
@@ -231,7 +239,122 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: Appbar(),
+      appBar: AppBar(
+        backgroundColor: Colors.black87, // Slightly lighter black for depth
+        elevation: 8, // Slightly increased for better shadow definition
+        shadowColor: Colors.white.withOpacity(
+          0.1,
+        ), // Softer shadow for elegance
+        toolbarHeight: 60,
+
+        automaticallyImplyLeading: false, // Prevent default back button
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 40,
+              child: Image.asset(
+                'assets/logo.png',
+                fit: BoxFit.contain, // Ensure logo scales properly
+              ),
+            ),
+            Text(
+              communityName ?? 'Loading...', // Dynamic community name
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(
+              Icons.more_vert,
+              color: Colors.white,
+              size: 28, // Larger icon for consistency
+            ),
+            tooltip: 'More options', // Accessibility improvement
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                backgroundColor: Colors.grey[900],
+
+                builder: (BuildContext context) {
+                  return Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Wrap(
+                      children: [
+                        ListTile(
+                          leading: const Icon(
+                            Icons.info_outline, // Icon for community details
+                            color: Colors.white,
+                          ),
+                          title: const Text(
+                            'Topluluk Detayları',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16, // Readable text size
+                            ),
+                          ),
+                          onTap: () {
+                            // Add navigation or action for community details
+                            // Example: Navigator.push(context, MaterialPageRoute(builder: (context) => CommunityDetailsPage()));
+                          },
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8.0,
+                            vertical: 4.0,
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () {
+                                _authenticationController.logout(context);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                  horizontal: 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: Colors.red.withOpacity(
+                                    0.1,
+                                  ), // subtle red background
+                                ),
+                                child: Row(
+                                  children: const [
+                                    Icon(Icons.logout, color: Colors.red),
+                                    SizedBox(width: 16),
+                                    Text(
+                                      'Çıkış Yap',
+                                      style: TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
       body: Stack(
         children: [
           NotificationListener<UserScrollNotification>(

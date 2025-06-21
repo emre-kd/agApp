@@ -127,7 +127,7 @@ class _AddPostState extends State<AddPost> {
         );
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Post created successfully!"),
+            content: Text("Post başarıyla oluşturuldu!"),
             backgroundColor: Color.fromARGB(255, 0, 145, 230),
             
             
