@@ -9,6 +9,7 @@ import 'package:agapp/screens/searched_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:agapp/models/post.dart' as post_model;
 import 'package:http/http.dart' as http;
+import 'package:photo_view/photo_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PostWidget extends StatefulWidget {
@@ -62,12 +63,14 @@ class _PostWidgetState extends State<PostWidget> {
         }
       } else {
         final error = jsonDecode(response.body)['error'] ?? 'Bir hata oluştu';
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Hata: $error')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Hata: $error')));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Ağ hatası oluştu')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Ağ hatası oluştu')));
     }
   }
 
@@ -75,290 +78,389 @@ class _PostWidgetState extends State<PostWidget> {
   Widget build(BuildContext context) {
     return Card(
       color: Colors.black,
-      margin: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey[800]!, width: 0.5),
+      ),
+      elevation: 0,
       child: Container(
-        decoration: const BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              color: Color.fromARGB(255, 224, 218, 218),
-              width: 0.5,
-            ),
-          ),
-        ),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
         child: Padding(
-          padding: const EdgeInsets.all(15),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header Row
               Row(
                 children: [
+                  // Profile Avatar
                   GestureDetector(
-                  onTap: () {
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (_) => SearchedProfile(
+                                userId: widget.post.userId,
+                                userName: widget.post.name,
+                              ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.grey[600]!,
+                          width: 0.5,
+                        ),
+                      ),
+                      child: CircleAvatar(
+                        backgroundImage:
+                            widget.post.profileImage.isNotEmpty
+                                ? NetworkImage(
+                                  '$baseNormalURL/${widget.post.profileImage}',
+                                )
+                                : null,
+                        radius: 22,
+                        backgroundColor: Colors.grey[900],
+                        child:
+                            widget.post.profileImage.isEmpty
+                                ? Icon(Icons.person, color: Colors.grey[400])
+                                : null,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+
+                  // User Info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => SearchedProfile(userId : widget.post.userId, userName : widget.post.name),
+                                builder:
+                                    (_) => SearchedProfile(
+                                      userId: widget.post.userId,
+                                      userName: widget.post.name,
+                                    ),
                               ),
                             );
                           },
-                    child: CircleAvatar(
-                      backgroundImage: widget.post.profileImage.isNotEmpty
-                          ? NetworkImage('$baseNormalURL/${widget.post.profileImage}')
-                          : null,
-                      radius: 22,
-                      backgroundColor: Colors.white,
-                      child: widget.post.profileImage.isEmpty
-                          ? const Icon(Icons.person, color: Colors.black)
-                          : null,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      GestureDetector(
-                         onTap: (){
-                          Navigator.push(
+                          child: Text(
+                            widget.post.name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => SearchedProfile(userId : widget.post.userId, userName : widget.post.name),
+                                builder:
+                                    (_) => SearchedProfile(
+                                      userId: widget.post.userId,
+                                      userName: widget.post.name,
+                                    ),
                               ),
                             );
-                        },
-                        child: Text(
-                          widget.post.name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: (){
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => SearchedProfile(userId : widget.post.userId, userName : widget.post.name),
-                              ),
-                            );
-                        },
-                        child: Text(
-                          widget.post.username,
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.6),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  Text(
-                    widget.post.createdAt,
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.4),
-                      fontSize: 12,
-                    ),
-                  ),
-                  if (widget.currentUserId == widget.post.userId)
-                    PopupMenuButton<String>(
-                      onSelected: (value) {
-                        if (value == 'update') {
-                          // Add your update logic here
-                        } else if (value == 'delete') {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                title: const Row(
-                                  children: [
-                                    Icon(
-                                      Icons.warning_amber_rounded,
-                                      color: Colors.red,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text('Silme İşlemi'),
-                                  ],
-                                ),
-                                content: const Text(
-                                  'Bu gönderiyi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.of(context).pop(),
-                                    child: Text(
-                                      'İptal',
-                                      style: TextStyle(
-                                        color: Theme.of(context).colorScheme.secondary,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      _deletePost(widget.post.id);
-                                      Navigator.of(context).pop();
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.red,
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                    ),
-                                    child: const Text(
-                                      'Sil',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                                actionsPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                              );
-                            },
-                          );
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.more_vert,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      elevation: 4,
-                      itemBuilder: (BuildContext context) => [
-                        PopupMenuItem(
-                          value: 'update',
-                          child: Row(
-                            children: [
-                              const SizedBox(width: 8),
-                              Text(
-                                'Güncelle',
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.red,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: const Text(
-                                    'Sil',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
+                          },
+                          child: Text(
+                            '@${widget.post.username}',
+                            style: TextStyle(
+                              color: Colors.grey[400],
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                       ],
                     ),
+                  ),
+
+                  // Timestamp and Menu
+                  Row(
+                    children: [
+                      Text(
+                        widget.post.createdAt,
+                        style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                      ),
+                      if (widget.currentUserId == widget.post.userId)
+                        _buildPostMenu(context),
+                    ],
+                  ),
                 ],
               ),
-              const SizedBox(height: 10),
+
+              const SizedBox(height: 12),
+
+              // Post Content
               if (widget.post.text.isNotEmpty)
-                Text(
-                  widget.post.text,
-                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    widget.post.text,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      height: 1.4,
+                    ),
+                  ),
                 ),
-              const SizedBox(height: 10),
+
               if (widget.post.media.isNotEmpty)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
-                    '$baseNormalURL/${widget.post.media}',
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    errorBuilder: (_, __, ___) => const SizedBox(),
+                GestureDetector(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return Dialog(
+                          backgroundColor: Colors.transparent,
+                          insetPadding: EdgeInsets.zero,
+                          child: Stack(
+                            children: [
+                              PhotoView(
+                                imageProvider: NetworkImage(
+                                  '$baseNormalURL/${widget.post.media}',
+                                ),
+                                backgroundDecoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.9),
+                                ),
+                                minScale: PhotoViewComputedScale.contained,
+                                maxScale: PhotoViewComputedScale.covered * 3,
+                                errorBuilder:
+                                    (context, error, stackTrace) => Center(
+                                      child: Icon(
+                                        Icons.broken_image,
+                                        color: Colors.grey[600],
+                                        size: 40,
+                                      ),
+                                    ),
+                              ),
+                              Positioned(
+                                top: 40,
+                                right: 16,
+                                child: IconButton(
+                                  icon: Icon(
+                                    Icons.close,
+                                    color: Colors.white,
+                                    size: 30,
+                                  ),
+                                  onPressed: () => Navigator.of(context).pop(),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Colors.grey[800]!,
+                          width: 0.5,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Image.network(
+                        '$baseNormalURL/${widget.post.media}',
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        errorBuilder:
+                            (_, __, ___) => Container(
+                              height: 200,
+                              color: Colors.grey[900],
+                              child: Center(
+                                child: Icon(
+                                  Icons.broken_image,
+                                  color: Colors.grey[600],
+                                  size: 40,
+                                ),
+                              ),
+                            ),
+                      ),
+                    ),
                   ),
                 ),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: InkWell(
-                      onTap: () {
-                        print("Like tapped");
-                      },
-                      child: Row(
-                        children: const [
-                          Icon(
-                            Icons.favorite_border,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                          SizedBox(width: 6),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: InkWell(
-                      onTap: () {
-                        print("Repost tapped");
-                      },
-                      child: Row(
-                        children: const [
-                          Icon(Icons.repeat, color: Colors.white, size: 22),
-                          SizedBox(width: 6),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: InkWell(
-                      onTap: () {
-                        print("Comment tapped");
-                      },
-                      child: Row(
-                        children: const [
-                          Icon(
-                            Icons.mode_comment_outlined,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                          SizedBox(width: 6),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              const SizedBox(height: 12),
+
+              // Action Buttons
+              _buildActionButtons(),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPostMenu(BuildContext context) {
+    return PopupMenuButton<String>(
+      padding: EdgeInsets.zero,
+      onSelected: (value) {
+        if (value == 'delete') {
+          _showDeleteDialog(context);
+        }
+      },
+      icon: Icon(Icons.more_vert, color: Colors.grey[400], size: 22),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: Colors.grey[800]!, width: 0.5),
+      ),
+      color: Colors.grey[900],
+      elevation: 2,
+      itemBuilder:
+          (BuildContext context) => [
+            PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(Icons.delete, color: Colors.grey[300], size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Delete Post',
+                    style: TextStyle(color: Colors.grey[300], fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          ],
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.grey[900],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.warning_rounded, color: Colors.red[400], size: 40),
+                const SizedBox(height: 16),
+                const Text(
+                  'Delete Post?',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'This action cannot be undone. The post will be permanently deleted.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          side: BorderSide(color: Colors.grey[700]!),
+                        ),
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(color: Colors.grey[300]),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        _deletePost(widget.post.id);
+                        Navigator.of(context).pop();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red[800],
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text('Delete'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        _buildActionButton(
+          icon: Icons.favorite_border,
+          label: 'Like',
+          onTap: () => print("Like tapped"),
+        ),
+        _buildActionButton(
+          icon: Icons.repeat,
+          label: 'Repost',
+          onTap: () => print("Repost tapped"),
+        ),
+        _buildActionButton(
+          icon: Icons.mode_comment_outlined,
+          label: 'Comment',
+          onTap: () => print("Comment tapped"),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.grey[400], size: 20),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(color: Colors.grey[400], fontSize: 13),
+            ),
+          ],
         ),
       ),
     );

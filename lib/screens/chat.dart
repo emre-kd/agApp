@@ -430,7 +430,7 @@ class _ChatState extends State<Chat> {
                             padding: const EdgeInsets.all(12.0),
                             decoration: BoxDecoration(
                               color:
-                                  isSent ? Colors.grey[900] : Colors.grey[800],
+                                  isSent ? Colors.blueAccent : Colors.grey[800],
                               borderRadius: BorderRadius.circular(12.0),
                             ),
                             child: Column(
@@ -441,9 +441,11 @@ class _ChatState extends State<Chat> {
                               children: [
                                 Text(
                                   message.text,
+                                  
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 14,
+                                    
                                   ),
                                 ),
                                 Text(
@@ -468,6 +470,7 @@ class _ChatState extends State<Chat> {
               children: [
                 Expanded(
                   child: TextField(
+                    maxLength: 250,
                     controller: _controller,
                     decoration: InputDecoration(
                       hintText: 'Type a message...',
