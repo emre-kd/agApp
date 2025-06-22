@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:video_player/video_player.dart'; // Import video_player
 
 class AddPost extends StatefulWidget {
   const AddPost({super.key});
@@ -26,6 +27,8 @@ class _AddPostState extends State<AddPost> {
   final _formKey = GlobalKey<FormState>();
   Map<String, String?> errors = {};
   bool isUpdating = false;
+  VideoPlayerController? _videoPlayerController; // Controller for video preview
+  bool _isVideoInitialized = false; // Track video initialization
 
   static const int _maxChars = 250;
 
@@ -44,6 +47,7 @@ class _AddPostState extends State<AddPost> {
   void dispose() {
     _textController.dispose();
     _focusNode.dispose();
+    _videoPlayerController?.dispose(); // Dispose video controller
     super.dispose();
   }
 
@@ -55,8 +59,30 @@ class _AddPostState extends State<AddPost> {
 
     if (result != null && result.files.single.path != null) {
       setState(() {
+        // Clear previous video controller if any
+        _videoPlayerController?.dispose();
+        _videoPlayerController = null;
+        _isVideoInitialized = false;
+
         _selectedMedia = File(result.files.single.path!);
         _mediaExtension = result.files.single.extension;
+
+        // Initialize video controller if the selected media is a video
+        if (_isVideo(_mediaExtension)) {
+          _videoPlayerController = VideoPlayerController.file(_selectedMedia!)
+            ..initialize().then((_) {
+              setState(() {
+                _isVideoInitialized = true;
+              });
+            }).catchError((error) {
+              setState(() {
+                _isVideoInitialized = false;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error loading video: $error')),
+              );
+            });
+        }
       });
     }
   }
@@ -65,14 +91,15 @@ class _AddPostState extends State<AddPost> {
     setState(() {
       _selectedMedia = null;
       _mediaExtension = null;
+      _videoPlayerController?.dispose();
+      _videoPlayerController = null;
+      _isVideoInitialized = false;
     });
   }
 
   bool _isVideo(String? extension) {
     return extension == 'mp4';
   }
-
-
 
   Future<void> _storePost() async {
     if (!_formKey.currentState!.validate()) return;
@@ -109,7 +136,7 @@ class _AddPostState extends State<AddPost> {
       if (_selectedMedia != null) {
         request.files.add(
           await http.MultipartFile.fromPath(
-            'media', // Adjust field name as per your API
+            'media',
             _selectedMedia!.path,
             filename: 'media.${_mediaExtension}',
           ),
@@ -118,7 +145,6 @@ class _AddPostState extends State<AddPost> {
 
       var response = await request.send();
       final responseData = await response.stream.bytesToString();
-        // debugPrint("Error: ${response.statusCode} - $responseData");
 
       if (response.statusCode == 200) {
         Navigator.pushReplacement(
@@ -129,8 +155,6 @@ class _AddPostState extends State<AddPost> {
           const SnackBar(
             content: Text("Post başarıyla oluşturuldu!"),
             backgroundColor: Color.fromARGB(255, 0, 145, 230),
-            
-            
           ),
         );
       } else if (response.statusCode == 401) {
@@ -148,6 +172,14 @@ class _AddPostState extends State<AddPost> {
             errors[key] = value[0];
           });
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              errors.values.join('\n'),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -216,7 +248,6 @@ class _AddPostState extends State<AddPost> {
                   maxLines: null,
                   minLines: 5,
                   keyboardType: TextInputType.multiline,
-               
                   decoration: InputDecoration(
                     counterText: "",
                     hintText: "Agalar ne diyor ?",
@@ -252,18 +283,22 @@ class _AddPostState extends State<AddPost> {
                       ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: _isVideo(_mediaExtension)
-                            ? Container(
-                                height: 200,
-                                width: double.infinity,
-                                color: Colors.grey[800],
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.videocam,
-                                    color: Colors.white,
-                                    size: 40,
-                                  ),
-                                ),
-                              )
+                            ? (_isVideoInitialized && _videoPlayerController != null
+                                ? SizedBox(
+                                    height: 200,
+                                    width: double.infinity,
+                                    child: VideoPlayer(_videoPlayerController!),
+                                  )
+                                : Container(
+                                    height: 200,
+                                    width: double.infinity,
+                                    color: Colors.grey[800],
+                                    child: const Center(
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ))
                             : Image.file(
                                 _selectedMedia!,
                                 height: 200,
@@ -297,7 +332,16 @@ class _AddPostState extends State<AddPost> {
           FloatingActionButton(
             onPressed: isUpdating ? null : _storePost,
             backgroundColor: Colors.white,
-            child: const Icon(Icons.send, color: Colors.black),
+            child: isUpdating
+                ? const SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.black,
+                    ),
+                  )
+                : const Icon(Icons.send, color: Colors.black),
           ),
         ],
       ),
