@@ -1,7 +1,6 @@
 // ignore_for_file: use_build_context_synchronously, avoid_print
 
 import 'dart:convert';
-
 import 'package:agapp/constant.dart';
 import 'package:agapp/screens/home.dart';
 import 'package:agapp/screens/profile.dart';
@@ -11,17 +10,18 @@ import 'package:agapp/models/post.dart' as post_model;
 import 'package:http/http.dart' as http;
 import 'package:photo_view/photo_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:video_player/video_player.dart';
 
 class PostWidget extends StatefulWidget {
   final post_model.Post post;
   final String parentScreen;
-  final int? currentUserId; // Add this parameter
+  final int? currentUserId;
 
   const PostWidget({
     Key? key,
     required this.post,
     required this.parentScreen,
-    this.currentUserId, // Make it optional
+    this.currentUserId,
   }) : super(key: key);
 
   @override
@@ -29,6 +29,42 @@ class PostWidget extends StatefulWidget {
 }
 
 class _PostWidgetState extends State<PostWidget> {
+  VideoPlayerController? _videoController;
+  bool _isVideoInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize video controller if the media is a video
+    if (_isVideo(widget.post.media)) {
+      _videoController = VideoPlayerController.network(
+          '$baseNormalURL/${widget.post.media}',
+        )
+        ..initialize()
+            .then((_) {
+              setState(() {
+                _isVideoInitialized = true;
+              });
+            })
+            .catchError((error) {
+              print('Video initialization error: $error');
+            });
+    }
+  }
+
+  @override
+  void dispose() {
+    _videoController?.dispose();
+    super.dispose();
+  }
+
+  // Helper method to determine if the media is a video based on file extension
+  bool _isVideo(String mediaUrl) {
+    // Alternatively, check `widget.post.mediaType` if available
+    final videoExtensions = ['.mp4', '.mov', '.avi', '.mkv'];
+    return videoExtensions.any((ext) => mediaUrl.toLowerCase().endsWith(ext));
+  }
+
   Future<void> _deletePost(int postId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
@@ -94,7 +130,6 @@ class _PostWidgetState extends State<PostWidget> {
               // Header Row
               Row(
                 children: [
-                  // Profile Avatar
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -133,8 +168,6 @@ class _PostWidgetState extends State<PostWidget> {
                     ),
                   ),
                   const SizedBox(width: 12),
-
-                  // User Info
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,8 +221,6 @@ class _PostWidgetState extends State<PostWidget> {
                       ],
                     ),
                   ),
-
-                  // Timestamp and Menu
                   Row(
                     children: [
                       Text(
@@ -202,10 +233,7 @@ class _PostWidgetState extends State<PostWidget> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 12),
-
-              // Post Content
               if (widget.post.text.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -218,90 +246,141 @@ class _PostWidgetState extends State<PostWidget> {
                     ),
                   ),
                 ),
-
-              if (widget.post.media.isNotEmpty)
-                GestureDetector(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return Dialog(
-                          backgroundColor: Colors.transparent,
-                          insetPadding: EdgeInsets.zero,
-                          child: Stack(
-                            children: [
-                              PhotoView(
-                                imageProvider: NetworkImage(
-                                  '$baseNormalURL/${widget.post.media}',
-                                ),
-                                backgroundDecoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.9),
-                                ),
-                                minScale: PhotoViewComputedScale.contained,
-                                maxScale: PhotoViewComputedScale.covered * 3,
-                                errorBuilder:
-                                    (context, error, stackTrace) => Center(
-                                      child: Icon(
-                                        Icons.broken_image,
-                                        color: Colors.grey[600],
-                                        size: 40,
-                                      ),
-                                    ),
-                              ),
-                              Positioned(
-                                top: 40,
-                                right: 16,
-                                child: IconButton(
-                                  icon: Icon(
-                                    Icons.close,
-                                    color: Colors.white,
-                                    size: 30,
-                                  ),
-                                  onPressed: () => Navigator.of(context).pop(),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    );
-                  },
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Colors.grey[800]!,
-                          width: 0.5,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Image.network(
-                        '$baseNormalURL/${widget.post.media}',
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        errorBuilder:
-                            (_, __, ___) => Container(
-                              height: 200,
-                              color: Colors.grey[900],
-                              child: Center(
-                                child: Icon(
-                                  Icons.broken_image,
-                                  color: Colors.grey[600],
-                                  size: 40,
-                                ),
-                              ),
-                            ),
-                      ),
-                    ),
-                  ),
-                ),
+              if (widget.post.media.isNotEmpty) _buildMediaWidget(),
               const SizedBox(height: 12),
-
-              // Action Buttons
               _buildActionButtons(),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  // New method to build the media widget (image or video)
+  Widget _buildMediaWidget() {
+    if (_isVideo(widget.post.media)) {
+      return _buildVideoPlayer();
+    } else {
+      return _buildImageViewer();
+    }
+  }
+
+  // Widget for displaying images
+  Widget _buildImageViewer() {
+    return GestureDetector(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: EdgeInsets.zero,
+              child: Stack(
+                children: [
+                  PhotoView(
+                    imageProvider: NetworkImage(
+                      '$baseNormalURL/${widget.post.media}',
+                    ),
+                    backgroundDecoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.9),
+                    ),
+                    minScale: PhotoViewComputedScale.contained,
+                    maxScale: PhotoViewComputedScale.covered * 3,
+                    errorBuilder:
+                        (context, error, stackTrace) => Center(
+                          child: Icon(
+                            Icons.broken_image,
+                            color: Colors.grey[600],
+                            size: 40,
+                          ),
+                        ),
+                  ),
+                  Positioned(
+                    top: 40,
+                    right: 16,
+                    child: IconButton(
+                      icon: Icon(Icons.close, color: Colors.white, size: 30),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[800]!, width: 0.5),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Image.network(
+            '$baseNormalURL/${widget.post.media}',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            errorBuilder:
+                (_, __, ___) => Container(
+                  height: 200,
+                  color: Colors.grey[900],
+                  child: Center(
+                    child: Icon(
+                      Icons.broken_image,
+                      color: Colors.grey[600],
+                      size: 40,
+                    ),
+                  ),
+                ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Widget for displaying videos
+  Widget _buildVideoPlayer() {
+    if (_videoController == null || !_isVideoInitialized) {
+      return Container(
+        height: 200,
+        color: Colors.grey[900],
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey[800]!, width: 0.5),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            AspectRatio(
+              aspectRatio: _videoController!.value.aspectRatio,
+              child: VideoPlayer(_videoController!),
+            ),
+            IconButton(
+              icon: Icon(
+                _videoController!.value.isPlaying
+                    ? Icons.pause
+                    : Icons.play_arrow,
+                color: Colors.white,
+                size: 50,
+              ),
+              onPressed: () {
+                setState(() {
+                  if (_videoController!.value.isPlaying) {
+                    _videoController!.pause();
+                  } else {
+                    _videoController!.play();
+                  }
+                });
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -407,8 +486,10 @@ class _PostWidgetState extends State<PostWidget> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const Text('Sil', style: TextStyle(color: Colors.white),),
-                      
+                      child: const Text(
+                        'Sil',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ],
                 ),
