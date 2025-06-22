@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:agapp/constant.dart';
 import 'package:agapp/controllers/authentication.dart';
 import 'package:agapp/screens/chat_list.dart';
+import 'package:agapp/screens/community_details.dart';
 import 'package:agapp/screens/post.dart' show PostWidget;
 import 'package:agapp/screens/search.dart';
 import 'package:flutter/material.dart';
@@ -34,6 +35,7 @@ class _HomeState extends State<Home> {
   List<Post> _pendingNewPosts = []; // Store new posts until user loads them
   int? currentUserId;
   String? communityName; // New state variable for community name
+  int? communityId;
   int _page = 1;
   final int _limit = 5;
   bool _hasMore = true;
@@ -89,6 +91,8 @@ class _HomeState extends State<Home> {
         setState(() {
           currentUserId = data['id'];
           communityName = data['community']?['name'] ?? 'Unknown Community';
+          communityId = data['community']?['id'] ?? 'Unknown Community';
+
 
           print(communityName);
         });
@@ -301,8 +305,15 @@ class _HomeState extends State<Home> {
                             ),
                           ),
                           onTap: () {
-                            // Add navigation or action for community details
-                            // Example: Navigator.push(context, MaterialPageRoute(builder: (context) => CommunityDetailsPage()));
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => CommunityDetails(
+                                     
+                                    ),
+                              ),
+                            );
                           },
                         ),
                         Padding(

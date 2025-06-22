@@ -21,3 +21,5 @@ const deleteUserPostURL = '$baseURL/deleteUserPost';
 const storeMessage = '$baseURL/storeMessage';
 const indexMessage = '$baseURL/indexMessage';
 const getConversations = '$baseURL/getConversations';
+
+const getCommunities= '$baseURL/getCommunities';
