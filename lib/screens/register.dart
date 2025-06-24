@@ -36,17 +36,18 @@ class _RegisterState extends State<Register> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+ @override
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: Colors.black,
+    appBar: AppBar(
+      title: Text('AgApp'),
+      centerTitle: true,
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: Text('AgApp'),
-        centerTitle: true,
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-      ),
-      body: Padding(
+      foregroundColor: Colors.white,
+    ),
+    body: SingleChildScrollView( // Added SingleChildScrollView
+      child: Padding(
         padding: const EdgeInsets.only(top: 20, right: 15, left: 15),
         child: Column(
           children: [
@@ -54,7 +55,6 @@ class _RegisterState extends State<Register> {
             const SizedBox(height: 20),
             // Email field
             Obx(
-              
               () => TextField(
                 maxLength: 40,
                 cursorColor: Colors.white,
@@ -78,22 +78,22 @@ class _RegisterState extends State<Register> {
                     borderSide: BorderSide(
                       color:
                           _authenticationController.errors['email'] != null
-                              ? Colors.red // If there's an error, set border to red
-                              : Colors.white, // Otherwise, keep it white
+                              ? Colors.red
+                              : Colors.white,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(
                       color:
                           _authenticationController.errors['email'] != null
-                              ? Colors.red // If there's an error, set border to red
-                              : Colors.white, // Otherwise, keep it white
+                              ? Colors.red
+                              : Colors.white,
                     ),
                   ),
                 ),
               ),
             ),
-            SizedBox(height: 5,),
+            SizedBox(height: 5),
             // Username field
             Obx(
               () => TextField(
@@ -118,22 +118,63 @@ class _RegisterState extends State<Register> {
                     borderSide: BorderSide(
                       color:
                           _authenticationController.errors['username'] != null
-                              ? Colors.red // If there's an error, set border to red
-                              : Colors.white, // Otherwise, keep it white
+                              ? Colors.red
+                              : Colors.white,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(
                       color:
                           _authenticationController.errors['username'] != null
-                              ? Colors.red // If there's an error, set border to red
-                              : Colors.white, // Otherwise, keep it white
+                              ? Colors.red
+                              : Colors.white,
                     ),
                   ),
                 ),
               ),
             ),
-             SizedBox(height: 5,),
+
+              SizedBox(height: 5),
+            // Username field
+            Obx(
+              () => TextField(
+                maxLength: 20,
+                cursorColor: Colors.white,
+                style: TextStyle(color: Colors.white),
+                // controller: userNameController,
+                decoration: InputDecoration(
+                  labelText: 'Community Code',
+                  labelStyle: TextStyle(color: Colors.white),
+                 helperText:
+                      _authenticationController.errors['community_code'] ??
+                      _authenticationController.errors['community_code'],
+                  helperStyle: TextStyle(
+                    color:
+                        _authenticationController.errors['community_code'] != null
+                            ? Colors.red
+                            : Colors.white,
+                  ),
+                  prefixIcon: Icon(Icons.group_add, color: Colors.white),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color:
+                          _authenticationController.errors['community_code'] != null
+                              ? Colors.red
+                              : Colors.white,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color:
+                          _authenticationController.errors['community_code'] != null
+                              ? Colors.red
+                              : Colors.white,
+                    ),
+                  ), 
+                ),
+              ),
+            ),
+            SizedBox(height: 5),
             // Password field
             Obx(
               () => TextField(
@@ -171,24 +212,22 @@ class _RegisterState extends State<Register> {
                     borderSide: BorderSide(
                       color:
                           _authenticationController.errors['password'] != null
-                              ? Colors
-                                  .red // If there's an error, set border to red
-                              : Colors.white, // Otherwise, keep it white
+                              ? Colors.red
+                              : Colors.white,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(
                       color:
                           _authenticationController.errors['password'] != null
-                              ? Colors
-                                  .red // If there's an error, set border to red
-                              : Colors.white, // Otherwise, keep it white
+                              ? Colors.red
+                              : Colors.white,
                     ),
                   ),
                 ),
               ),
             ),
-            SizedBox(height: 5,),
+            SizedBox(height: 5),
             // Password confirmation field
             Obx(
               () => TextField(
@@ -226,42 +265,39 @@ class _RegisterState extends State<Register> {
                     borderSide: BorderSide(
                       color:
                           _authenticationController.errors['password'] != null
-                              ? Colors
-                                  .red // If there's an error, set border to red
-                              : Colors.white, // Otherwise, keep it white
+                              ? Colors.red
+                              : Colors.white,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(
                       color:
                           _authenticationController.errors['password'] != null
-                              ? Colors
-                                  .red // If there's an error, set border to red
-                              : Colors.white, // Otherwise, keep it white
+                              ? Colors.red
+                              : Colors.white,
                     ),
                   ),
                 ),
               ),
             ),
-            SizedBox(height: 5,),
+            SizedBox(height: 5),
             Obx(() {
               return _authenticationController.isLoading.value
                   ? const CircularProgressIndicator()
                   : ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 90,
-                        vertical: 15,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 90,
+                          vertical: 15,
+                        ),
                       ),
-                    ),
-                    onPressed: registerUser,
-                    child:
-                        isLoading
-                            ? CircularProgressIndicator(color: Colors.white)
-                            : Text('Register', style: TextStyle(fontSize: 15)),
-                  );
+                      onPressed: registerUser,
+                      child: isLoading
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text('Register', style: TextStyle(fontSize: 15)),
+                    );
             }),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -281,9 +317,11 @@ class _RegisterState extends State<Register> {
                 ),
               ],
             ),
+            SizedBox(height: 20), // Add some padding at the bottom
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
