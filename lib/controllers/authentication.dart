@@ -151,7 +151,7 @@ class AuthenticationController extends GetxController {
     required String password,
     required String password_confirmation,
     required BuildContext context,
-     String? role,
+    
   }) async {
     try {
       isLoading.value = true;
