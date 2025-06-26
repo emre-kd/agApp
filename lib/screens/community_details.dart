@@ -1,4 +1,5 @@
 import 'package:agapp/constant.dart';
+import 'package:agapp/screens/searched_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -13,6 +14,7 @@ class CommunityDetails extends StatefulWidget {
 
 class _CommunityDetailsState extends State<CommunityDetails> {
   Map<String, dynamic>? communityData;
+  Map<String, dynamic>? communityUserData;
   bool isLoading = true;
   String? errorMessage;
 
@@ -34,10 +36,13 @@ class _CommunityDetailsState extends State<CommunityDetails> {
         },
       );
 
+      print(response.body);
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
           communityData = data['community'];
+          communityUserData = data['community']['user'];
           isLoading = false;
         });
       } else {
@@ -71,14 +76,15 @@ class _CommunityDetailsState extends State<CommunityDetails> {
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
       ),
-      body: isLoading
-          ? const Center(
-              child: CircularProgressIndicator(
-                color: Colors.black,
-                strokeWidth: 2,
-              ),
-            )
-          : errorMessage != null
+      body:
+          isLoading
+              ? const Center(
+                child: CircularProgressIndicator(
+                  color: Colors.black,
+                  strokeWidth: 2,
+                ),
+              )
+              : errorMessage != null
               ? _buildErrorState()
               : _buildCommunityDetails(),
     );
@@ -89,11 +95,7 @@ class _CommunityDetailsState extends State<CommunityDetails> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.error_outline,
-            color: Colors.black,
-            size: 60,
-          ),
+          const Icon(Icons.error_outline, color: Colors.black, size: 60),
           const SizedBox(height: 16),
           Text(
             errorMessage!,
@@ -151,6 +153,25 @@ class _CommunityDetailsState extends State<CommunityDetails> {
               title: 'Topluluk Kodu',
               subtitle: communityData?['code'] ?? 'N/A',
             ),
+             const SizedBox(height: 8),
+            _buildInfoCard(
+              icon: Icons.person_4,
+              title: 'Topluluk Kurucusu',
+              subtitle:
+                  '${communityUserData?['name'] ?? 'N/A'} / ${communityUserData?['username'] ?? 'N/A'}',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder:
+                        (_) => SearchedProfile(
+                          userId: communityUserData?['id'],
+                          userName: communityUserData?['username'],
+                        ),
+                  ),
+                );
+              },
+            ),
             const SizedBox(height: 8),
             _buildInfoCard(
               icon: Icons.people,
@@ -163,6 +184,8 @@ class _CommunityDetailsState extends State<CommunityDetails> {
               title: 'Oluşturulma Tarihi',
               subtitle: communityData?['created_at'] ?? 'N/A',
             ),
+
+           
           ],
         ),
       ),
@@ -184,6 +207,7 @@ class _CommunityDetailsState extends State<CommunityDetails> {
     required IconData icon,
     required String title,
     required String subtitle,
+    VoidCallback? onTap, // Optional onTap callback
   }) {
     return AnimatedOpacity(
       opacity: 1.0,
@@ -195,25 +219,23 @@ class _CommunityDetailsState extends State<CommunityDetails> {
           borderRadius: BorderRadius.circular(12),
           side: const BorderSide(color: Colors.black12),
         ),
-        child: ListTile(
-          leading: Icon(
-            icon,
-            color: Colors.black,
-            size: 24,
-          ),
-          title: Text(
-            title,
-            style: const TextStyle(
-              color: Colors.black,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+        child: InkWell(
+          // Add InkWell for tap handling with ripple effect
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12), // Match Card's border radius
+          child: ListTile(
+            leading: Icon(icon, color: Colors.black, size: 24),
+            title: Text(
+              title,
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-          subtitle: Text(
-            subtitle,
-            style: const TextStyle(
-              color: Colors.black87,
-              fontSize: 14,
+            subtitle: Text(
+              subtitle,
+              style: const TextStyle(color: Colors.black87, fontSize: 14),
             ),
           ),
         ),
