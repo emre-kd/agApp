@@ -151,7 +151,8 @@ class AuthenticationController extends GetxController {
     required String password,
     required String password_confirmation,
     required BuildContext context,
-    
+    String? communityCode, // var olan topluluğa katılmak için
+    String? communityName, // yeni topluluk oluşturmak için
   }) async {
     try {
       isLoading.value = true;
@@ -163,15 +164,25 @@ class AuthenticationController extends GetxController {
         'password': password,
         'password_confirmation': password_confirmation,
       };
+
+      if (communityCode != null && communityCode.isNotEmpty) {
+        data['community_code'] = communityCode;
+      }
+      if (communityName != null && communityName.isNotEmpty) {
+        data['community_name'] = communityName;
+     
+      }
+
       var response = await http.post(
         Uri.parse(registerURL),
         headers: {'Accept': 'application/json'},
         body: data,
       );
 
-      var responseData = json.decode(response.body);
-           debugPrint("Error: ${response.statusCode} - $responseData");
+      print(response.body);
 
+      var responseData = json.decode(response.body);
+      debugPrint("Error: ${response.statusCode} - $responseData");
 
       if (response.statusCode == 201) {
         debugPrint("Registration Successful: $responseData");
