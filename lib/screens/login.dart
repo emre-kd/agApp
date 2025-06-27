@@ -1,4 +1,5 @@
 import 'package:agapp/controllers/authentication.dart';
+import 'package:agapp/screens/forgot_password.dart';
 import 'package:agapp/screens/register.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -26,7 +27,7 @@ class _LoginState extends State<Login> {
     await _authenticationController.login(
       username: userNameController.text.trim(),
       password: passwordController.text.trim(),
-      context: context, 
+      context: context,
     );
   }
 
@@ -34,7 +35,6 @@ class _LoginState extends State<Login> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-
 
       body: Padding(
         padding: const EdgeInsets.only(top: 100, right: 15, left: 15),
@@ -51,9 +51,9 @@ class _LoginState extends State<Login> {
                 controller: userNameController,
 
                 decoration: InputDecoration(
-                  labelText: 'Username',
+                  labelText: 'Kullanıcı Adı',
                   labelStyle: TextStyle(color: Colors.white),
-                   helperText:
+                  helperText:
                       _authenticationController.errors['username'] ??
                       _authenticationController.errors['username'],
                   helperStyle: TextStyle(
@@ -68,7 +68,8 @@ class _LoginState extends State<Login> {
                     borderSide: BorderSide(
                       color:
                           _authenticationController.errors['username'] != null
-                              ? Colors.red // If there's an error, set border to red
+                              ? Colors
+                                  .red // If there's an error, set border to red
                               : Colors.white, // Otherwise, keep it white
                     ),
                   ),
@@ -76,7 +77,8 @@ class _LoginState extends State<Login> {
                     borderSide: BorderSide(
                       color:
                           _authenticationController.errors['username'] != null
-                              ? Colors.red // If there's an error, set border to red
+                              ? Colors
+                                  .red // If there's an error, set border to red
                               : Colors.white, // Otherwise, keep it white
                     ),
                   ),
@@ -95,7 +97,7 @@ class _LoginState extends State<Login> {
 
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
-                  labelText: 'Password',
+                  labelText: 'Şifre',
                   labelStyle: TextStyle(color: Colors.white),
                   helperText:
                       _authenticationController.errors['password'] ??
@@ -112,7 +114,8 @@ class _LoginState extends State<Login> {
                     borderSide: BorderSide(
                       color:
                           _authenticationController.errors['password'] != null
-                              ? Colors.red // If there's an error, set border to red
+                              ? Colors
+                                  .red // If there's an error, set border to red
                               : Colors.white, // Otherwise, keep it white
                     ),
                   ),
@@ -120,7 +123,8 @@ class _LoginState extends State<Login> {
                     borderSide: BorderSide(
                       color:
                           _authenticationController.errors['password'] != null
-                              ? Colors.red // If there's an error, set border to red
+                              ? Colors
+                                  .red // If there's an error, set border to red
                               : Colors.white, // Otherwise, keep it white
                     ),
                   ),
@@ -141,7 +145,21 @@ class _LoginState extends State<Login> {
                 ),
               );
             }),
-            SizedBox(height: 20),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ForgotPassword()),
+                  );
+                },
+                child: const Text(
+                  "Şifreni mi unuttun?",
+                  style: TextStyle(color: Colors.blue),
+                ),
+              ),
+            ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
@@ -153,14 +171,14 @@ class _LoginState extends State<Login> {
               ),
 
               onPressed: loginUser,
-              child: Text('Login', style: TextStyle(fontSize: 15)),
+              child: Text('Giriş Yap', style: TextStyle(fontSize: 15)),
             ),
 
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text(
-                  "Not a user yet?",
+                  "Hesabın mı yok?",
                   style: TextStyle(color: Colors.white),
                 ),
                 TextButton(
@@ -170,7 +188,8 @@ class _LoginState extends State<Login> {
                       MaterialPageRoute(builder: (context) => Register()),
                     );
                   },
-                  child: const Text("Register"),
+                  child: const Text("Kayıt Ol" ,
+                    style: TextStyle(color: Colors.blue),),
                 ),
               ],
             ),

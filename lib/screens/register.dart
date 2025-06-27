@@ -396,7 +396,7 @@ class _RegisterState extends State<Register> {
                         MaterialPageRoute(builder: (context) => const Login()),
                       );
                     },
-                    child: const Text("Giriş"),
+                    child: const Text("Giriş",   style: TextStyle(color: Colors.blue),),
                   ),
                 ],
               ),
