@@ -6,6 +6,7 @@ import 'package:agapp/constant.dart';
 import 'package:agapp/models/user.dart';
 import 'package:agapp/screens/home.dart';
 import 'package:agapp/screens/login.dart';
+import 'package:agapp/screens/verification_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -145,14 +146,14 @@ class AuthenticationController extends GetxController {
     }
   }
 
-  Future register({
+  Future<void> register({
     required String username,
     required String email,
     required String password,
     required String password_confirmation,
     required BuildContext context,
-    String? communityCode, // var olan topluluğa katılmak için
-    String? communityName, // yeni topluluk oluşturmak için
+    String? communityCode,
+    String? communityName,
   }) async {
     try {
       isLoading.value = true;
@@ -170,7 +171,6 @@ class AuthenticationController extends GetxController {
       }
       if (communityName != null && communityName.isNotEmpty) {
         data['community_name'] = communityName;
-     
       }
 
       var response = await http.post(
@@ -179,47 +179,135 @@ class AuthenticationController extends GetxController {
         body: data,
       );
 
+      var responseData = json.decode(response.body);
+
       print(response.body);
 
-      var responseData = json.decode(response.body);
-      debugPrint("Error: ${response.statusCode} - $responseData");
-
-      if (response.statusCode == 201) {
-        debugPrint("Registration Successful: $responseData");
-
-        String token = responseData['token']; // Ensure your API returns a token
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', token);
-
-        await getUserDetails();
-
+      if (response.statusCode == 200 && responseData['requires_verification'] == true) {
+        // Navigate to verification screen
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => Home()), // Navigate to Home
-          // Remove all previous routes
+          MaterialPageRoute(
+            builder: (context) => VerificationScreen(email: email, username: username),
+          ),
         );
       } else if (response.statusCode == 422) {
-        // Laravel validation error
         Map<String, dynamic> errorMessages = responseData['errors'];
         errorMessages.forEach((key, value) {
-          errors[key] = value[0]; // Store only the first error for each field
+          errors[key] = value[0];
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Server error. Please try again later."),
+          const SnackBar(
+            content: Text("Registration failed. Please try again."),
             backgroundColor: Colors.red,
           ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text("Something went wrong. Please check your connection."),
           backgroundColor: Colors.red,
         ),
       );
-      debugPrint("Exception: ${e.toString()}");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> verifyRegistration({
+  required String code,
+  required String email,
+  required String username,
+  required BuildContext context,
+}) async {
+  try {
+    isLoading.value = true;
+    
+    var response = await http.post(
+      Uri.parse('$baseURL/verify-registration'),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        'code': code,
+        'email': email,
+        'username': email,
+      }),
+    );
+
+    var responseData = json.decode(response.body);
+    print(response.body);
+
+    if (response.statusCode == 201) {
+      // Success case
+      String token = responseData['token'];
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', token);
+      
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => Home()),
+        (route) => false,
+      );
+    } else {
+      // Error case
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(responseData['message'] ?? "Verification failed"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Network error. Please try again."),
+        backgroundColor: Colors.red,
+      ),
+    );
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+  Future<void> resendVerificationCode(String email, BuildContext context) async {
+    try {
+      isLoading.value = true;
+      
+      var response = await http.post(
+        Uri.parse('$baseURL/resend-verification'),
+        headers: {'Accept': 'application/json'},
+        body: {'email': email},
+      );
+
+      var responseData = json.decode(response.body);
+      print(response.body);
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Verification code resent successfully"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(responseData['message'] ?? "Failed to resend code"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Failed to resend verification code"),
+          backgroundColor: Colors.red,
+        ),
+      );
     } finally {
       isLoading.value = false;
     }

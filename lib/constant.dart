@@ -23,3 +23,11 @@ const indexMessage = '$baseURL/indexMessage';
 const getConversations = '$baseURL/getConversations';
 
 const getCommunities= '$baseURL/getCommunities';
+
+const verifyRegistration= '$baseURL/verifyRegistration';
+const resendVerification= '$baseURL/resendVerification';
+
+
+
+
+
