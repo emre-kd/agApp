@@ -149,6 +149,7 @@ class AuthenticationController extends GetxController {
   Future<void> register({
     required String username,
     required String email,
+    
     required String password,
     required String password_confirmation,
     required BuildContext context,
@@ -256,7 +257,7 @@ class AuthenticationController extends GetxController {
       // Error case
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(responseData['message'] ?? "Verification failed"),
+          content: Text(responseData['message'] ?? "Doğrulama başarısız oldu"),
           backgroundColor: Colors.red,
         ),
       );
@@ -273,14 +274,14 @@ class AuthenticationController extends GetxController {
   }
 }
 
-  Future<void> resendVerificationCode(String email, BuildContext context) async {
+  Future<void> resendVerificationCode(String email, BuildContext context, String username) async {
     try {
       isLoading.value = true;
       
       var response = await http.post(
         Uri.parse('$baseURL/resend-verification'),
         headers: {'Accept': 'application/json'},
-        body: {'email': email},
+        body: {'email': email, 'username': username},
       );
 
       var responseData = json.decode(response.body);
@@ -289,14 +290,14 @@ class AuthenticationController extends GetxController {
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Verification code resent successfully"),
+            content: Text("Doğrulama kodu yeniden gönderildi"),
             backgroundColor: Colors.green,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(responseData['message'] ?? "Failed to resend code"),
+            content: Text(responseData['message'] ?? "Kod yeniden gönderilemedi"),
             backgroundColor: Colors.red,
           ),
         );
@@ -304,7 +305,7 @@ class AuthenticationController extends GetxController {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Failed to resend verification code"),
+          content: Text("Doğrulama kodunu yeniden gönderme başarısız oldu"),
           backgroundColor: Colors.red,
         ),
       );

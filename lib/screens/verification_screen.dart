@@ -7,6 +7,7 @@ import 'package:agapp/controllers/authentication.dart';
 class VerificationScreen extends StatefulWidget {
   final String email;
   final String username;
+  
   const VerificationScreen({super.key, required this.email, required this.username});
 
   @override
@@ -49,7 +50,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Email Verification'),
+        title: const Text('E-Posta Doğrulama'),
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
       ),
@@ -59,12 +60,12 @@ class _VerificationScreenState extends State<VerificationScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Verification code sent to ${widget.email}',
+              'Doğrulama kodun adresine gönderildi ${widget.email}',
               style: const TextStyle(color: Colors.white, fontSize: 16),
             ),
             const SizedBox(height: 20),
             Text(
-              'Time remaining: ${formatTime(_remainingTime)}',
+              'Kalan Zaman: ${formatTime(_remainingTime)}',
               style: TextStyle(
                 color: _remainingTime < 60 ? Colors.red : Colors.white,
                 fontSize: 16,
@@ -73,10 +74,11 @@ class _VerificationScreenState extends State<VerificationScreen> {
             const SizedBox(height: 20),
             TextField(
               controller: codeController,
+              maxLength: 6,
               keyboardType: TextInputType.number,
               style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(
-                labelText: 'Verification Code',
+                labelText: 'Doğrulama Kodu',
                 labelStyle: TextStyle(color: Colors.white),
                 border: OutlineInputBorder(),
                 enabledBorder: OutlineInputBorder(
@@ -107,18 +109,21 @@ class _VerificationScreenState extends State<VerificationScreen> {
                         foregroundColor: Colors.black,
                         minimumSize: const Size(double.infinity, 50),
                       ),
-                      child: const Text('Verify'),
+                      child: const Text('Doğrula'),
                     );
             }),
             const SizedBox(height: 10),
             TextButton(
               onPressed: () {
                 // Resend code logic
-                _authController.resendVerificationCode(widget.email, context);
+                _authController.resendVerificationCode(
+                  widget.email, 
+                  context,
+                  widget.username,);
                 setState(() => _remainingTime = 900);
               },
               child: const Text(
-                'Resend Code',
+                'Tekrar Gönder',
                 style: TextStyle(color: Colors.blue),
               ),
             ),
