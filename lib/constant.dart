@@ -27,6 +27,10 @@ const getCommunities= '$baseURL/getCommunities';
 const verifyRegistration= '$baseURL/verifyRegistration';
 const resendVerification= '$baseURL/resendVerification';
 
+const likePostURL = '$baseURL/posts'; 
+
+
+
 
 
 

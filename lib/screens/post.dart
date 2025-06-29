@@ -31,6 +31,8 @@ class PostWidget extends StatefulWidget {
 class _PostWidgetState extends State<PostWidget> {
   VideoPlayerController? _videoController;
   bool _isVideoInitialized = false;
+  bool _isLiked = false;
+  int _likeCount = 0;
 
   @override
   void initState() {
@@ -38,18 +40,17 @@ class _PostWidgetState extends State<PostWidget> {
     // Initialize video controller if the media is a video
     if (_isVideo(widget.post.media)) {
       _videoController = VideoPlayerController.network(
-          '$baseNormalURL/${widget.post.media}',
-        )
-        ..initialize()
-            .then((_) {
-              setState(() {
-                _isVideoInitialized = true;
-              });
-            })
-            .catchError((error) {
-              print('Video initialization error: $error');
-            });
+        '$baseNormalURL/${widget.post.media}',
+      )..initialize().then((_) {
+          setState(() {
+            _isVideoInitialized = true;
+          });
+        }).catchError((error) {
+          print('Video initialization error: $error');
+        });
     }
+    // Initialize like status
+    _checkLikeStatus();
   }
 
   @override
@@ -60,9 +61,95 @@ class _PostWidgetState extends State<PostWidget> {
 
   // Helper method to determine if the media is a video based on file extension
   bool _isVideo(String mediaUrl) {
-    // Alternatively, check `widget.post.mediaType` if available
     final videoExtensions = ['.mp4', '.mov', '.avi', '.mkv'];
     return videoExtensions.any((ext) => mediaUrl.toLowerCase().endsWith(ext));
+  }
+
+  // Check initial like status and count
+  Future<void> _checkLikeStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    if (token == null) {
+      print('No token found in SharedPreferences');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Oturum açmanız gerekiyor')),
+      );
+      return;
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse('$likePostURL/${widget.post.id}/like-status'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _isLiked = data['is_liked'] == true; // Ensure boolean conversion
+          _likeCount = data['like_count'] ?? 0; // Fallback to 0 if null
+        });
+      } else {
+        print('Failed to fetch like status: ${response.statusCode} - ${response.body}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: Like durumu alınamadı (${response.statusCode})')),
+        );
+      }
+    } catch (e) {
+      print('Error checking like status: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ağ hatası oluştu')),
+      );
+    }
+  }
+
+  // Toggle like status
+  Future<void> _toggleLike() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    if (token == null) {
+      print('No token found in SharedPreferences');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Oturum açmanız gerekiyor')),
+      );
+      return;
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('$likePostURL/${widget.post.id}/like'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _isLiked = data['is_liked'] == true; // Ensure boolean conversion
+          _likeCount = data['like_count'] ?? 0; // Fallback to 0 if null
+        });
+      } else {
+        print('Failed to toggle like: ${response.statusCode} - ${response.body}');
+        final error = jsonDecode(response.body)['message'] ?? 'Bir hata oluştu';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $error')),
+        );
+      }
+    } catch (e) {
+      print('Error toggling like: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ağ hatası oluştu')),
+      );
+    }
   }
 
   Future<void> _deletePost(int postId) async {
@@ -99,14 +186,14 @@ class _PostWidgetState extends State<PostWidget> {
         }
       } else {
         final error = jsonDecode(response.body)['error'] ?? 'Bir hata oluştu';
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Hata: $error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $error')),
+        );
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Ağ hatası oluştu')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ağ hatası oluştu')),
+      );
     }
   }
 
@@ -135,11 +222,10 @@ class _PostWidgetState extends State<PostWidget> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder:
-                              (_) => SearchedProfile(
-                                userId: widget.post.userId,
-                                userName: widget.post.name,
-                              ),
+                          builder: (_) => SearchedProfile(
+                            userId: widget.post.userId,
+                            userName: widget.post.name,
+                          ),
                         ),
                       );
                     },
@@ -152,18 +238,16 @@ class _PostWidgetState extends State<PostWidget> {
                         ),
                       ),
                       child: CircleAvatar(
-                        backgroundImage:
-                            widget.post.profileImage.isNotEmpty
-                                ? NetworkImage(
-                                  '$baseNormalURL/${widget.post.profileImage}',
-                                )
-                                : null,
+                        backgroundImage: widget.post.profileImage.isNotEmpty
+                            ? NetworkImage(
+                                '$baseNormalURL/${widget.post.profileImage}',
+                              )
+                            : null,
                         radius: 22,
                         backgroundColor: Colors.grey[900],
-                        child:
-                            widget.post.profileImage.isEmpty
-                                ? Icon(Icons.person, color: Colors.grey[400])
-                                : null,
+                        child: widget.post.profileImage.isEmpty
+                            ? Icon(Icons.person, color: Colors.grey[400])
+                            : null,
                       ),
                     ),
                   ),
@@ -177,11 +261,10 @@ class _PostWidgetState extends State<PostWidget> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder:
-                                    (_) => SearchedProfile(
-                                      userId: widget.post.userId,
-                                      userName: widget.post.name,
-                                    ),
+                                builder: (_) => SearchedProfile(
+                                  userId: widget.post.userId,
+                                  userName: widget.post.name,
+                                ),
                               ),
                             );
                           },
@@ -202,11 +285,10 @@ class _PostWidgetState extends State<PostWidget> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder:
-                                    (_) => SearchedProfile(
-                                      userId: widget.post.userId,
-                                      userName: widget.post.name,
-                                    ),
+                                builder: (_) => SearchedProfile(
+                                  userId: widget.post.userId,
+                                  userName: widget.post.name,
+                                ),
                               ),
                             );
                           },
@@ -286,14 +368,13 @@ class _PostWidgetState extends State<PostWidget> {
                     ),
                     minScale: PhotoViewComputedScale.contained,
                     maxScale: PhotoViewComputedScale.covered * 3,
-                    errorBuilder:
-                        (context, error, stackTrace) => Center(
-                          child: Icon(
-                            Icons.broken_image,
-                            color: Colors.grey[600],
-                            size: 40,
-                          ),
-                        ),
+                    errorBuilder: (context, error, stackTrace) => Center(
+                      child: Icon(
+                        Icons.broken_image,
+                        color: Colors.grey[600],
+                        size: 40,
+                      ),
+                    ),
                   ),
                   Positioned(
                     top: 40,
@@ -320,18 +401,17 @@ class _PostWidgetState extends State<PostWidget> {
             '$baseNormalURL/${widget.post.media}',
             fit: BoxFit.cover,
             width: double.infinity,
-            errorBuilder:
-                (_, __, ___) => Container(
-                  height: 200,
-                  color: Colors.grey[900],
-                  child: Center(
-                    child: Icon(
-                      Icons.broken_image,
-                      color: Colors.grey[600],
-                      size: 40,
-                    ),
-                  ),
+            errorBuilder: (_, __, ___) => Container(
+              height: 200,
+              color: Colors.grey[900],
+              child: Center(
+                child: Icon(
+                  Icons.broken_image,
+                  color: Colors.grey[600],
+                  size: 40,
                 ),
+              ),
+            ),
           ),
         ),
       ),
@@ -401,22 +481,21 @@ class _PostWidgetState extends State<PostWidget> {
       ),
       color: Colors.grey[900],
       elevation: 2,
-      itemBuilder:
-          (BuildContext context) => [
-            PopupMenuItem(
-              value: 'delete',
-              child: Row(
-                children: [
-                  Icon(Icons.delete, color: Colors.grey[300], size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Sil',
-                    style: TextStyle(color: Colors.grey[300], fontSize: 14),
-                  ),
-                ],
+      itemBuilder: (BuildContext context) => [
+        PopupMenuItem(
+          value: 'delete',
+          child: Row(
+            children: [
+              Icon(Icons.delete, color: Colors.grey[300], size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Sil',
+                style: TextStyle(color: Colors.grey[300], fontSize: 14),
               ),
-            ),
-          ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -506,11 +585,11 @@ class _PostWidgetState extends State<PostWidget> {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         _buildActionButton(
-          icon: Icons.favorite_border,
-          label: '1',
-          onTap: () => print("Like tapped"),
+          icon: _isLiked ? Icons.favorite : Icons.favorite_border,
+          color: _isLiked ? Colors.red : Colors.grey[400],
+          label: _likeCount.toString(),
+          onTap: _toggleLike,
         ),
-    
         _buildActionButton(
           icon: Icons.mode_comment_outlined,
           label: '5',
@@ -524,6 +603,7 @@ class _PostWidgetState extends State<PostWidget> {
     required IconData icon,
     required String label,
     required VoidCallback onTap,
+    Color? color,
   }) {
     return InkWell(
       onTap: onTap,
@@ -532,7 +612,7 @@ class _PostWidgetState extends State<PostWidget> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Row(
           children: [
-            Icon(icon, color: Colors.grey[400], size: 20),
+            Icon(icon, color: color ?? Colors.grey[400], size: 20),
             const SizedBox(width: 6),
             Text(
               label,
