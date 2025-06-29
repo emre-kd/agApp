@@ -507,17 +507,13 @@ class _PostWidgetState extends State<PostWidget> {
       children: [
         _buildActionButton(
           icon: Icons.favorite_border,
-          label: 'Like',
+          label: '1',
           onTap: () => print("Like tapped"),
         ),
-        _buildActionButton(
-          icon: Icons.repeat,
-          label: 'Repost',
-          onTap: () => print("Repost tapped"),
-        ),
+    
         _buildActionButton(
           icon: Icons.mode_comment_outlined,
-          label: 'Comment',
+          label: '5',
           onTap: () => print("Comment tapped"),
         ),
       ],

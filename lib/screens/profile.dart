@@ -224,9 +224,9 @@ class _ProfileState extends State<Profile> {
       try {
         final date = DateTime.parse(dateString);
         final formatter = DateFormat('dd MM yyyy');
-        return 'Joined ${formatter.format(date)}';
+        return '${formatter.format(date)} tarihinde katıldı';
       } catch (e) {
-        return 'Joined Unknown';
+        return 'N/A';
       }
     }
 
@@ -297,7 +297,7 @@ class _ProfileState extends State<Profile> {
                           ),
                         ),
                         child: const Text(
-                          'Update Profile',
+                          'Profili Güncelle',
                           style: TextStyle(color: Colors.white, fontSize: 16),
                         ),
                       ),
@@ -422,7 +422,7 @@ class _ProfileState extends State<Profile> {
                       child: Padding(
                         padding: EdgeInsets.all(20.0),
                         child: Text(
-                          'No posts available',
+                          'Gönderi yok',
                           style: TextStyle(color: Colors.grey, fontSize: 16),
                           textAlign: TextAlign.center,
                         ),

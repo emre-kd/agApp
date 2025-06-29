@@ -97,7 +97,7 @@ class _HomeState extends State<Home> {
           print(communityName);
         });
       } else {
-        print('Failed to fetch user info: ${response.statusCode}');
+        print('Kullanıcı bilgisi alınamadı: ${response.statusCode}');
       }
     } catch (_e) {
       print('Error fetching user info: $_e');
@@ -263,7 +263,7 @@ class _HomeState extends State<Home> {
               ),
             ),
             Text(
-              communityName ?? 'Loading...', // Dynamic community name
+              communityName ?? 'Yükleniyor...', // Dynamic community name
               style: const TextStyle(
                 color: Colors.white70,
                 fontSize: 10,
@@ -281,7 +281,7 @@ class _HomeState extends State<Home> {
               color: Colors.white,
               size: 28, // Larger icon for consistency
             ),
-            tooltip: 'More options', // Accessibility improvement
+            tooltip: 'Daha fazla seçenek', // Accessibility improvement
             onPressed: () {
               showModalBottomSheet(
                 context: context,
@@ -391,7 +391,7 @@ class _HomeState extends State<Home> {
                       : posts.isEmpty
                       ? const Center(
                         child: Text(
-                          'Topluluğunuzda hiç gönderi yok',
+                          'Topluluğunuzda hiç gönderi yok, ilk gönderiyi sen oluştur !',
                           style: TextStyle(color: Colors.white, fontSize: 16),
                         ),
                       )
