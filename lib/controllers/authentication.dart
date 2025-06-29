@@ -217,62 +217,63 @@ class AuthenticationController extends GetxController {
     }
   }
 
-  Future<void> verifyRegistration({
-  required String code,
-  required String email,
-  required String username,
-  required BuildContext context,
-}) async {
-  try {
-    isLoading.value = true;
     
-    var response = await http.post(
-      Uri.parse('$baseURL/verify-registration'),
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: json.encode({
-        'code': code,
-        'email': email,
-        'username': email,
-      }),
-    );
-
-    var responseData = json.decode(response.body);
-    print(response.body);
-
-    if (response.statusCode == 201) {
-      // Success case
-      String token = responseData['token'];
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('token', token);
+  Future<void> verifyRegistration({
+    required String code,
+    required String email,
+    required String username,
+    required BuildContext context,
+  }) async {
+    try {
+      isLoading.value = true;
       
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => Home()),
-        (route) => false,
+      var response = await http.post(
+        Uri.parse('$baseURL/verify-registration'),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'code': code,
+          'email': email,
+          'username': email,
+        }),
       );
-    } else {
-      // Error case
+
+      var responseData = json.decode(response.body);
+      print(response.body);
+
+      if (response.statusCode == 201) {
+        // Success case
+        String token = responseData['token'];
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', token);
+        
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => Home()),
+          (route) => false,
+        );
+      } else {
+        // Error case
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(responseData['message'] ?? "Doğrulama başarısız oldu"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(responseData['message'] ?? "Doğrulama başarısız oldu"),
+        const SnackBar(
+          content: Text("Network error. Please try again."),
           backgroundColor: Colors.red,
         ),
       );
+    } finally {
+      isLoading.value = false;
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Network error. Please try again."),
-        backgroundColor: Colors.red,
-      ),
-    );
-  } finally {
-    isLoading.value = false;
   }
-}
 
   Future<void> resendVerificationCode(String email, BuildContext context, String username) async {
     try {
@@ -419,6 +420,219 @@ class AuthenticationController extends GetxController {
         ),
       );
       debugPrint("Logout Error: ${e.toString()}");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+
+
+
+
+
+    
+  Future<bool> requestPasswordReset(String email, BuildContext context) async {
+    try {
+      isLoading.value = true;
+      errors.clear(); // Clear previous errors
+
+      final response = await http.post(
+        Uri.parse('$baseURL/forgot-password'),
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+        body: jsonEncode({'email': email}),
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else if (response.statusCode == 422) {
+        final responseData = jsonDecode(response.body);
+        Map<String, dynamic> errorMessages = responseData['errors'];
+        errorMessages.forEach((key, value) {
+          errors[key] = value[0]; // Update errors map with first error message
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errors['email'] ?? 'E-posta gönderilemedi. Lütfen tekrar deneyin.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return false;
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('E-posta gönderilemedi. Lütfen tekrar deneyin.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return false;
+      }
+    } catch (e) {
+      print('Error requesting password reset: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ağ hatası. Lütfen bağlantınızı kontrol edin.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<Map<String, dynamic>?> verifyResetCode(String email, String code, BuildContext context) async {
+    try {
+      isLoading.value = true;
+      final response = await http.post(
+        Uri.parse('$baseURL/verify-reset-code'),
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+        body: jsonEncode({'email': email, 'code': code}),
+      );
+
+      print(response.body);
+
+      if (response.statusCode == 200) {
+        
+        return jsonDecode(response.body);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Doğrulama kodu geçersiz.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+        return null;
+      }
+    } catch (e) {
+      print('Error verifying code: $e');
+      Get.snackbar('Hata', 'Ağ hatası. Lütfen bağlantınızı kontrol edin.',
+          backgroundColor: Colors.red, colorText: Colors.white);
+      return null;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+Future<bool> resendResetCode(String email, BuildContext context) async {
+    try {
+      isLoading.value = true;
+      final response = await http.post(
+        Uri.parse('$baseURL/resend-reset-code'),
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+        body: jsonEncode({'email': email}),
+      );
+
+      print(response.body);
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Doğrulama kodu tekrar gönderildi!"),
+            backgroundColor: Color.fromARGB(255, 0, 145, 230), // Match your success color
+          ),
+        );
+        return true;
+      } else if (response.statusCode == 422) {
+        final responseData = jsonDecode(response.body);
+        Map<String, dynamic> errorMessages = responseData['errors'];
+        errorMessages.forEach((key, value) {
+          errors[key] = value[0]; // Update errors map with first error message
+        });
+        Get.snackbar(
+          'Hata',
+          errors['email'] ?? 'Kodu tekrar gönderme başarısız.',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return false;
+      } else {
+        final responseData = jsonDecode(response.body);
+        Get.snackbar(
+          'Hata',
+          responseData['message'] ?? 'Kodu tekrar gönderme başarısız.',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return false;
+      }
+    } catch (e) {
+      print('Error resending reset code: $e');
+      Get.snackbar(
+        'Hata',
+        'Ağ hatası. Lütfen bağlantınızı kontrol edin.',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<bool> resetPassword(String email, String newPassword, String resetToken, BuildContext context) async {
+    try {
+      isLoading.value = true;
+      errors.clear(); // Clear previous errors
+
+      final response = await http.post(
+        Uri.parse('$baseURL/reset-password'),
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+        body: jsonEncode({
+          'email': email,
+          'newPassword': newPassword,
+          'newPassword_confirmation': newPassword,
+          'reset_token': resetToken,
+        }),
+      );
+
+      print(response.body);
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Şifre başarıyla sıfırlandı!"),
+            backgroundColor: Color.fromARGB(255, 0, 145, 230), // Match success color
+          ),
+        );
+        return true;
+      } else if (response.statusCode == 422) {
+        final responseData = jsonDecode(response.body);
+        Map<String, dynamic> errorMessages = responseData['errors'];
+        errorMessages.forEach((key, value) {
+          errors[key] = value[0]; // Update errors map with first error message
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              errors['newPassword'] ??
+                  errors['newPassword_confirmation'] ??
+                  errors['email'] ??
+                  errors['reset_token'] ??
+                  'Şifre sıfırlama başarısız.',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return false;
+      } else {
+        final responseData = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(responseData['message'] ?? 'Şifre sıfırlama başarısız.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return false;
+      }
+    } catch (e) {
+      print('Error resetting password: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ağ hatası. Lütfen bağlantınızı kontrol edin.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return false;
     } finally {
       isLoading.value = false;
     }

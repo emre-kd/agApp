@@ -1,7 +1,7 @@
 
 
-const baseURL = 'http://192.168.1.105:8000/api';
-const baseNormalURL = 'http://192.168.1.105:8000';
+const baseURL = 'http://192.168.1.101:8000/api';
+const baseNormalURL = 'http://192.168.1.101:8000';
 
 const loginURL = '$baseURL/login';
 const registerURL = '$baseURL/register';
