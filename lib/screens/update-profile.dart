@@ -59,7 +59,7 @@ class _UpdateProfileState extends State<UpdateProfile> {
     String? token = prefs.getString('token');
     if (token == null) {
       setState(() {
-        errorMessage = 'No authentication token found';
+        errorMessage = 'Hiçbir kimlik doğrulama belirteci bulunamadı';
         isLoading = false;
       });
       return;
@@ -142,7 +142,7 @@ class _UpdateProfileState extends State<UpdateProfile> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Authentication error. Please log in again.'),
+          content: Text('Kimlik doğrulama hatası. Lütfen tekrar giriş yapın.'),
         ),
       );
       return;
@@ -195,14 +195,14 @@ class _UpdateProfileState extends State<UpdateProfile> {
         );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Profile updated successfully!"),
+            content: Text("Profil başarıyla güncellendi!"),
             backgroundColor: Color.fromARGB(255, 0, 145, 230),
           ),
         );
       } else if (response.statusCode == 401) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Unauthorized. Please login again."),
+            content: Text("Yetkisiz. Lütfen tekrar giriş yapın."),
             backgroundColor: Colors.red,
           ),
         );
@@ -217,7 +217,7 @@ class _UpdateProfileState extends State<UpdateProfile> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Server error. Please try again later."),
+            content: Text("Sunucu hatası. Lütfen daha sonra tekrar deneyin."),
             backgroundColor: Colors.red,
           ),
         );
@@ -251,7 +251,7 @@ class _UpdateProfileState extends State<UpdateProfile> {
             );
           },
         ),
-        title: const Text('User Profile'),
+        title: const Text('Kullanıcı Profili'),
         titleTextStyle: GoogleFonts.tektur(color: Colors.white, fontSize: 20),
         actions: [
           IconButton(
@@ -371,7 +371,7 @@ class _UpdateProfileState extends State<UpdateProfile> {
                         style: const TextStyle(color: Colors.white),
                         controller: _nameController,
                         decoration: InputDecoration(
-                          labelText: 'Name',
+                          labelText: 'İsim',
                           prefixStyle: const TextStyle(color: Colors.white),
                           labelStyle: const TextStyle(color: Colors.white),
                           errorText: errors['name'],
@@ -421,7 +421,7 @@ class _UpdateProfileState extends State<UpdateProfile> {
                         style: const TextStyle(color: Colors.white),
                         controller: _userNameController,
                         decoration: InputDecoration(
-                          labelText: 'Username',
+                          labelText: 'Kullanıcı Adı',
                           prefixStyle: const TextStyle(color: Colors.white),
                           labelStyle: const TextStyle(color: Colors.white),
                           errorText: errors['username'],
@@ -465,7 +465,7 @@ class _UpdateProfileState extends State<UpdateProfile> {
                       ),
                       const SizedBox(height: 10),
                       // Email Field
-                      TextFormField(
+                     /* TextFormField(
                         maxLength: 50,
                         cursorColor: Colors.white,
                         style: const TextStyle(color: Colors.white),
@@ -514,7 +514,7 @@ class _UpdateProfileState extends State<UpdateProfile> {
                         ),
                         keyboardType: TextInputType.emailAddress,
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 10), */
                       // Password Field
                       TextFormField(
                         maxLength: 20,
@@ -523,7 +523,7 @@ class _UpdateProfileState extends State<UpdateProfile> {
                         controller: _passwordController,
                         obscureText: _obscurePassword,
                         decoration: InputDecoration(
-                          labelText: 'Password (Leave empty to keep current)',
+                          labelText: 'Şifre (Güncel tutmak için boş bırakın)',
                           prefixStyle: const TextStyle(color: Colors.white),
                           labelStyle: const TextStyle(color: Colors.white),
                           errorText: errors['password'],
@@ -605,7 +605,7 @@ class _UpdateProfileState extends State<UpdateProfile> {
                                   ),
                                 )
                                 : const Text(
-                                  'Update Profile',
+                                  'Profili Güncelle',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
