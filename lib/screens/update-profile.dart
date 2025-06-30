@@ -208,11 +208,27 @@ class _UpdateProfileState extends State<UpdateProfile> {
         );
       } else if (response.statusCode == 422) {
         setState(() {
-          Map<String, dynamic> errorMessages =
-              jsonDecode(responseData)['errors'];
+          errors.clear(); // varsa önceki hataları temizle
+
+          final errorMessages =
+              jsonDecode(responseData)['errors'] as Map<String, dynamic>;
+
           errorMessages.forEach((key, value) {
-            errors[key] = value[0]; // or keep the whole list if needed
+            errors[key] = value[0]; // form alanlarında gösterilmek üzere
           });
+
+          // SnackBar'da göstermek için tüm hata mesajlarını alt alta birleştir
+          final allErrorMessages = errorMessages.values
+              .map((errorList) => errorList[0].toString())
+              .join('\n');
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(allErrorMessages),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 4),
+            ),
+          );
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -465,7 +481,7 @@ class _UpdateProfileState extends State<UpdateProfile> {
                       ),
                       const SizedBox(height: 10),
                       // Email Field
-                     /* TextFormField(
+                      /* TextFormField(
                         maxLength: 50,
                         cursorColor: Colors.white,
                         style: const TextStyle(color: Colors.white),
@@ -583,13 +599,15 @@ class _UpdateProfileState extends State<UpdateProfile> {
                         onPressed: isUpdating ? null : _updateProfile,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.black,
-                          
+
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
-                                    side: const BorderSide(color: Colors.white, width: 1.5),
-
+                            side: const BorderSide(
+                              color: Colors.white,
+                              width: 1.5,
+                            ),
                           ),
                           disabledBackgroundColor: Colors.grey[800],
                           disabledForegroundColor: Colors.white70,

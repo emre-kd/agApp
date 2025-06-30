@@ -59,187 +59,184 @@ class _CommunityDetailsState extends State<CommunityDetails> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: Text(
-          communityData?['name'] ?? 'Topluluk Detayları',
+ @override
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: Colors.black,  // <-- Siyah arka plan
+    appBar: AppBar(
+      backgroundColor: Colors.black,
+      title: Text(
+        communityData?['name'] ?? 'Topluluk Detayları',
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 13,
+        ),
+      ),
+      iconTheme: const IconThemeData(color: Colors.white),
+      elevation: 0,
+    ),
+    body: isLoading
+        ? const Center(
+            child: CircularProgressIndicator(
+              color: Colors.white, // Beyaz spinner
+              strokeWidth: 2,
+            ),
+          )
+        : errorMessage != null
+            ? _buildErrorState()
+            : _buildCommunityDetails(),
+  );
+}
+
+Widget _buildErrorState() {
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.error_outline, color: Colors.white, size: 60),
+        const SizedBox(height: 16),
+        Text(
+          errorMessage!,
           style: const TextStyle(
             color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        OutlinedButton(
+          onPressed: () {
+            setState(() {
+              isLoading = true;
+              errorMessage = null;
+            });
+            fetchCommunityDetails();
+          },
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.white,
+            side: const BorderSide(color: Colors.white),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          ),
+          child: const Text(
+            'Tekrar Dene',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        elevation: 0,
-      ),
-      body:
-          isLoading
-              ? const Center(
-                child: CircularProgressIndicator(
-                  color: Colors.black,
-                  strokeWidth: 2,
-                ),
-              )
-              : errorMessage != null
-              ? _buildErrorState()
-              : _buildCommunityDetails(),
-    );
-  }
+      ],
+    ),
+  );
+}
 
-  Widget _buildErrorState() {
-    return Center(
+Widget _buildCommunityDetails() {
+  return SingleChildScrollView(
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.error_outline, color: Colors.black, size: 60),
-          const SizedBox(height: 16),
-          Text(
-            errorMessage!,
-            style: const TextStyle(
-              color: Colors.black,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
+          _buildSectionHeader('Topluluk Bilgisi'),
+          const SizedBox(height: 12),
+          _buildInfoCard(
+            icon: Icons.group,
+            title: 'Topluluk Adı',
+            subtitle: communityData?['name'] ?? 'N/A',
           ),
-          const SizedBox(height: 16),
-          OutlinedButton(
-            onPressed: () {
-              setState(() {
-                isLoading = true;
-                errorMessage = null;
-              });
-              fetchCommunityDetails();
+          const SizedBox(height: 8),
+          _buildInfoCard(
+            icon: Icons.code,
+            title: 'Topluluk Kodu',
+            subtitle: communityData?['code'] ?? 'N/A',
+          ),
+          const SizedBox(height: 8),
+          _buildInfoCard(
+            icon: Icons.person_4,
+            title: 'Topluluk Kurucusu',
+            subtitle:
+                '${communityUserData?['name'] ?? 'N/A'} / ${communityUserData?['username'] ?? 'N/A'}',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => SearchedProfile(
+                    userId: communityUserData?['id'],
+                    userName: communityUserData?['username'],
+                  ),
+                ),
+              );
             },
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.black,
-              side: const BorderSide(color: Colors.black),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            ),
-            child: const Text(
-              'Tekrar Dene',
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+          ),
+          const SizedBox(height: 8),
+          _buildInfoCard(
+            icon: Icons.people,
+            title: 'Üyeler',
+            subtitle: '${communityData?['users_count'] ?? 0} üye',
+          ),
+          const SizedBox(height: 8),
+          _buildInfoCard(
+            icon: Icons.calendar_today,
+            title: 'Oluşturulma Tarihi',
+            subtitle: communityData?['created_at'] ?? 'N/A',
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
-  Widget _buildCommunityDetails() {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionHeader('Topluluk Bilgisi'),
-            const SizedBox(height: 12),
-            _buildInfoCard(
-              icon: Icons.group,
-              title: 'Topluluk Adı',
-              subtitle: communityData?['name'] ?? 'N/A',
-            ),
-            const SizedBox(height: 8),
-            _buildInfoCard(
-              icon: Icons.code,
-              title: 'Topluluk Kodu',
-              subtitle: communityData?['code'] ?? 'N/A',
-            ),
-             const SizedBox(height: 8),
-            _buildInfoCard(
-              icon: Icons.person_4,
-              title: 'Topluluk Kurucusu',
-              subtitle:
-                  '${communityUserData?['name'] ?? 'N/A'} / ${communityUserData?['username'] ?? 'N/A'}',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (_) => SearchedProfile(
-                          userId: communityUserData?['id'],
-                          userName: communityUserData?['username'],
-                        ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 8),
-            _buildInfoCard(
-              icon: Icons.people,
-              title: 'Üyeler',
-              subtitle: '${communityData?['users_count'] ?? 0} üye',
-            ),
-            const SizedBox(height: 8),
-            _buildInfoCard(
-              icon: Icons.calendar_today,
-              title: 'Oluşturulma Tarihi',
-              subtitle: communityData?['created_at'] ?? 'N/A',
-            ),
+Widget _buildSectionHeader(String title) {
+  return Text(
+    title,
+    style: const TextStyle(
+      color: Colors.white,  // Beyaz başlıklar
+      fontSize: 18,
+      fontWeight: FontWeight.bold,
+    ),
+  );
+}
 
-           
-          ],
-        ),
+Widget _buildInfoCard({
+  required IconData icon,
+  required String title,
+  required String subtitle,
+  VoidCallback? onTap, // Optional onTap callback
+}) {
+  return AnimatedOpacity(
+    opacity: 1.0,
+    duration: const Duration(milliseconds: 300),
+    child: Card(
+      color: const Color(0xFF121212), // koyu gri/siyah kart
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: Colors.white24),
       ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        color: Colors.black,
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-      ),
-    );
-  }
-
-  Widget _buildInfoCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    VoidCallback? onTap, // Optional onTap callback
-  }) {
-    return AnimatedOpacity(
-      opacity: 1.0,
-      duration: const Duration(milliseconds: 300),
-      child: Card(
-        color: Colors.white,
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: Colors.black12),
-        ),
-        child: InkWell(
-          // Add InkWell for tap handling with ripple effect
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12), // Match Card's border radius
-          child: ListTile(
-            leading: Icon(icon, color: Colors.black, size: 24),
-            title: Text(
-              title,
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: ListTile(
+          leading: Icon(icon, color: Colors.white, size: 24), // Beyaz ikon
+          title: Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
             ),
-            subtitle: Text(
-              subtitle,
-              style: const TextStyle(color: Colors.black87, fontSize: 14),
-            ),
+          ),
+          subtitle: Text(
+            subtitle,
+            style: const TextStyle(color: Colors.white70, fontSize: 14),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
 }
