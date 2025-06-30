@@ -7,6 +7,7 @@ class User {
   String? createdAt;
   String? image;
   String? coverImage;
+  String? profileImage;
   User({
     this.id,
     this.name,
@@ -15,6 +16,7 @@ class User {
     this.createdAt,
     this.image,
     this.coverImage,
+    this.profileImage,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class User {
       createdAt: json['created_at'],
       image: json['image'],
       coverImage: json['coverImage'],
+      profileImage: json['profileImage'],
     );
   }
 }

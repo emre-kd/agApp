@@ -1,7 +1,9 @@
+// lib/screens/post.dart
 // ignore_for_file: use_build_context_synchronously, avoid_print
 
 import 'dart:convert';
 import 'package:agapp/constant.dart';
+import 'package:agapp/screens/comments_page.dart';
 import 'package:agapp/screens/home.dart';
 import 'package:agapp/screens/profile.dart';
 import 'package:agapp/screens/searched_profile.dart';
@@ -31,6 +33,7 @@ class PostWidget extends StatefulWidget {
 class _PostWidgetState extends State<PostWidget> {
   VideoPlayerController? _videoController;
   bool _isVideoInitialized = false;
+  bool _isVideoError = false;
   bool _isLiked = false;
   int _likeCount = 0;
 
@@ -39,15 +42,7 @@ class _PostWidgetState extends State<PostWidget> {
     super.initState();
     // Initialize video controller if the media is a video
     if (_isVideo(widget.post.media)) {
-      _videoController = VideoPlayerController.network(
-        '$baseNormalURL/${widget.post.media}',
-      )..initialize().then((_) {
-          setState(() {
-            _isVideoInitialized = true;
-          });
-        }).catchError((error) {
-          print('Video initialization error: $error');
-        });
+      _initializeVideoPlayer();
     }
     // Initialize like status
     _checkLikeStatus();
@@ -62,7 +57,32 @@ class _PostWidgetState extends State<PostWidget> {
   // Helper method to determine if the media is a video based on file extension
   bool _isVideo(String mediaUrl) {
     final videoExtensions = ['.mp4', '.mov', '.avi', '.mkv'];
-    return videoExtensions.any((ext) => mediaUrl.toLowerCase().endsWith(ext));
+    return mediaUrl.isNotEmpty && videoExtensions.any((ext) => mediaUrl.toLowerCase().endsWith(ext));
+  }
+
+  // Initialize video player with error handling
+  Future<void> _initializeVideoPlayer() async {
+    try {
+      _videoController = VideoPlayerController.network(
+        '$baseNormalURL/${widget.post.media}',
+      );
+      await _videoController!.initialize();
+      setState(() {
+        _isVideoInitialized = true;
+        _isVideoError = false;
+      });
+    } catch (error) {
+      print('Video initialization error: $error');
+      setState(() {
+        _isVideoError = true;
+      });
+      showTopPopUp(
+        context,
+        message: 'Video yüklenemedi',
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 2),
+      );
+    }
   }
 
   // Check initial like status and count
@@ -72,8 +92,11 @@ class _PostWidgetState extends State<PostWidget> {
 
     if (token == null) {
       print('No token found in SharedPreferences');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Oturum açmanız gerekiyor')),
+      showTopPopUp(
+        context,
+        message: 'Oturum açmanız gerekiyor',
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 2),
       );
       return;
     }
@@ -96,14 +119,20 @@ class _PostWidgetState extends State<PostWidget> {
         });
       } else {
         print('Failed to fetch like status: ${response.statusCode} - ${response.body}');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: Like durumu alınamadı (${response.statusCode})')),
+        showTopPopUp(
+          context,
+          message: 'Hata: Like durumu alınamadı (${response.statusCode})',
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
         );
       }
     } catch (e) {
       print('Error checking like status: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ağ hatası oluştu')),
+      showTopPopUp(
+        context,
+        message: 'Ağ hatası oluştu',
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 2),
       );
     }
   }
@@ -115,8 +144,11 @@ class _PostWidgetState extends State<PostWidget> {
 
     if (token == null) {
       print('No token found in SharedPreferences');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Oturum açmanız gerekiyor')),
+      showTopPopUp(
+        context,
+        message: 'Oturum açmanız gerekiyor',
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 2),
       );
       return;
     }
@@ -137,17 +169,29 @@ class _PostWidgetState extends State<PostWidget> {
           _isLiked = data['is_liked'] == true; // Ensure boolean conversion
           _likeCount = data['like_count'] ?? 0; // Fallback to 0 if null
         });
+        showTopPopUp(
+          context,
+          message: _isLiked ? 'Gönderi beğenildi' : 'Beğeni kaldırıldı',
+          backgroundColor: const Color.fromARGB(255, 0, 145, 230),
+          duration: const Duration(seconds: 2),
+        );
       } else {
         print('Failed to toggle like: ${response.statusCode} - ${response.body}');
         final error = jsonDecode(response.body)['message'] ?? 'Bir hata oluştu';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $error')),
+        showTopPopUp(
+          context,
+          message: 'Hata: $error',
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
         );
       }
     } catch (e) {
       print('Error toggling like: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ağ hatası oluştu')),
+      showTopPopUp(
+        context,
+        message: 'Ağ hatası oluştu',
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 2),
       );
     }
   }
@@ -165,14 +209,15 @@ class _PostWidgetState extends State<PostWidget> {
       );
 
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Post başarıyla silindi!"),
-            backgroundColor: Color.fromARGB(255, 0, 145, 230),
-            duration: Duration(seconds: 2),
-          ),
+        showTopPopUp(
+          context,
+          message: 'Post başarıyla silindi!',
+          backgroundColor: const Color.fromARGB(255, 0, 145, 230),
+          duration: const Duration(seconds: 2),
         );
 
+        // Delay navigation to allow pop-up to be visible
+        await Future.delayed(const Duration(seconds: 2));
         if (widget.parentScreen == 'home') {
           Navigator.pushReplacement(
             context,
@@ -186,13 +231,19 @@ class _PostWidgetState extends State<PostWidget> {
         }
       } else {
         final error = jsonDecode(response.body)['error'] ?? 'Bir hata oluştu';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $error')),
+        showTopPopUp(
+          context,
+          message: 'Hata: $error',
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ağ hatası oluştu')),
+      showTopPopUp(
+        context,
+        message: 'Ağ hatası oluştu',
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 2),
       );
     }
   }
@@ -239,9 +290,7 @@ class _PostWidgetState extends State<PostWidget> {
                       ),
                       child: CircleAvatar(
                         backgroundImage: widget.post.profileImage.isNotEmpty
-                            ? NetworkImage(
-                                '$baseNormalURL/${widget.post.profileImage}',
-                              )
+                            ? NetworkImage('$baseNormalURL/${widget.post.profileImage}')
                             : null,
                         radius: 22,
                         backgroundColor: Colors.grey[900],
@@ -338,7 +387,7 @@ class _PostWidgetState extends State<PostWidget> {
     );
   }
 
-  // New method to build the media widget (image or video)
+  // Build the media widget (image or video)
   Widget _buildMediaWidget() {
     if (_isVideo(widget.post.media)) {
       return _buildVideoPlayer();
@@ -360,9 +409,7 @@ class _PostWidgetState extends State<PostWidget> {
               child: Stack(
                 children: [
                   PhotoView(
-                    imageProvider: NetworkImage(
-                      '$baseNormalURL/${widget.post.media}',
-                    ),
+                    imageProvider: NetworkImage('$baseNormalURL/${widget.post.media}'),
                     backgroundDecoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.9),
                     ),
@@ -420,11 +467,30 @@ class _PostWidgetState extends State<PostWidget> {
 
   // Widget for displaying videos
   Widget _buildVideoPlayer() {
-    if (_videoController == null || !_isVideoInitialized) {
-      return Container(
-        height: 200,
-        color: Colors.grey[900],
-        child: const Center(child: CircularProgressIndicator()),
+    if (_isVideoError || _videoController == null || !_isVideoInitialized) {
+      return GestureDetector(
+        onTap: _initializeVideoPlayer, // Retry on tap
+        child: Container(
+          height: 200,
+          color: Colors.grey[900],
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.broken_image,
+                  color: Colors.grey[600],
+                  size: 40,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Video yüklenemedi. Tekrar deneyin.',
+                  style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+        ),
       );
     }
 
@@ -444,9 +510,7 @@ class _PostWidgetState extends State<PostWidget> {
             ),
             IconButton(
               icon: Icon(
-                _videoController!.value.isPlaying
-                    ? Icons.pause
-                    : Icons.play_arrow,
+                _videoController!.value.isPlaying ? Icons.pause : Icons.play_arrow,
                 color: Colors.white,
                 size: 50,
               ),
@@ -516,7 +580,7 @@ class _PostWidgetState extends State<PostWidget> {
                 Icon(Icons.warning_rounded, color: Colors.red[400], size: 40),
                 const SizedBox(height: 16),
                 const Text(
-                  'Post silinsin mi ?',
+                  'Post silinsin mi?',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -592,8 +656,19 @@ class _PostWidgetState extends State<PostWidget> {
         ),
         _buildActionButton(
           icon: Icons.mode_comment_outlined,
-          label: '5',
-          onTap: () => print("Comment tapped"),
+          label: widget.post.commentsCount.toString(),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CommentsPage(
+                  post: widget.post,
+                  currentUserId: widget.currentUserId,
+                  parentScreen: widget.parentScreen,
+                ),
+              ),
+            );
+          },
         ),
       ],
     );
@@ -623,4 +698,44 @@ class _PostWidgetState extends State<PostWidget> {
       ),
     );
   }
+}
+
+// lib/utils/top_pop_up.dart
+
+void showTopPopUp(
+  BuildContext context, {
+  required String message,
+  Color backgroundColor = Colors.black,
+  Duration duration = const Duration(seconds: 2),
+}) {
+  final overlay = Overlay.of(context);
+  final overlayEntry = OverlayEntry(
+    builder: (context) => Positioned(
+      top: 80.0, // Below AppBar (~56.0) and status bar (~20-30 pixels)
+      left: 16.0,
+      right: 16.0,
+      child: Material(
+        elevation: 4.0,
+        borderRadius: BorderRadius.circular(8.0),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          child: Text(
+            message,
+            style: const TextStyle(color: Colors.white, fontSize: 14.0),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  overlay.insert(overlayEntry);
+
+  // Remove the pop-up after the specified duration
+  Future.delayed(duration, () {
+    overlayEntry.remove();
+  });
 }

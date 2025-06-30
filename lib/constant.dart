@@ -29,6 +29,9 @@ const resendVerification= '$baseURL/resendVerification';
 
 const likePostURL = '$baseURL/posts'; 
 
+const  fetchCommentsURL = '$baseURL/posts';
+const  addCommentURL = '$baseURL/comments';
+
 
 
 

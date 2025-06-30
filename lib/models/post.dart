@@ -7,6 +7,8 @@ class Post {
   final String username;
   final String profileImage;
   final int userId; 
+  int commentsCount;
+
 
   Post({
     required this.id,
@@ -17,6 +19,8 @@ class Post {
     required this.username,
     required this.profileImage,
     required this.userId,
+    required this.commentsCount,
+
 
   });
 
@@ -31,6 +35,8 @@ class Post {
     username: user['username']?.toString() ?? '',
     profileImage: user['image']?.toString() ?? '',
     userId: user['id'] is int ? user['id'] : int.parse(user['id']?.toString() ?? '0'), // Convert to int
+    commentsCount: json['comments_count'] ?? 0,
+
   );
 }
 }
