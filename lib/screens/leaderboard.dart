@@ -9,7 +9,6 @@ class Leaderboard extends StatefulWidget {
 
 class _LeaderboardState extends State<Leaderboard> with SingleTickerProviderStateMixin {
   TabController? _tabController;
-  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -20,7 +19,6 @@ class _LeaderboardState extends State<Leaderboard> with SingleTickerProviderStat
   @override
   void dispose() {
     _tabController?.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -45,60 +43,24 @@ class _LeaderboardState extends State<Leaderboard> with SingleTickerProviderStat
             fontSize: 20,
           ),
         ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(100),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: TextField(
-                  controller: _searchController,
-                  style: const TextStyle(color: Colors.white, fontSize: 14),
-                  decoration: InputDecoration(
-                    hintText: 'Search posts...',
-                    hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-                    prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
-                    filled: true,
-                    fillColor: Colors.grey[900],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[800]!, width: 0.5),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[800]!, width: 0.5),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Color.fromARGB(255, 0, 145, 230),
-                        width: 1,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              TabBar(
-                controller: _tabController,
-                indicatorColor: const Color.fromARGB(255, 0, 145, 230),
-                indicatorWeight: 3,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.grey[400],
-                labelStyle: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-                unselectedLabelStyle: const TextStyle(
-                  fontWeight: FontWeight.w400,
-                  fontSize: 14,
-                ),
-                tabs: const [
-                  Tab(text: 'Most Liked Posts'),
-                  Tab(text: 'Most Commented Posts'),
-                ],
-              ),
-            ],
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: const Color.fromARGB(255, 0, 145, 230),
+          indicatorWeight: 3,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.grey[400],
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
           ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w400,
+            fontSize: 14,
+          ),
+          tabs: const [
+            Tab(text: 'Most Liked Posts'),
+            Tab(text: 'Most Commented Posts'),
+          ],
         ),
       ),
       body: TabBarView(
