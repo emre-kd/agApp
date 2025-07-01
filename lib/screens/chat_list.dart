@@ -144,7 +144,7 @@ class _ChatListState extends State<ChatList> {
                     TextButton(
                       onPressed: _fetchConversations,
                       child: const Text(
-                        'Retry',
+                        'Tekrar dene',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
@@ -157,7 +157,7 @@ class _ChatListState extends State<ChatList> {
               : conversations!.isEmpty
               ? const Center(
                 child: Text(
-                  'No conversations found',
+                  'Hiçbir mesaj bulunamadı',
                   style: TextStyle(color: Colors.white54, fontSize: 16),
                 ),
               )
@@ -207,7 +207,7 @@ class _ChatListState extends State<ChatList> {
                                     : null,
                           ),
                           title: Text(
-                            convo['name'] ?? 'Unknown',
+                            convo['name'] ?? 'Bilinmiyor',
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,

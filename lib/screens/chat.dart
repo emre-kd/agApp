@@ -399,7 +399,7 @@ class _ChatState extends State<Chat> {
                 messages.isEmpty && !isLoading
                     ? const Center(
                       child: Text(
-                        'No messages yet. Start the conversation!',
+                        'Henüz mesaj yok. Konuşmaya başla!',
                         style: TextStyle(fontSize: 16, color: Colors.white54),
                       ),
                     )
@@ -473,7 +473,7 @@ class _ChatState extends State<Chat> {
                     maxLength: 250,
                     controller: _controller,
                     decoration: InputDecoration(
-                      hintText: 'Type a message...',
+                      hintText: 'Bir mesaj yazın',
                       hintStyle: const TextStyle(color: Colors.white54),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20.0),

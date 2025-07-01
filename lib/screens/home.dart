@@ -6,6 +6,7 @@ import 'package:agapp/constant.dart';
 import 'package:agapp/controllers/authentication.dart';
 import 'package:agapp/screens/chat_list.dart';
 import 'package:agapp/screens/community_details.dart';
+import 'package:agapp/screens/leaderboard.dart';
 import 'package:agapp/screens/notification_settings.dart';
 import 'package:agapp/screens/post.dart' show PostWidget;
 import 'package:agapp/screens/search.dart';
@@ -93,7 +94,6 @@ class _HomeState extends State<Home> {
           currentUserId = data['id'];
           communityName = data['community']?['name'] ?? 'Unknown Community';
           communityId = data['community']?['id'] ?? 'Unknown Community';
-
 
           print(communityName);
         });
@@ -293,9 +293,10 @@ class _HomeState extends State<Home> {
                     padding: const EdgeInsets.all(16),
                     child: Wrap(
                       children: [
-                         ListTile(
+                        ListTile(
                           leading: const Icon(
-                            Icons.notifications_active, // Icon for community details
+                            Icons
+                                .notifications_active, // Icon for community details
                             color: Colors.white,
                           ),
                           title: const Text(
@@ -309,10 +310,7 @@ class _HomeState extends State<Home> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder:
-                                    (context) => NotificationSettings(
-                                     
-                                    ),
+                                builder: (context) => NotificationSettings(),
                               ),
                             );
                           },
@@ -333,10 +331,7 @@ class _HomeState extends State<Home> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder:
-                                    (context) => CommunityDetails(
-                                     
-                                    ),
+                                builder: (context) => CommunityDetails(),
                               ),
                             );
                           },
@@ -528,7 +523,7 @@ class _HomeState extends State<Home> {
                         },
                         icon: Icon(Icons.home, color: Colors.white),
                       ),
-                      SizedBox(width: 40),
+                      SizedBox(width: 20),
                       IconButton(
                         onPressed: () {
                           Navigator.push(
@@ -538,7 +533,17 @@ class _HomeState extends State<Home> {
                         },
                         icon: Icon(Icons.search_rounded, color: Colors.white),
                       ),
-                      SizedBox(width: 40),
+                      SizedBox(width: 20),
+                      IconButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => Leaderboard()),
+                          );
+                        },
+                        icon: Icon(Icons.leaderboard, color: Colors.white),
+                      ),
+                      SizedBox(width: 20),
                       IconButton(
                         onPressed: () {
                           Navigator.push(
@@ -548,7 +553,7 @@ class _HomeState extends State<Home> {
                         },
                         icon: Icon(Icons.mail_outline, color: Colors.white),
                       ),
-                      SizedBox(width: 40),
+                      SizedBox(width: 20),
                       IconButton(
                         onPressed: () {
                           Navigator.push(

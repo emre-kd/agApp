@@ -298,6 +298,7 @@ class _SearchedProfileState extends State<SearchedProfile> {
             color: Colors.white,
             backgroundColor: Colors.black.withOpacity(0.8),
             child: CustomScrollView(
+              
               controller: _scrollController, // Attach ScrollController
               slivers: [
                 SliverAppBar(
