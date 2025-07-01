@@ -442,6 +442,8 @@ class AuthenticationController extends GetxController {
         body: jsonEncode({'email': email}),
       );
 
+      print(response.body);
+
       if (response.statusCode == 200) {
         return true;
       } else if (response.statusCode == 422) {

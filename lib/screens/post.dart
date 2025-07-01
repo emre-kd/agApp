@@ -76,12 +76,14 @@ class _PostWidgetState extends State<PostWidget> {
       setState(() {
         _isVideoError = true;
       });
+      /*
       showTopPopUp(
         context,
         message: 'Video yüklenemedi',
         backgroundColor: Colors.red,
         duration: const Duration(seconds: 2),
       );
+      */
     }
   }
 
@@ -119,12 +121,14 @@ class _PostWidgetState extends State<PostWidget> {
         });
       } else {
         print('Failed to fetch like status: ${response.statusCode} - ${response.body}');
+        /*
         showTopPopUp(
           context,
           message: 'Hata: Like durumu alınamadı (${response.statusCode})',
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 2),
         );
+        */
       }
     } catch (e) {
       print('Error checking like status: $e');
