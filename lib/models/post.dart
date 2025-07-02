@@ -1,3 +1,5 @@
+import 'package:agapp/models/user.dart';
+
 class Post {
   final int id; // Post ID
   final String text;
@@ -8,6 +10,10 @@ class Post {
   final String profileImage;
   final int userId; 
   int commentsCount;
+  final int? likesCount; // Add this
+    final User user;
+
+
 
 
   Post({
@@ -20,6 +26,11 @@ class Post {
     required this.profileImage,
     required this.userId,
     required this.commentsCount,
+    this.likesCount,
+        required this.user,
+
+
+    
 
 
   });
@@ -36,6 +47,9 @@ class Post {
     profileImage: user['image']?.toString() ?? '',
     userId: user['id'] is int ? user['id'] : int.parse(user['id']?.toString() ?? '0'), // Convert to int
     commentsCount: json['comments_count'] ?? 0,
+    likesCount: json['likes_count'] ?? 0,
+     user: User.fromJson(json['user']),
+
 
   );
 }

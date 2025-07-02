@@ -1,10 +1,10 @@
-// lib/screens/post.dart
 // ignore_for_file: use_build_context_synchronously, avoid_print
 
 import 'dart:convert';
 import 'package:agapp/constant.dart';
 import 'package:agapp/screens/comments_page.dart';
 import 'package:agapp/screens/home.dart';
+import 'package:agapp/screens/leaderboard.dart';
 import 'package:agapp/screens/profile.dart';
 import 'package:agapp/screens/searched_profile.dart';
 import 'package:flutter/material.dart';
@@ -40,11 +40,9 @@ class _PostWidgetState extends State<PostWidget> {
   @override
   void initState() {
     super.initState();
-    // Initialize video controller if the media is a video
     if (_isVideo(widget.post.media)) {
       _initializeVideoPlayer();
     }
-    // Initialize like status
     _checkLikeStatus();
   }
 
@@ -54,13 +52,12 @@ class _PostWidgetState extends State<PostWidget> {
     super.dispose();
   }
 
-  // Helper method to determine if the media is a video based on file extension
-  bool _isVideo(String mediaUrl) {
+  bool _isVideo(String? mediaUrl) {
+    if (mediaUrl == null || mediaUrl.isEmpty) return false;
     final videoExtensions = ['.mp4', '.mov', '.avi', '.mkv'];
-    return mediaUrl.isNotEmpty && videoExtensions.any((ext) => mediaUrl.toLowerCase().endsWith(ext));
+    return videoExtensions.any((ext) => mediaUrl.toLowerCase().endsWith(ext));
   }
 
-  // Initialize video player with error handling
   Future<void> _initializeVideoPlayer() async {
     try {
       _videoController = VideoPlayerController.network(
@@ -76,18 +73,15 @@ class _PostWidgetState extends State<PostWidget> {
       setState(() {
         _isVideoError = true;
       });
-      /*
       showTopPopUp(
         context,
         message: 'Video yüklenemedi',
         backgroundColor: Colors.red,
         duration: const Duration(seconds: 2),
       );
-      */
     }
   }
 
-  // Check initial like status and count
   Future<void> _checkLikeStatus() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
@@ -116,19 +110,17 @@ class _PostWidgetState extends State<PostWidget> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          _isLiked = data['is_liked'] == true; // Ensure boolean conversion
-          _likeCount = data['like_count'] ?? 0; // Fallback to 0 if null
+          _isLiked = data['is_liked'] == true;
+          _likeCount = data['like_count'] ?? widget.post.likesCount ?? 0;
         });
       } else {
         print('Failed to fetch like status: ${response.statusCode} - ${response.body}');
-        /*
         showTopPopUp(
           context,
           message: 'Hata: Like durumu alınamadı (${response.statusCode})',
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 2),
         );
-        */
       }
     } catch (e) {
       print('Error checking like status: $e');
@@ -141,7 +133,6 @@ class _PostWidgetState extends State<PostWidget> {
     }
   }
 
-  // Toggle like status
   Future<void> _toggleLike() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
@@ -170,8 +161,8 @@ class _PostWidgetState extends State<PostWidget> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          _isLiked = data['is_liked'] == true; // Ensure boolean conversion
-          _likeCount = data['like_count'] ?? 0; // Fallback to 0 if null
+          _isLiked = data['is_liked'] == true;
+          _likeCount = data['like_count'] ?? widget.post.likesCount ?? 0;
         });
         showTopPopUp(
           context,
@@ -220,7 +211,6 @@ class _PostWidgetState extends State<PostWidget> {
           duration: const Duration(seconds: 2),
         );
 
-        // Delay navigation to allow pop-up to be visible
         await Future.delayed(const Duration(seconds: 2));
         if (widget.parentScreen == 'home') {
           Navigator.pushReplacement(
@@ -231,6 +221,11 @@ class _PostWidgetState extends State<PostWidget> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const Profile()),
+          );
+        }  else if (widget.parentScreen == 'leaderboard') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const Leaderboard()),
           );
         }
       } else {
@@ -254,6 +249,7 @@ class _PostWidgetState extends State<PostWidget> {
 
   @override
   Widget build(BuildContext context) {
+    print('PostWidget build - ID: ${widget.post.id}, Comments: ${widget.post.commentsCount}');
     return Card(
       color: Colors.black,
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
@@ -269,7 +265,6 @@ class _PostWidgetState extends State<PostWidget> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Row
               Row(
                 children: [
                   GestureDetector(
@@ -381,7 +376,8 @@ class _PostWidgetState extends State<PostWidget> {
                     ),
                   ),
                 ),
-              if (widget.post.media.isNotEmpty) _buildMediaWidget(),
+              if (widget.post.media.isNotEmpty)
+                _buildMediaWidget(),
               const SizedBox(height: 12),
               _buildActionButtons(),
             ],
@@ -391,7 +387,6 @@ class _PostWidgetState extends State<PostWidget> {
     );
   }
 
-  // Build the media widget (image or video)
   Widget _buildMediaWidget() {
     if (_isVideo(widget.post.media)) {
       return _buildVideoPlayer();
@@ -400,7 +395,6 @@ class _PostWidgetState extends State<PostWidget> {
     }
   }
 
-  // Widget for displaying images
   Widget _buildImageViewer() {
     return GestureDetector(
       onTap: () {
@@ -469,11 +463,10 @@ class _PostWidgetState extends State<PostWidget> {
     );
   }
 
-  // Widget for displaying videos
   Widget _buildVideoPlayer() {
     if (_isVideoError || _videoController == null || !_isVideoInitialized) {
       return GestureDetector(
-        onTap: _initializeVideoPlayer, // Retry on tap
+        onTap: _initializeVideoPlayer,
         child: Container(
           height: 200,
           color: Colors.grey[900],
@@ -660,7 +653,7 @@ class _PostWidgetState extends State<PostWidget> {
         ),
         _buildActionButton(
           icon: Icons.mode_comment_outlined,
-          label: widget.post.commentsCount.toString(),
+          label: (widget.post.commentsCount).toString(),
           onTap: () {
             Navigator.push(
               context,
@@ -702,44 +695,4 @@ class _PostWidgetState extends State<PostWidget> {
       ),
     );
   }
-}
-
-// lib/utils/top_pop_up.dart
-
-void showTopPopUp(
-  BuildContext context, {
-  required String message,
-  Color backgroundColor = Colors.black,
-  Duration duration = const Duration(seconds: 2),
-}) {
-  final overlay = Overlay.of(context);
-  final overlayEntry = OverlayEntry(
-    builder: (context) => Positioned(
-      top: 80.0, // Below AppBar (~56.0) and status bar (~20-30 pixels)
-      left: 16.0,
-      right: 16.0,
-      child: Material(
-        elevation: 4.0,
-        borderRadius: BorderRadius.circular(8.0),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          child: Text(
-            message,
-            style: const TextStyle(color: Colors.white, fontSize: 14.0),
-          ),
-        ),
-      ),
-    ),
-  );
-
-  overlay.insert(overlayEntry);
-
-  // Remove the pop-up after the specified duration
-  Future.delayed(duration, () {
-    overlayEntry.remove();
-  });
 }

@@ -217,21 +217,22 @@ class _ProfileState extends State<Profile> {
       setState(() => _isLoadingMore = false);
     }
   }
-@override
-Widget build(BuildContext context) {
-  String formatCreatedAt(String dateString) {
-    try {
-      final date = DateTime.parse(dateString);
-      final formatter = DateFormat('dd MM yyyy');
-      return '${formatter.format(date)} tarihinde katıldı';
-    } catch (e) {
-      return 'N/A';
-    }
-  }
 
-  return isLoading
-      ? const Center(child: CircularProgressIndicator())
-      : DefaultTabController(
+  @override
+  Widget build(BuildContext context) {
+    String formatCreatedAt(String dateString) {
+      try {
+        final date = DateTime.parse(dateString);
+        final formatter = DateFormat('dd MM yyyy');
+        return '${formatter.format(date)} tarihinde katıldı';
+      } catch (e) {
+        return 'N/A';
+      }
+    }
+
+    return isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : DefaultTabController(
           length: 3,
           child: Scaffold(
             backgroundColor: Colors.black,
@@ -244,123 +245,184 @@ Widget build(BuildContext context) {
               backgroundColor: Colors.black.withOpacity(0.8),
               child: NestedScrollView(
                 controller: _scrollController, // Keep the ScrollController here
-                headerSliverBuilder: (context, innerBoxIsScrolled) => [
-                  // SliverAppBar
-                  SliverAppBar(
-                    backgroundColor: Colors.black,
-                    expandedHeight: 60,
-                    floating: false,
-                    pinned: true,
-                    leading: Padding(
-                      padding: const EdgeInsets.only(left: 10.0, top: 7, bottom: 7),
-                      child: FloatingActionButton(
-                        onPressed: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => Home()));
-                        },
-                        backgroundColor: Colors.black.withOpacity(0.2),
-                        elevation: 0,
-                        child: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
-                      ),
-                    ),
-                    actions: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 10.0, top: 10.0),
-                        child: OutlinedButton(
-                          onPressed: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateProfile()));
-                          },
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.white),
-                            backgroundColor: Colors.transparent,
-                            padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
+                headerSliverBuilder:
+                    (context, innerBoxIsScrolled) => [
+                      // SliverAppBar
+                      SliverAppBar(
+                        backgroundColor: Colors.black,
+                        expandedHeight: 60,
+                        floating: false,
+                        pinned: true,
+                        leading: Padding(
+                          padding: const EdgeInsets.only(
+                            left: 10.0,
+                            top: 7,
+                            bottom: 7,
                           ),
-                          child: const Text('Profili Güncelle', style: TextStyle(color: Colors.white, fontSize: 16)),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  // Cover ve Profil Resmi
-                  SliverToBoxAdapter(
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Container(
-                          height: 200,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.grey[300],
-                            image: DecorationImage(
-                              fit: BoxFit.cover,
-                              image: userData['coverImage'] != null
-                                  ? NetworkImage('$baseNormalURL/${userData['coverImage']}')
-                                  : const AssetImage('assets/default-cover.png') as ImageProvider,
+                          child: FloatingActionButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => Home()),
+                              );
+                            },
+                            backgroundColor: Colors.black.withOpacity(0.2),
+                            elevation: 0,
+                            child: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                              size: 28,
                             ),
                           ),
                         ),
-                        Positioned(
-                          bottom: -75,
-                          left: 20,
-                          child: Container(
-                            height: 150,
-                            width: 150,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 4),
-                              image: userData['image'] != null
-                                  ? DecorationImage(
-                                      fit: BoxFit.cover,
-                                      image: NetworkImage('$baseNormalURL/${userData['image']}'),
-                                    )
-                                  : null,
-                              color: Colors.grey[300],
+                        actions: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              right: 10.0,
+                              top: 10.0,
                             ),
-                            child: userData['image'] == null
-                                ? const Center(
-                                    child: Icon(Icons.person, size: 60, color: Colors.white70),
-                                  )
-                                : null,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Profil Bilgileri + TabBar
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0).copyWith(top: 90),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _nameController.text,
-                            style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-                          ),
-                          Text('@${_userNameController.text}', style: const TextStyle(color: Colors.grey, fontSize: 16)),
-                          const SizedBox(height: 10),
-                          Text(
-                            formatCreatedAt(_createdAtController.text),
-                            style: const TextStyle(color: Colors.grey, fontSize: 14),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // TabBar
-                          const TabBar(
-                            labelColor: Colors.white,
-                            unselectedLabelColor: Colors.grey,
-                            indicatorColor: Colors.white,
-                            tabs: [
-                              Tab(text: 'Gönderiler'),
-                              Tab(text: 'Beğeniler'),
-                              Tab(text: 'Yorumlar'),
-                            ],
+                            child: OutlinedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => UpdateProfile(),
+                                  ),
+                                );
+                              },
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Colors.white),
+                                backgroundColor: Colors.transparent,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 15.0,
+                                  vertical: 5.0,
+                                ),
+                              ),
+                              child: const Text(
+                                'Profili Güncelle',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                ],
+
+                      // Cover ve Profil Resmi
+                      SliverToBoxAdapter(
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              height: 200,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: Colors.grey[300],
+                                image: DecorationImage(
+                                  fit: BoxFit.cover,
+                                  image:
+                                      userData['coverImage'] != null
+                                          ? NetworkImage(
+                                            '$baseNormalURL/${userData['coverImage']}',
+                                          )
+                                          : const AssetImage(
+                                                'assets/default-cover.png',
+                                              )
+                                              as ImageProvider,
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: -75,
+                              left: 20,
+                              child: Container(
+                                height: 150,
+                                width: 150,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 4,
+                                  ),
+                                  image:
+                                      userData['image'] != null
+                                          ? DecorationImage(
+                                            fit: BoxFit.cover,
+                                            image: NetworkImage(
+                                              '$baseNormalURL/${userData['image']}',
+                                            ),
+                                          )
+                                          : null,
+                                  color: Colors.grey[300],
+                                ),
+                                child:
+                                    userData['image'] == null
+                                        ? const Center(
+                                          child: Icon(
+                                            Icons.person,
+                                            size: 60,
+                                            color: Colors.white70,
+                                          ),
+                                        )
+                                        : null,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Profil Bilgileri + TabBar
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20.0,
+                          ).copyWith(top: 90),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _nameController.text,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                '@${_userNameController.text}',
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                formatCreatedAt(_createdAtController.text),
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+
+                              // TabBar
+                              const TabBar(
+                                labelColor: Colors.white,
+                                unselectedLabelColor: Colors.grey,
+                                indicatorColor: Colors.white,
+                                tabs: [
+                                  Tab(text: 'Gönderiler'),
+                                  Tab(text: 'Beğeniler'),
+                                  Tab(text: 'Yorumlar'),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
 
                 // Tab içerikleri
                 body: TabBarView(
@@ -368,45 +430,55 @@ Widget build(BuildContext context) {
                     // Gönderiler
                     posts.isEmpty
                         ? const Center(
-                            child: Text('Gönderi yok', style: TextStyle(color: Colors.grey, fontSize: 16)),
-                          )
-                        : CustomScrollView(
-                            // Use CustomScrollView instead of ListView.builder
-                            slivers: [
-                              SliverList(
-                                delegate: SliverChildBuilderDelegate(
-                                  (context, index) {
-                                    if (index == posts.length && _isLoadingMore) {
-                                      return const Center(
-                                        child: Padding(
-                                          padding: EdgeInsets.all(16.0),
-                                          child: CircularProgressIndicator(color: Colors.white),
-                                        ),
-                                      );
-                                    }
-                                    final post = posts[index];
-                                    return PostWidget(
-                                      post: post,
-                                      parentScreen: 'profile',
-                                      currentUserId: currentUserId,
-                                    );
-                                  },
-                                  childCount: posts.length + (_isLoadingMore ? 1 : 0),
-                                ),
-                              ),
-                            ],
+                          child: Text(
+                            'Gönderi yok',
+                            style: TextStyle(color: Colors.grey, fontSize: 16),
                           ),
+                        )
+                        : CustomScrollView(
+                          // Use CustomScrollView instead of ListView.builder
+                          slivers: [
+                            SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  if (index == posts.length && _isLoadingMore) {
+                                    return const Center(
+                                      child: Padding(
+                                        padding: EdgeInsets.all(16.0),
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  final post = posts[index];
+                                  return PostWidget(
+                                    post: post,
+                                    parentScreen: 'profile',
+                                    currentUserId: currentUserId,
+                                  );
+                                },
+                                childCount:
+                                    posts.length + (_isLoadingMore ? 1 : 0),
+                              ),
+                            ),
+                          ],
+                        ),
 
                     // Beğeniler
                     const Center(
-                      child: Text('Beğenilen gönderiler burada gösterilecek.',
-                          style: TextStyle(color: Colors.grey, fontSize: 16)),
+                      child: Text(
+                        'Beğenilen gönderiler burada gösterilecek.',
+                        style: TextStyle(color: Colors.grey, fontSize: 16),
+                      ),
                     ),
 
                     // Yorumlar
                     const Center(
-                      child: Text('Yorumlar burada gösterilecek.',
-                          style: TextStyle(color: Colors.grey, fontSize: 16)),
+                      child: Text(
+                        'Yorumlar burada gösterilecek.',
+                        style: TextStyle(color: Colors.grey, fontSize: 16),
+                      ),
                     ),
                   ],
                 ),
@@ -414,5 +486,5 @@ Widget build(BuildContext context) {
             ),
           ),
         );
-}
+  }
 }
