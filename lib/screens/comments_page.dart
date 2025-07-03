@@ -175,6 +175,8 @@ class _CommentsPageState extends State<CommentsPage> {
         }),
       );
 
+      print(response.body);
+
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
         setState(() {

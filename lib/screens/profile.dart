@@ -1,7 +1,8 @@
 // ignore_for_file: deprecated_member_use, avoid_print, use_build_context_synchronously, no_leading_underscores_for_local_identifiers, unused_field
 import 'dart:convert';
-
+import 'package:agapp/models/comment.dart';
 import 'package:agapp/models/post.dart';
+import 'package:agapp/screens/comments_page.dart';
 import 'package:agapp/screens/home.dart';
 import 'package:agapp/screens/post.dart';
 import 'package:agapp/screens/update-profile.dart';
@@ -9,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
-
 import '../constant.dart';
 
 class Profile extends StatefulWidget {
@@ -22,21 +22,22 @@ class Profile extends StatefulWidget {
 class _ProfileState extends State<Profile> {
   Map<String, dynamic> userData = {};
   List<Post> posts = [];
-  List<Post> likedPosts = []; // New list for liked posts
+  List<Post> likedPosts = [];
+  List<Comment> comments = [];
   bool isLoading = true;
-  bool _isLoadingMore = false;
-  bool _isLoadingMoreLikes = false; // Track loading more liked posts
+  bool isLoadingMorePosts = false;
+  bool isLoadingMoreLikes = false;
+  bool isLoadingMoreComments = false;
   String errorMessage = '';
-  Map<String, String> errors = {};
-  bool isUpdating = false;
   int? currentUserId;
-  int _page = 1;
-  int _likesPage = 1; // Track page for liked posts
-  final int _limit = 5;
-  bool _hasMore = true;
-  bool _hasMoreLikes = true; // Track if more liked posts are available
-  final ScrollController _scrollController = ScrollController();
-  final ScrollController _likesScrollController = ScrollController(); // New controller for liked posts
+  int postsPage = 1;
+  int likesPage = 1;
+  int commentsPage = 1;
+  final int limit = 5;
+  final int limitComments = 20;
+  bool hasMorePosts = true;
+  bool hasMoreLikes = true;
+  bool hasMoreComments = true;
 
   // Controllers
   late TextEditingController _nameController;
@@ -44,6 +45,11 @@ class _ProfileState extends State<Profile> {
   late TextEditingController _emailController;
   late TextEditingController _createdAtController;
   late TextEditingController _passwordController;
+
+  // Scroll Controllers
+  final ScrollController _postsScrollController = ScrollController();
+  final ScrollController _likesScrollController = ScrollController();
+  final ScrollController _commentsScrollController = ScrollController();
 
   @override
   void initState() {
@@ -53,27 +59,36 @@ class _ProfileState extends State<Profile> {
     _emailController = TextEditingController();
     _createdAtController = TextEditingController();
     _passwordController = TextEditingController();
+
     fetchUserData();
     fetchUserPosts();
-    fetchLikedPosts(); // Fetch liked posts on init
+    fetchLikedPosts();
+    fetchUserComments();
 
-    // Listener for posts pagination
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-              _scrollController.position.maxScrollExtent - 200 &&
-          !_isLoadingMore &&
-          _hasMore) {
+    _postsScrollController.addListener(() {
+      if (_postsScrollController.position.pixels >=
+              _postsScrollController.position.maxScrollExtent - 200 &&
+          !isLoadingMorePosts &&
+          hasMorePosts) {
         fetchMorePosts();
       }
     });
 
-    // Listener for liked posts pagination
     _likesScrollController.addListener(() {
       if (_likesScrollController.position.pixels >=
               _likesScrollController.position.maxScrollExtent - 200 &&
-          !_isLoadingMoreLikes &&
-          _hasMoreLikes) {
+          !isLoadingMoreLikes &&
+          hasMoreLikes) {
         fetchMoreLikedPosts();
+      }
+    });
+
+    _commentsScrollController.addListener(() {
+      if (_commentsScrollController.position.pixels >=
+              _commentsScrollController.position.maxScrollExtent - 200 &&
+          !isLoadingMoreComments &&
+          hasMoreComments) {
+        fetchMoreComments();
       }
     });
   }
@@ -85,8 +100,9 @@ class _ProfileState extends State<Profile> {
     _emailController.dispose();
     _createdAtController.dispose();
     _passwordController.dispose();
-    _scrollController.dispose();
+    _postsScrollController.dispose();
     _likesScrollController.dispose();
+    _commentsScrollController.dispose();
     super.dispose();
   }
 
@@ -101,10 +117,7 @@ class _ProfileState extends State<Profile> {
       return;
     }
 
-    setState(() {
-      isLoading = true;
-      errorMessage = '';
-    });
+    setState(() => isLoading = true);
 
     try {
       final response = await http.get(
@@ -118,14 +131,13 @@ class _ProfileState extends State<Profile> {
       if (response.statusCode == 200) {
         final decodedResponse = json.decode(response.body);
         setState(() {
-          if (decodedResponse is List<dynamic> && decodedResponse.isNotEmpty) {
-            userData = decodedResponse[0] as Map<String, dynamic>;
-          } else if (decodedResponse is Map<String, dynamic>) {
-            userData = decodedResponse;
-          } else {
-            userData = {};
-            errorMessage = 'Unexpected response format';
-          }
+          userData =
+              decodedResponse is List<dynamic> && decodedResponse.isNotEmpty
+                  ? decodedResponse[0] as Map<String, dynamic>
+                  : decodedResponse is Map<String, dynamic>
+                  ? decodedResponse
+                  : {};
+          if (userData.isEmpty) errorMessage = 'Unexpected response format';
           _nameController.text = userData['name']?.toString() ?? '';
           _userNameController.text = userData['username']?.toString() ?? '';
           _emailController.text = userData['email']?.toString() ?? '';
@@ -133,9 +145,7 @@ class _ProfileState extends State<Profile> {
           currentUserId = userData['id']?.toInt();
           isLoading = false;
         });
-        if (currentUserId != null) {
-          await prefs.setInt('id', currentUserId!);
-        }
+        if (currentUserId != null) await prefs.setInt('id', currentUserId!);
       } else {
         setState(() {
           errorMessage = 'Failed to load user data: ${response.body}';
@@ -152,9 +162,9 @@ class _ProfileState extends State<Profile> {
 
   Future<void> fetchUserPosts() async {
     setState(() {
-      isLoading = true;
-      _page = 1;
-      _hasMore = true;
+      postsPage = 1;
+      hasMorePosts = true;
+      posts.clear();
     });
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -162,7 +172,7 @@ class _ProfileState extends State<Profile> {
 
     try {
       final response = await http.get(
-        Uri.parse('$fetchUserPostURL?page=$_page&limit=$_limit'),
+        Uri.parse('$fetchUserPostURL?page=$postsPage&limit=$limit'),
         headers: {
           'Authorization': 'Bearer $token',
           'Accept': 'application/json',
@@ -172,37 +182,29 @@ class _ProfileState extends State<Profile> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final List<dynamic> postJson = data['posts'];
-
         setState(() {
           posts = postJson.map((json) => Post.fromJson(json)).toList();
-          isLoading = false;
-          _hasMore = postJson.length == _limit;
+          hasMorePosts = postJson.length == limit;
         });
-      } else {
-        print('Error: ${response.statusCode}');
-        setState(() => isLoading = false);
       }
     } catch (e) {
-      print('Fetch error: $e');
-      setState(() => isLoading = false);
+      setState(() {
+        errorMessage = 'Error fetching posts: ${e.toString()}';
+      });
     }
   }
 
   Future<void> fetchMorePosts() async {
-    if (_isLoadingMore || !_hasMore) return;
+    if (isLoadingMorePosts || !hasMorePosts) return;
 
-    setState(() {
-      _isLoadingMore = true;
-    });
-
-    await Future.delayed(const Duration(seconds: 1));
+    setState(() => isLoadingMorePosts = true);
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
 
     try {
       final response = await http.get(
-        Uri.parse('$fetchUserPostURL?page=${_page + 1}&limit=$_limit'),
+        Uri.parse('$fetchUserPostURL?page=${postsPage + 1}&limit=$limit'),
         headers: {
           'Authorization': 'Bearer $token',
           'Accept': 'application/json',
@@ -212,28 +214,25 @@ class _ProfileState extends State<Profile> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final List<dynamic> postJson = data['posts'];
-
         setState(() {
-          _page++;
+          postsPage++;
           posts.addAll(postJson.map((json) => Post.fromJson(json)).toList());
-          _isLoadingMore = false;
-          _hasMore = postJson.length == _limit;
+          isLoadingMorePosts = false;
+          hasMorePosts = postJson.length == limit;
         });
       } else {
-        print('Error: ${response.statusCode}');
-        setState(() => _isLoadingMore = false);
+        setState(() => isLoadingMorePosts = false);
       }
     } catch (e) {
-      print('Fetch error: $e');
-      setState(() => _isLoadingMore = false);
+      setState(() => isLoadingMorePosts = false);
     }
   }
 
   Future<void> fetchLikedPosts() async {
     setState(() {
-      isLoading = true;
-      _likesPage = 1;
-      _hasMoreLikes = true;
+      likesPage = 1;
+      hasMoreLikes = true;
+      likedPosts.clear();
     });
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -241,7 +240,7 @@ class _ProfileState extends State<Profile> {
 
     try {
       final response = await http.get(
-        Uri.parse('$baseURL/user/liked-posts?page=$_likesPage&limit=$_limit'),
+        Uri.parse('$baseURL/user/liked-posts?page=$likesPage&limit=$limit'),
         headers: {
           'Authorization': 'Bearer $token',
           'Accept': 'application/json',
@@ -251,37 +250,31 @@ class _ProfileState extends State<Profile> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final List<dynamic> postJson = data['posts'];
-
         setState(() {
           likedPosts = postJson.map((json) => Post.fromJson(json)).toList();
-          isLoading = false;
-          _hasMoreLikes = postJson.length == _limit;
+          hasMoreLikes = postJson.length == limit;
         });
-      } else {
-        print('Error fetching liked posts: ${response.statusCode}');
-        setState(() => isLoading = false);
       }
     } catch (e) {
-      print('Fetch liked posts error: $e');
-      setState(() => isLoading = false);
+      setState(() {
+        errorMessage = 'Error fetching liked posts: ${e.toString()}';
+      });
     }
   }
 
   Future<void> fetchMoreLikedPosts() async {
-    if (_isLoadingMoreLikes || !_hasMoreLikes) return;
+    if (isLoadingMoreLikes || !hasMoreLikes) return;
 
-    setState(() {
-      _isLoadingMoreLikes = true;
-    });
-
-    await Future.delayed(const Duration(seconds: 1));
+    setState(() => isLoadingMoreLikes = true);
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
 
     try {
       final response = await http.get(
-        Uri.parse('$baseURL/user/liked-posts?page=${_likesPage + 1}&limit=$_limit'),
+        Uri.parse(
+          '$baseURL/user/liked-posts?page=${likesPage + 1}&limit=$limit',
+        ),
         headers: {
           'Authorization': 'Bearer $token',
           'Accept': 'application/json',
@@ -291,302 +284,500 @@ class _ProfileState extends State<Profile> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final List<dynamic> postJson = data['posts'];
-
         setState(() {
-          _likesPage++;
-          likedPosts.addAll(postJson.map((json) => Post.fromJson(json)).toList());
-          _isLoadingMoreLikes = false;
-          _hasMoreLikes = postJson.length == _limit;
+          likesPage++;
+          likedPosts.addAll(
+            postJson.map((json) => Post.fromJson(json)).toList(),
+          );
+          isLoadingMoreLikes = false;
+          hasMoreLikes = postJson.length == limit;
         });
       } else {
-        print('Error fetching more liked posts: ${response.statusCode}');
-        setState(() => _isLoadingMoreLikes = false);
+        setState(() => isLoadingMoreLikes = false);
       }
     } catch (e) {
-      print('Fetch more liked posts error: $e');
-      setState(() => _isLoadingMoreLikes = false);
+      setState(() => isLoadingMoreLikes = false);
     }
   }
 
+  Future<void> fetchUserComments() async {
+    setState(() {
+      commentsPage = 1;
+      hasMoreComments = true;
+      comments.clear();
+    });
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    try {
+      final response = await http.get(
+        Uri.parse(
+          '$baseURL/user/comments?page=$commentsPage&limit=$limitComments',
+        ),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List<dynamic> commentJson = data['comments']['data'];
+        setState(() {
+          comments = commentJson.map((json) => Comment.fromJson(json)).toList();
+          hasMoreComments = commentJson.length == limitComments;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Error fetching comments: ${e.toString()}';
+      });
+    }
+  }
+
+  Future<void> fetchMoreComments() async {
+    if (isLoadingMoreComments || !hasMoreComments) return;
+
+    setState(() => isLoadingMoreComments = true);
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    try {
+      final response = await http.get(
+        Uri.parse(
+          '$baseURL/user/comments?page=${commentsPage + 1}&limit=$limitComments',
+        ),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List<dynamic> commentJson = data['comments']['data'];
+        setState(() {
+          commentsPage++;
+          comments.addAll(
+            commentJson.map((json) => Comment.fromJson(json)).toList(),
+          );
+          isLoadingMoreComments = false;
+          hasMoreComments = commentJson.length == limitComments;
+        });
+      } else {
+        setState(() => isLoadingMoreComments = false);
+      }
+    } catch (e) {
+      setState(() => isLoadingMoreComments = false);
+    }
+  }
+
+  Future<void> refreshAllData() async {
+    setState(() => isLoading = true);
+    await Future.wait([
+      fetchUserData(),
+      fetchUserPosts(),
+      fetchLikedPosts(),
+      fetchUserComments(),
+    ]);
+    setState(() => isLoading = false);
+  }
+
+  void onCommentTap(Comment comment) {
+    print('Tapped comment ID: ${comment.id} on Post ID: ${comment.postId}');
+    // Add navigation to post or other logic here
+  }
+
+  String formatCreatedAt(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      return DateFormat('dd MM yyyy').format(date) + ' tarihinde katıldı';
+    } catch (e) {
+      return 'N/A';
+    }
+  }
+
+  // ...existing code...
   @override
   Widget build(BuildContext context) {
-    String formatCreatedAt(String dateString) {
-      try {
-        final date = DateTime.parse(dateString);
-        final formatter = DateFormat('dd MM yyyy');
-        return '${formatter.format(date)} tarihinde katıldı';
-      } catch (e) {
-        return 'N/A';
-      }
-    }
-
     return isLoading
         ? const Center(child: CircularProgressIndicator())
         : DefaultTabController(
-            length: 3,
-            child: Scaffold(
-              backgroundColor: Colors.black,
-              body: RefreshIndicator(
-                onRefresh: () async {
-                  await fetchUserData();
-                  await fetchUserPosts();
-                  await fetchLikedPosts(); // Refresh liked posts
-                },
-                color: Colors.white,
-                backgroundColor: Colors.black.withOpacity(0.8),
-                child: NestedScrollView(
-                  controller: _scrollController,
-                  headerSliverBuilder: (context, innerBoxIsScrolled) => [
-                    SliverAppBar(
-                      backgroundColor: Colors.black,
-                      expandedHeight: 60,
-                      floating: false,
-                      pinned: true,
-                      leading: Padding(
-                        padding: const EdgeInsets.only(
-                          left: 10.0,
-                          top: 7,
-                          bottom: 7,
-                        ),
-                        child: FloatingActionButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => Home()),
-                            );
-                          },
-                          backgroundColor: Colors.black.withOpacity(0.2),
-                          elevation: 0,
-                          child: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                        ),
-                      ),
-                      actions: [
-                        Padding(
+          length: 3,
+          child: Scaffold(
+            backgroundColor: Colors.black,
+            body: RefreshIndicator(
+              onRefresh: refreshAllData,
+              color: Colors.white,
+              backgroundColor: Colors.black.withOpacity(0.8),
+              child: NestedScrollView(
+                headerSliverBuilder:
+                    (context, innerBoxIsScrolled) => [
+                      SliverAppBar(
+                        backgroundColor: Colors.black,
+                        expandedHeight: 60,
+                        floating: false,
+                        pinned: true,
+                        leading: Padding(
                           padding: const EdgeInsets.only(
-                            right: 10.0,
-                            top: 10.0,
+                            left: 10.0,
+                            top: 7,
+                            bottom: 7,
                           ),
-                          child: OutlinedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => UpdateProfile(),
+                          child: FloatingActionButton(
+                            onPressed:
+                                () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => Home(),
+                                  ),
                                 ),
-                              );
-                            },
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: Colors.white),
-                              backgroundColor: Colors.transparent,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 15.0,
-                                vertical: 5.0,
-                              ),
-                            ),
-                            child: const Text(
-                              'Profili Güncelle',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
+                            backgroundColor: Colors.black.withOpacity(0.2),
+                            elevation: 0,
+                            child: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                              size: 28,
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                    SliverToBoxAdapter(
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Container(
-                            height: 200,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: Colors.grey[300],
-                              image: DecorationImage(
-                                fit: BoxFit.cover,
-                                image: userData['coverImage'] != null
-                                    ? NetworkImage(
-                                        '$baseNormalURL/${userData['coverImage']}',
-                                      )
-                                    : const AssetImage(
-                                        'assets/default-cover.png',
-                                      ) as ImageProvider,
-                              ),
+                        actions: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              right: 10.0,
+                              top: 10.0,
                             ),
-                          ),
-                          Positioned(
-                            bottom: -75,
-                            left: 20,
-                            child: Container(
-                              height: 150,
-                              width: 150,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 4,
+                            child: OutlinedButton(
+                              onPressed:
+                                  () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => UpdateProfile(),
+                                    ),
+                                  ),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Colors.white),
+                                backgroundColor: Colors.transparent,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 15.0,
+                                  vertical: 5.0,
                                 ),
-                                image: userData['image'] != null
-                                    ? DecorationImage(
-                                        fit: BoxFit.cover,
-                                        image: NetworkImage(
-                                          '$baseNormalURL/${userData['image']}',
-                                        ),
-                                      )
-                                    : null,
-                                color: Colors.grey[300],
                               ),
-                              child: userData['image'] == null
-                                  ? const Center(
-                                      child: Icon(
-                                        Icons.person,
-                                        size: 60,
-                                        color: Colors.white70,
-                                      ),
-                                    )
-                                  : null,
+                              child: const Text(
+                                'Profili Güncelle',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20.0,
-                        ).copyWith(top: 90),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      SliverToBoxAdapter(
+                        child: Stack(
+                          clipBehavior: Clip.none,
                           children: [
-                            Text(
-                              _nameController.text,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
+                            Container(
+                              height: 200,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: Colors.grey[300],
+                                image: DecorationImage(
+                                  fit: BoxFit.cover,
+                                  image:
+                                      userData['coverImage'] != null
+                                          ? NetworkImage(
+                                            '$baseNormalURL/${userData['coverImage']}',
+                                          )
+                                          : const AssetImage(
+                                                'assets/default-cover.png',
+                                              )
+                                              as ImageProvider,
+                                ),
                               ),
                             ),
-                            Text(
-                              '@${_userNameController.text}',
-                              style: const TextStyle(
-                                color: Colors.grey,
-                                fontSize: 16,
+                            Positioned(
+                              bottom: -75,
+                              left: 20,
+                              child: Container(
+                                height: 150,
+                                width: 150,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 4,
+                                  ),
+                                  image:
+                                      userData['image'] != null
+                                          ? DecorationImage(
+                                            fit: BoxFit.cover,
+                                            image: NetworkImage(
+                                              '$baseNormalURL/${userData['image']}',
+                                            ),
+                                          )
+                                          : null,
+                                  color: Colors.grey[300],
+                                ),
+                                child:
+                                    userData['image'] == null
+                                        ? const Center(
+                                          child: Icon(
+                                            Icons.person,
+                                            size: 60,
+                                            color: Colors.white70,
+                                          ),
+                                        )
+                                        : null,
                               ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              formatCreatedAt(_createdAtController.text),
-                              style: const TextStyle(
-                                color: Colors.grey,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            const TabBar(
-                              labelColor: Colors.white,
-                              unselectedLabelColor: Colors.grey,
-                              indicatorColor: Colors.white,
-                              tabs: [
-                                Tab(text: 'Gönderiler'),
-                                Tab(text: 'Beğeniler'),
-                                Tab(text: 'Yorumlar'),
-                              ],
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  ],
-                  body: TabBarView(
-                    children: [
-                      // Gönderiler
-                      posts.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'Gönderi yok',
-                                style: TextStyle(color: Colors.grey, fontSize: 16),
-                              ),
-                            )
-                          : CustomScrollView(
-                              slivers: [
-                                SliverList(
-                                  delegate: SliverChildBuilderDelegate(
-                                    (context, index) {
-                                      if (index == posts.length && _isLoadingMore) {
-                                        return const Center(
-                                          child: Padding(
-                                            padding: EdgeInsets.all(16.0),
-                                            child: CircularProgressIndicator(
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                      final post = posts[index];
-                                      return PostWidget(
-                                        post: post,
-                                        parentScreen: 'profile',
-                                        currentUserId: currentUserId,
-                                      );
-                                    },
-                                    childCount: posts.length + (_isLoadingMore ? 1 : 0),
-                                  ),
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20.0,
+                          ).copyWith(top: 90),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _nameController.text,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                              ],
-                            ),
-                      // Beğeniler
-                      likedPosts.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'Beğenilen gönderi yok',
-                                style: TextStyle(color: Colors.grey, fontSize: 16),
                               ),
-                            )
-                          : CustomScrollView(
-                              controller: _likesScrollController, // Use separate controller
-                              slivers: [
-                                SliverList(
-                                  delegate: SliverChildBuilderDelegate(
-                                    (context, index) {
-                                      if (index == likedPosts.length && _isLoadingMoreLikes) {
-                                        return const Center(
-                                          child: Padding(
-                                            padding: EdgeInsets.all(16.0),
-                                            child: CircularProgressIndicator(
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                      final post = likedPosts[index];
-                                      return PostWidget(
-                                        post: post,
-                                        parentScreen: 'profile',
-                                        currentUserId: currentUserId,
-                                      );
-                                    },
-                                    childCount: likedPosts.length + (_isLoadingMoreLikes ? 1 : 0),
-                                  ),
+                              Text(
+                                '@${_userNameController.text}',
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 16,
                                 ),
-                              ],
-                            ),
-                      // Yorumlar
-                      const Center(
-                        child: Text(
-                          'Yorumlar burada gösterilecek.',
-                          style: TextStyle(color: Colors.grey, fontSize: 16),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                formatCreatedAt(_createdAtController.text),
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              // REMOVE THE TABBAR FROM HERE!
+                            ],
+                          ),
                         ),
                       ),
                     ],
-                  ),
+                body: Column(
+                  children: [
+                    const TabBar(
+                      labelColor: Colors.white,
+                      unselectedLabelColor: Colors.grey,
+                      indicatorColor: Colors.white,
+                      tabs: [
+                        Tab(text: 'Gönderiler'),
+                        Tab(text: 'Beğeniler'),
+                        Tab(text: 'Yorumlar'),
+                      ],
+                    ),
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          posts.isEmpty
+                              ? const Center(
+                                child: Text(
+                                  'Gönderi yok',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              )
+                              : ListView.builder(
+                                  padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
+                                controller: _postsScrollController,
+                                itemCount:
+                                    posts.length + (isLoadingMorePosts ? 1 : 0),
+                                itemBuilder: (context, index) {
+                                  if (index == posts.length &&
+                                      isLoadingMorePosts) {
+                                    return const Center(
+                                      child: Padding(
+                                        padding: EdgeInsets.all(16.0),
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  final post = posts[index];
+                                  return PostWidget(
+                                    post: post,
+                                    parentScreen: 'profile',
+                                    currentUserId: currentUserId,
+                                  );
+                                },
+                              ),
+                          // Beğeniler
+                          likedPosts.isEmpty
+                              ? const Center(
+                                child: Text(
+                                  'Beğenilen gönderi yok',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              )
+                              : ListView.builder(
+                                  padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
+                                controller: _likesScrollController,
+                                itemCount:
+                                    likedPosts.length +
+                                    (isLoadingMoreLikes ? 1 : 0),
+                                itemBuilder: (context, index) {
+                                  if (index == likedPosts.length &&
+                                      isLoadingMoreLikes) {
+                                    return const Center(
+                                      child: Padding(
+                                        padding: EdgeInsets.all(16.0),
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  final post = likedPosts[index];
+                                  return PostWidget(
+                                    post: post,
+                                    parentScreen: 'profile',
+                                    currentUserId: currentUserId,
+                                  );
+                                },
+                              ),
+                          // Yorumlar
+                          comments.isEmpty
+                              ? const Center(
+                                child: Text(
+                                  'Yorum yok',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              )
+                              : ListView.separated(
+                                controller: _commentsScrollController,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
+                                itemCount:
+                                    comments.length +
+                                    (isLoadingMoreComments ? 1 : 0),
+                                separatorBuilder:
+                                    (context, index) => const Divider(
+                                      color: Colors.white10,
+                                      thickness: 0.6,
+                                      indent: 16,
+                                      endIndent: 16,
+                                    ),
+                                itemBuilder: (context, index) {
+                                  if (index == comments.length &&
+                                      isLoadingMoreComments) {
+                                    return const Center(
+                                      child: Padding(
+                                        padding: EdgeInsets.all(16.0),
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    );
+                                  }
+
+                                  final comment = comments[index];
+
+                                  return ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundImage:
+                                          comment.user.image != null
+                                              ? NetworkImage(
+                                                '$baseNormalURL/${comment.user.image}',
+                                              )
+                                              : null,
+                                      backgroundColor: Colors.grey[800],
+                                      child:
+                                          comment.user.image == null
+                                              ? const Icon(
+                                                Icons.person,
+                                                color: Colors.white70,
+                                              )
+                                              : null,
+                                    ),
+                                    title: Text(
+                                      comment.user.name ?? 'Unknown',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    subtitle: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          comment.comment,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          DateFormat(
+                                            'yyyy-MM-dd HH:mm',
+                                          ).format(comment.createdAt),
+                                          style: const TextStyle(
+                                            color: Colors.white30,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) => CommentsPage(
+                                                post: comment.post,
+                                                parentScreen: 'profile',
+                                              ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          );
+          ),
+        );
   }
+
+  // ...existing code...
 }
