@@ -290,14 +290,7 @@ class _PostWidgetState extends State<PostWidget> {
                   ),
                 );
               },
-              child: Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.grey[600]!,
-                    width: 0.5,
-                  ),
-                ),
+          
                 child: CircleAvatar(
                   backgroundImage: widget.post.profileImage.isNotEmpty
                       ? NetworkImage('$baseNormalURL/${widget.post.profileImage}')
@@ -309,7 +302,7 @@ class _PostWidgetState extends State<PostWidget> {
                       : null,
                 ),
               ),
-            ),
+        
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -448,11 +441,7 @@ class _PostWidgetState extends State<PostWidget> {
       },
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[800]!, width: 0.5),
-            borderRadius: BorderRadius.circular(12),
-          ),
+        
           child: Image.network(
             '$baseNormalURL/${widget.post.media}',
             fit: BoxFit.cover,
@@ -470,7 +459,6 @@ class _PostWidgetState extends State<PostWidget> {
             ),
           ),
         ),
-      ),
     );
   }
 
@@ -506,8 +494,6 @@ class _PostWidgetState extends State<PostWidget> {
       borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[800]!, width: 0.5),
-          borderRadius: BorderRadius.circular(12),
         ),
         child: Stack(
           alignment: Alignment.center,

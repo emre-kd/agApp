@@ -183,6 +183,8 @@ class _SearchedProfileState extends State<SearchedProfile> {
         },
       );
 
+      print(response.body);
+
       if (response.statusCode == 200) {
         final decodedResponse = json.decode(response.body);
         setState(() {
@@ -407,6 +409,7 @@ class _SearchedProfileState extends State<SearchedProfile> {
         },
       );
 
+      print(response.body);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final List<dynamic> commentJson = data['comments']['data'] ?? [];
@@ -780,6 +783,7 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                   );
                                 },
                               ),
+
                           comments.isEmpty
                               ? const Center(
                                 child: Text(
@@ -793,8 +797,9 @@ class _SearchedProfileState extends State<SearchedProfile> {
                               )
                               : ListView.separated(
                                 controller: _commentsScrollController,
-                                                                   padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
-
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 20,
+                                ),
                                 itemCount:
                                     comments.length +
                                     (isLoadingMoreComments ? 1 : 0),
@@ -803,7 +808,7 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                       color: Colors.white24,
                                       thickness: 1,
                                       height: 32,
-                                    ), // Full-width divider between comments
+                                    ),
                                 itemBuilder: (context, index) {
                                   if (index == comments.length &&
                                       isLoadingMoreComments) {
@@ -821,7 +826,6 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                   final comment = comments[index];
                                   final post = comment.post;
 
-                                  // Calculate approximate height for the vertical line
                                   final bool hasMedia =
                                       post.media.toString().isNotEmpty &&
                                       (post.media.toLowerCase().endsWith(
@@ -854,18 +858,15 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                   final bool hasText =
                                       post.text.trim().isNotEmpty;
 
-                                  // Adjust vertical line height based on content
                                   double verticalLineHeight;
                                   if (hasMedia && hasText) {
-                                    verticalLineHeight =
-                                        290; // Text + media + divider
+                                    verticalLineHeight = 290;
                                   } else if (hasMedia) {
-                                    verticalLineHeight = 250; // Media + divider
+                                    verticalLineHeight = 250;
                                   } else if (hasText) {
-                                    verticalLineHeight = 180; // Text + divider
+                                    verticalLineHeight = 180;
                                   } else {
-                                    verticalLineHeight =
-                                        140; // No text, no media + divider
+                                    verticalLineHeight = 140;
                                   }
 
                                   return GestureDetector(
@@ -883,13 +884,12 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                     },
                                     child: Padding(
                                       padding: const EdgeInsets.symmetric(
-                                        vertical: 12,
+                                        vertical: 16,
                                       ),
                                       child: Row(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          // Single vertical line for both post and comment
                                           Container(
                                             width: 2,
                                             height: verticalLineHeight,
@@ -904,7 +904,7 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                // --- POST PREVIEW ---
+                                                /// --- POST USER INFO ---
                                                 Row(
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
@@ -929,69 +929,84 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                                                     Colors
                                                                         .white70,
                                                                 size: 20,
-                                                                semanticLabel:
-                                                                    'User avatar',
                                                               )
                                                               : null,
                                                     ),
                                                     const SizedBox(width: 12),
                                                     Expanded(
                                                       child: Row(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
                                                         children: [
-                                                          Flexible(
+                                                          Expanded(
+                                                            child: Column(
+                                                              crossAxisAlignment:
+                                                                  CrossAxisAlignment
+                                                                      .start,
+                                                              children: [
+                                                                Text(
+                                                                  post
+                                                                          .user
+                                                                          .name ??
+                                                                      'Unknown',
+                                                                  style: const TextStyle(
+                                                                    color:
+                                                                        Colors
+                                                                            .white,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w600,
+                                                                    fontSize:
+                                                                        16,
+                                                                  ),
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
+                                                                ),
+                                                                const SizedBox(
+                                                                  height: 2,
+                                                                ),
+                                                                Text(
+                                                                  post
+                                                                          .user
+                                                                          .username ??
+                                                                      'unknown',
+                                                                  style: TextStyle(
+                                                                    color:
+                                                                        Colors
+                                                                            .grey[400],
+                                                                    fontSize:
+                                                                        13,
+                                                                    fontStyle:
+                                                                        FontStyle
+                                                                            .italic,
+                                                                  ),
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                          const SizedBox(
+                                                            width: 8,
+                                                          ),
+                                                          Padding(
+                                                            padding: const EdgeInsets.only(right: 8),
                                                             child: Text(
-                                                              post.user.name ??
-                                                                  'Unknown',
+                                                              timeago.format(
+                                                                post.createdAt,
+                                                                locale: 'tr',
+                                                              ),
                                                               style: const TextStyle(
                                                                 color:
                                                                     Colors
-                                                                        .white,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w600,
-                                                                fontSize: 16,
+                                                                        .white38,
+                                                                fontSize: 11,
                                                               ),
-                                                              overflow:
-                                                                  TextOverflow
-                                                                      .ellipsis,
-                                                            ),
-                                                          ),
-                                                          const SizedBox(
-                                                            width: 8,
-                                                          ),
-                                                          Flexible(
-                                                            child: Text(
-                                                              post
-                                                                      .user
-                                                                      .username ??
-                                                                  'unknown',
-                                                              style: TextStyle(
-                                                                color:
-                                                                    Colors
-                                                                        .grey[400],
-                                                                fontSize: 14,
-                                                                fontStyle:
-                                                                    FontStyle
-                                                                        .italic,
-                                                              ),
-                                                              overflow:
-                                                                  TextOverflow
-                                                                      .ellipsis,
-                                                            ),
-                                                          ),
-                                                          const SizedBox(
-                                                            width: 8,
-                                                          ),
-                                                          Text(
-                                                            timeago.format(
-                                                              post.createdAt,
-                                                              locale: 'tr',
-                                                            ),
-                                                            style: const TextStyle(
-                                                              color:
-                                                                  Colors
-                                                                      .white38,
-                                                              fontSize: 13,
+                                                              textAlign:
+                                                                  TextAlign.right,
                                                             ),
                                                           ),
                                                         ],
@@ -999,8 +1014,9 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                                     ),
                                                   ],
                                                 ),
+
                                                 if (hasText) ...[
-                                                  const SizedBox(height: 10),
+                                                  const SizedBox(height: 12),
                                                   Text(
                                                     post.text
                                                             .replaceAll(
@@ -1028,12 +1044,13 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                                     ),
                                                   ),
                                                 ],
+
                                                 if (hasMedia) ...[
-                                                  Padding(
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                          top: 12,
-                                                          left: 8,
+                                                  const SizedBox(height: 12),
+                                                  ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          8,
                                                         ),
                                                     child: Builder(
                                                       builder: (context) {
@@ -1088,42 +1105,33 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                                                 );
 
                                                         if (isImage) {
-                                                          return ClipRRect(
-                                                            borderRadius:
-                                                                BorderRadius.circular(
-                                                                  8,
-                                                                ),
-                                                            child: Image.network(
-                                                              mediaUrl,
-                                                              height: 140,
-                                                              width:
-                                                                  double
-                                                                      .infinity,
-                                                              fit: BoxFit.cover,
-                                                              errorBuilder:
-                                                                  (
-                                                                    context,
-                                                                    error,
-                                                                    stackTrace,
-                                                                  ) => Container(
-                                                                    height: 140,
-                                                                    color:
-                                                                        Colors
-                                                                            .grey[800],
-                                                                    child: const Center(
-                                                                      child: Icon(
-                                                                        Icons
-                                                                            .broken_image,
-                                                                        color:
-                                                                            Colors.white54,
-                                                                        size:
-                                                                            30,
-                                                                        semanticLabel:
-                                                                            'Broken image',
-                                                                      ),
+                                                          return Image.network(
+                                                            mediaUrl,
+                                                            height: 140,
+                                                            width:
+                                                                double.infinity,
+                                                            fit: BoxFit.cover,
+                                                            errorBuilder:
+                                                                (
+                                                                  context,
+                                                                  error,
+                                                                  stackTrace,
+                                                                ) => Container(
+                                                                  height: 140,
+                                                                  color:
+                                                                      Colors
+                                                                          .grey[800],
+                                                                  child: const Center(
+                                                                    child: Icon(
+                                                                      Icons
+                                                                          .broken_image,
+                                                                      color:
+                                                                          Colors
+                                                                              .white54,
+                                                                      size: 30,
                                                                     ),
                                                                   ),
-                                                            ),
+                                                                ),
                                                           );
                                                         } else if (isVideo) {
                                                           return Container(
@@ -1147,8 +1155,6 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                                                     Colors
                                                                         .white70,
                                                                 size: 48,
-                                                                semanticLabel:
-                                                                    'Video',
                                                               ),
                                                             ),
                                                           );
@@ -1159,16 +1165,17 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                                     ),
                                                   ),
                                                 ],
-                                                // Separator between post preview and comment
-                                                const SizedBox(height: 12),
+
+                                                const SizedBox(height: 16),
                                                 const Divider(
                                                   color: Colors.white24,
                                                   thickness: 0.5,
-                                                  height: 16,
+                                                  height: 20,
                                                   indent: 8,
                                                 ),
-                                                const SizedBox(height: 12),
-                                                // --- COMMENT ---
+                                                const SizedBox(height: 16),
+
+                                                /// --- COMMENT USER INFO ---
                                                 Row(
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
@@ -1193,22 +1200,23 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                                                     Colors
                                                                         .white70,
                                                                 size: 26,
-                                                                semanticLabel:
-                                                                    'User avatar',
                                                               )
                                                               : null,
                                                     ),
                                                     const SizedBox(width: 16),
                                                     Expanded(
-                                                      child: Column(
+                                                      child: Row(
                                                         crossAxisAlignment:
                                                             CrossAxisAlignment
                                                                 .start,
                                                         children: [
-                                                          Row(
-                                                            children: [
-                                                              Flexible(
-                                                                child: Text(
+                                                          Expanded(
+                                                            child: Column(
+                                                              crossAxisAlignment:
+                                                                  CrossAxisAlignment
+                                                                      .start,
+                                                              children: [
+                                                                Text(
                                                                   comment
                                                                           .user
                                                                           .name ??
@@ -1227,12 +1235,10 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                                                       TextOverflow
                                                                           .ellipsis,
                                                                 ),
-                                                              ),
-                                                              const SizedBox(
-                                                                width: 8,
-                                                              ),
-                                                              Flexible(
-                                                                child: Text(
+                                                                const SizedBox(
+                                                                  height: 2,
+                                                                ),
+                                                                Text(
                                                                   comment
                                                                           .user
                                                                           .username ??
@@ -1242,7 +1248,7 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                                                         Colors
                                                                             .grey[400],
                                                                     fontSize:
-                                                                        14,
+                                                                        13,
                                                                     fontStyle:
                                                                         FontStyle
                                                                             .italic,
@@ -1251,43 +1257,43 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                                                       TextOverflow
                                                                           .ellipsis,
                                                                 ),
-                                                              ),
-                                                              const SizedBox(
-                                                                width: 8,
-                                                              ),
-                                                              Text(
-                                                                timeago.format(
-                                                                  comment
-                                                                      .createdAt,
-                                                                  locale: 'tr',
-                                                                ),
-                                                                style: const TextStyle(
-                                                                  color:
-                                                                      Colors
-                                                                          .white38,
-                                                                  fontSize: 13,
-                                                                ),
-                                                              ),
-                                                            ],
+                                                              ],
+                                                            ),
                                                           ),
                                                           const SizedBox(
-                                                            height: 8,
+                                                            width: 8,
                                                           ),
-                                                          Text(
-                                                            comment.comment,
-                                                            style:
-                                                                const TextStyle(
-                                                                  color:
-                                                                      Colors
-                                                                          .white,
-                                                                  fontSize: 15,
-                                                                  height: 1.4,
-                                                                ),
+                                                          Padding(
+                                                            padding: const EdgeInsets.only(right: 8),
+                                                            child: Text(
+                                                              timeago.format(
+                                                                comment.createdAt,
+                                                                locale: 'tr',
+                                                              ),
+                                                              style: const TextStyle(
+                                                                color:
+                                                                    Colors
+                                                                        .white38,
+                                                                fontSize: 11,
+                                                              ),
+                                                              textAlign:
+                                                                  TextAlign.right,
+                                                            ),
                                                           ),
                                                         ],
                                                       ),
                                                     ),
                                                   ],
+                                                ),
+
+                                                const SizedBox(height: 10),
+                                                Text(
+                                                  comment.comment,
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 15,
+                                                    height: 1.5,
+                                                  ),
                                                 ),
                                               ],
                                             ),

@@ -171,9 +171,9 @@ class _ChatListState extends State<ChatList> {
                   itemBuilder: (context, index) {
                     final convo = conversations![index];
                     return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
+                      padding: const EdgeInsets.only(
+                      bottom: 
+                      0
                       ),
                       child: Card(
                         elevation: 0,
