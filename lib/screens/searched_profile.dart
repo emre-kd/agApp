@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:timeago/timeago.dart' as timeago;
 import '../constant.dart';
 
 class SearchedProfile extends StatefulWidget {
@@ -792,10 +793,8 @@ class _SearchedProfileState extends State<SearchedProfile> {
                               )
                               : ListView.separated(
                                 controller: _commentsScrollController,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                  horizontal: 20,
-                                ),
+                                                                   padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
+
                                 itemCount:
                                     comments.length +
                                     (isLoadingMoreComments ? 1 : 0),
@@ -859,16 +858,14 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                   double verticalLineHeight;
                                   if (hasMedia && hasText) {
                                     verticalLineHeight =
-                                        310; // Text + media + username + divider
+                                        290; // Text + media + divider
                                   } else if (hasMedia) {
-                                    verticalLineHeight =
-                                        270; // Media + username + divider
+                                    verticalLineHeight = 250; // Media + divider
                                   } else if (hasText) {
-                                    verticalLineHeight =
-                                        200; // Text + username + divider
+                                    verticalLineHeight = 180; // Text + divider
                                   } else {
                                     verticalLineHeight =
-                                        160; // Username only + divider
+                                        140; // No text, no media + divider
                                   }
 
                                   return GestureDetector(
@@ -932,46 +929,69 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                                                     Colors
                                                                         .white70,
                                                                 size: 20,
+                                                                semanticLabel:
+                                                                    'User avatar',
                                                               )
                                                               : null,
                                                     ),
                                                     const SizedBox(width: 12),
                                                     Expanded(
-                                                      child: Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
+                                                      child: Row(
                                                         children: [
-                                                          Text(
-                                                            post.user.name ??
-                                                                'Unknown',
-                                                            style:
-                                                                const TextStyle(
-                                                                  color:
-                                                                      Colors
-                                                                          .white,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w600,
-                                                                  fontSize: 16,
-                                                                ),
+                                                          Flexible(
+                                                            child: Text(
+                                                              post.user.name ??
+                                                                  'Unknown',
+                                                              style: const TextStyle(
+                                                                color:
+                                                                    Colors
+                                                                        .white,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                                fontSize: 16,
+                                                              ),
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                            ),
                                                           ),
                                                           const SizedBox(
-                                                            height: 4,
+                                                            width: 8,
+                                                          ),
+                                                          Flexible(
+                                                            child: Text(
+                                                              post
+                                                                      .user
+                                                                      .username ??
+                                                                  'unknown',
+                                                              style: TextStyle(
+                                                                color:
+                                                                    Colors
+                                                                        .grey[400],
+                                                                fontSize: 14,
+                                                                fontStyle:
+                                                                    FontStyle
+                                                                        .italic,
+                                                              ),
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                            ),
+                                                          ),
+                                                          const SizedBox(
+                                                            width: 8,
                                                           ),
                                                           Text(
-                                                            post
-                                                                    .user
-                                                                    .username ??
-                                                                'unknown',
-                                                            style: TextStyle(
+                                                            timeago.format(
+                                                              post.createdAt,
+                                                              locale: 'tr',
+                                                            ),
+                                                            style: const TextStyle(
                                                               color:
                                                                   Colors
-                                                                      .grey[400],
-                                                              fontSize: 14,
-                                                              fontStyle:
-                                                                  FontStyle
-                                                                      .italic,
+                                                                      .white38,
+                                                              fontSize: 13,
                                                             ),
                                                           ),
                                                         ],
@@ -1098,6 +1118,8 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                                                             Colors.white54,
                                                                         size:
                                                                             30,
+                                                                        semanticLabel:
+                                                                            'Broken image',
                                                                       ),
                                                                     ),
                                                                   ),
@@ -1125,6 +1147,8 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                                                     Colors
                                                                         .white70,
                                                                 size: 48,
+                                                                semanticLabel:
+                                                                    'Video',
                                                               ),
                                                             ),
                                                           );
@@ -1169,6 +1193,8 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                                                     Colors
                                                                         .white70,
                                                                 size: 26,
+                                                                semanticLabel:
+                                                                    'User avatar',
                                                               )
                                                               : null,
                                                     ),
@@ -1179,37 +1205,70 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                                             CrossAxisAlignment
                                                                 .start,
                                                         children: [
-                                                          Text(
-                                                            comment.user.name ??
-                                                                'Unknown',
-                                                            style:
-                                                                const TextStyle(
+                                                          Row(
+                                                            children: [
+                                                              Flexible(
+                                                                child: Text(
+                                                                  comment
+                                                                          .user
+                                                                          .name ??
+                                                                      'Unknown',
+                                                                  style: const TextStyle(
+                                                                    color:
+                                                                        Colors
+                                                                            .white,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w600,
+                                                                    fontSize:
+                                                                        16,
+                                                                  ),
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
+                                                                ),
+                                                              ),
+                                                              const SizedBox(
+                                                                width: 8,
+                                                              ),
+                                                              Flexible(
+                                                                child: Text(
+                                                                  comment
+                                                                          .user
+                                                                          .username ??
+                                                                      'unknown',
+                                                                  style: TextStyle(
+                                                                    color:
+                                                                        Colors
+                                                                            .grey[400],
+                                                                    fontSize:
+                                                                        14,
+                                                                    fontStyle:
+                                                                        FontStyle
+                                                                            .italic,
+                                                                  ),
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
+                                                                ),
+                                                              ),
+                                                              const SizedBox(
+                                                                width: 8,
+                                                              ),
+                                                              Text(
+                                                                timeago.format(
+                                                                  comment
+                                                                      .createdAt,
+                                                                  locale: 'tr',
+                                                                ),
+                                                                style: const TextStyle(
                                                                   color:
                                                                       Colors
-                                                                          .white,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w600,
-                                                                  fontSize: 16,
+                                                                          .white38,
+                                                                  fontSize: 13,
                                                                 ),
-                                                          ),
-                                                          const SizedBox(
-                                                            height: 4,
-                                                          ),
-                                                          Text(
-                                                            comment
-                                                                    .user
-                                                                    .username ??
-                                                                'unknown',
-                                                            style: TextStyle(
-                                                              color:
-                                                                  Colors
-                                                                      .grey[400],
-                                                              fontSize: 14,
-                                                              fontStyle:
-                                                                  FontStyle
-                                                                      .italic,
-                                                            ),
+                                                              ),
+                                                            ],
                                                           ),
                                                           const SizedBox(
                                                             height: 8,
@@ -1224,22 +1283,6 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                                                   fontSize: 15,
                                                                   height: 1.4,
                                                                 ),
-                                                          ),
-                                                          const SizedBox(
-                                                            height: 10,
-                                                          ),
-                                                          Text(
-                                                            DateFormat(
-                                                              'MMM d, yyyy • HH:mm',
-                                                            ).format(
-                                                              comment.createdAt,
-                                                            ),
-                                                            style: const TextStyle(
-                                                              color:
-                                                                  Colors
-                                                                      .white38,
-                                                              fontSize: 13,
-                                                            ),
                                                           ),
                                                         ],
                                                       ),

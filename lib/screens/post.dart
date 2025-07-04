@@ -10,6 +10,7 @@ import 'package:agapp/screens/searched_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:agapp/models/post.dart' as post_model;
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
@@ -73,12 +74,13 @@ class _PostWidgetState extends State<PostWidget> {
       setState(() {
         _isVideoError = true;
       });
-      showTopPopUp(
+     /* showTopPopUp(
         context,
         message: 'Video yüklenemedi',
         backgroundColor: Colors.red,
         duration: const Duration(seconds: 2),
       );
+      */
     }
   }
 
@@ -256,22 +258,62 @@ class _PostWidgetState extends State<PostWidget> {
   @override
   Widget build(BuildContext context) {
     print('PostWidget build - ID: ${widget.post.id}, Comments: ${widget.post.commentsCount}');
-    return Card(
-      color: Colors.black,
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey[800]!, width: 0.5),
+   return Card(
+  color: Colors.black,
+  margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 0),
+  elevation: 0,
+  child: Container(
+    decoration: BoxDecoration(
+      border: const Border(
+        bottom: BorderSide(
+          color: Colors.white24,
+          width: 0.5,
+        ),
       ),
-      elevation: 0,
-      child: Container(
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+    ),
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => SearchedProfile(
+                      userId: widget.post.userId,
+                      userName: widget.post.name,
+                    ),
+                  ),
+                );
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.grey[600]!,
+                    width: 0.5,
+                  ),
+                ),
+                child: CircleAvatar(
+                  backgroundImage: widget.post.profileImage.isNotEmpty
+                      ? NetworkImage('$baseNormalURL/${widget.post.profileImage}')
+                      : null,
+                  radius: 22,
+                  backgroundColor: Colors.grey[900],
+                  child: widget.post.profileImage.isEmpty
+                      ? Icon(Icons.person, color: Colors.grey[400])
+                      : null,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   GestureDetector(
                     onTap: () {
@@ -285,112 +327,75 @@ class _PostWidgetState extends State<PostWidget> {
                         ),
                       );
                     },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.grey[600]!,
-                          width: 0.5,
-                        ),
+                    child: Text(
+                      widget.post.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
                       ),
-                      child: CircleAvatar(
-                        backgroundImage: widget.post.profileImage.isNotEmpty
-                            ? NetworkImage('$baseNormalURL/${widget.post.profileImage}')
-                            : null,
-                        radius: 22,
-                        backgroundColor: Colors.grey[900],
-                        child: widget.post.profileImage.isEmpty
-                            ? Icon(Icons.person, color: Colors.grey[400])
-                            : null,
-                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => SearchedProfile(
-                                  userId: widget.post.userId,
-                                  userName: widget.post.name,
-                                ),
-                              ),
-                            );
-                          },
-                          child: Text(
-                            widget.post.name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                  const SizedBox(height: 2),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => SearchedProfile(
+                            userId: widget.post.userId,
+                            userName: widget.post.name,
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => SearchedProfile(
-                                  userId: widget.post.userId,
-                                  userName: widget.post.name,
-                                ),
-                              ),
-                            );
-                          },
-                          child: Text(
-                            '${widget.post.username}',
-                            style: TextStyle(
-                              color: Colors.grey[400],
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        widget.post.createdAt,
-                        style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                      );
+                    },
+                    child: Text(
+                      '${widget.post.username}',
+                      style: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 13,
                       ),
-                      if (widget.currentUserId == widget.post.userId)
-                        _buildPostMenu(context),
-                    ],
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              if (widget.post.text.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(
-                    widget.post.text,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      height: 1.4,
-                    ),
-                  ),
+            ),
+            Row(
+              children: [
+                Text(
+                  DateFormat('MMM d, yyyy ').format(widget.post.createdAt),
+                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
                 ),
-              if (widget.post.media.isNotEmpty)
-                _buildMediaWidget(),
-              const SizedBox(height: 12),
-              _buildActionButtons(),
-            ],
-          ),
+                if (widget.currentUserId == widget.post.userId)
+                  _buildPostMenu(context),
+              ],
+            ),
+          ],
         ),
-      ),
-    );
+        const SizedBox(height: 12),
+        if (widget.post.text.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              widget.post.text,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                height: 1.4,
+              ),
+            ),
+          ),
+        if (widget.post.media.isNotEmpty)
+          _buildMediaWidget(),
+        const SizedBox(height: 12),
+        _buildActionButtons(),
+      ],
+    ),
+  ),
+);
+
   }
 
   Widget _buildMediaWidget() {

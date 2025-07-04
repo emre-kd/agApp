@@ -459,10 +459,7 @@ class _LeaderboardState extends State<Leaderboard> {
                                       parentScreen: 'leaderboard',
                                       currentUserId: currentUserId,
                                     ),
-                                    const Divider(
-                                      color: Colors.grey,
-                                      height: 1,
-                                    ),
+                                   
                                   ],
                                 );
                               },

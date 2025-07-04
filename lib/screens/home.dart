@@ -387,6 +387,7 @@ class _HomeState extends State<Home> {
         ],
       ),
       body: Stack(
+        
         children: [
           NotificationListener<UserScrollNotification>(
             onNotification: (notification) {
@@ -422,7 +423,7 @@ class _HomeState extends State<Home> {
                           if (index == posts.length) {
                             return const Center(
                               child: Padding(
-                                padding: EdgeInsets.all(16.0),
+                                padding: EdgeInsets.all(26.0),
                                 child: CircularProgressIndicator(
                                   color: Colors.white,
                                 ),

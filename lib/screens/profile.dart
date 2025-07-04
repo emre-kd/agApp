@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:timeago/timeago.dart' as timeago;
 import '../constant.dart';
 
 class Profile extends StatefulWidget {
@@ -667,484 +668,324 @@ class _ProfileState extends State<Profile> {
                                 },
                               ),
 
-                          // Yorumlar (Comments) with connected Post preview + tappable
-                          // Comments (Comments) with connected Post preview + tappable
-                          comments.isEmpty
-                              ? const Center(
-                                child: Text(
-                                  'Yorum yok',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              )
-                              : ListView.separated(
-                                controller: _commentsScrollController,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                  horizontal: 20,
-                                ),
-                                itemCount:
-                                    comments.length +
-                                    (isLoadingMoreComments ? 1 : 0),
-                                separatorBuilder:
-                                    (context, index) => const Divider(
-                                      color: Colors.white24,
-                                      thickness: 1,
-                                      height: 32,
-                                    ), // Full-width divider between comments
-                                itemBuilder: (context, index) {
-                                  if (index == comments.length &&
-                                      isLoadingMoreComments) {
-                                    return const Center(
-                                      child: Padding(
-                                        padding: EdgeInsets.all(16.0),
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 3,
+    
+
+                              comments.isEmpty
+                                  ? const Center(
+                                      child: Text(
+                                        'Yorum yok',
+                                        style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
                                         ),
                                       ),
-                                    );
-                                  }
-
-                                  final comment = comments[index];
-                                  final post = comment.post;
-
-                                  // Calculate approximate height for the vertical line
-                                  final bool hasMedia =
-                                      post.media.toString().isNotEmpty &&
-                                      (post.media.toLowerCase().endsWith(
-                                            '.jpg',
-                                          ) ||
-                                          post.media.toLowerCase().endsWith(
-                                            '.jpeg',
-                                          ) ||
-                                          post.media.toLowerCase().endsWith(
-                                            '.png',
-                                          ) ||
-                                          post.media.toLowerCase().endsWith(
-                                            '.gif',
-                                          ) ||
-                                          post.media.toLowerCase().endsWith(
-                                            '.webp',
-                                          ) ||
-                                          post.media.toLowerCase().endsWith(
-                                            '.mp4',
-                                          ) ||
-                                          post.media.toLowerCase().endsWith(
-                                            '.mov',
-                                          ) ||
-                                          post.media.toLowerCase().endsWith(
-                                            '.avi',
-                                          ) ||
-                                          post.media.toLowerCase().endsWith(
-                                            '.mkv',
-                                          ));
-                                  final bool hasText =
-                                      post.text.trim().isNotEmpty;
-
-                                  // Adjust vertical line height based on content
-                                  double verticalLineHeight;
-                                  if (hasMedia && hasText) {
-                                    verticalLineHeight =
-                                        310; // Text + media + username + divider
-                                  } else if (hasMedia) {
-                                    verticalLineHeight =
-                                        270; // Media + username + divider
-                                  } else if (hasText) {
-                                    verticalLineHeight =
-                                        200; // Text + username + divider
-                                  } else {
-                                    verticalLineHeight =
-                                        160; // Username only + divider
-                                  }
-
-                                  return GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder:
-                                              (context) => CommentsPage(
-                                                post: comment.post,
-                                                parentScreen: 'searchedProfile',
+                                    )
+                                  : ListView.separated(
+                                      controller: _commentsScrollController,
+                                      padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
+                                      itemCount: comments.length + (isLoadingMoreComments ? 1 : 0),
+                                      separatorBuilder: (context, index) => const Divider(
+                                        color: Colors.white24,
+                                        thickness: 1,
+                                        height: 32,
+                                      ), // Full-width divider between comments
+                                      itemBuilder: (context, index) {
+                                        if (index == comments.length && isLoadingMoreComments) {
+                                          return const Center(
+                                            child: Padding(
+                                              padding: EdgeInsets.all(16.0),
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 3,
                                               ),
-                                        ),
-                                      );
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 12,
-                                      ),
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          // Single vertical line for both post and comment
-                                          Container(
-                                            width: 2,
-                                            height: verticalLineHeight,
-                                            margin: const EdgeInsets.only(
-                                              right: 16,
-                                              left: 4,
                                             ),
-                                            color: Colors.white24,
-                                          ),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
+                                          );
+                                        }
+
+                                        final comment = comments[index];
+                                        final post = comment.post;
+
+                                        // Calculate approximate height for the vertical line
+                                        final bool hasMedia = post.media.toString().isNotEmpty &&
+                                            (post.media.toLowerCase().endsWith('.jpg') ||
+                                                post.media.toLowerCase().endsWith('.jpeg') ||
+                                                post.media.toLowerCase().endsWith('.png') ||
+                                                post.media.toLowerCase().endsWith('.gif') ||
+                                                post.media.toLowerCase().endsWith('.webp') ||
+                                                post.media.toLowerCase().endsWith('.mp4') ||
+                                                post.media.toLowerCase().endsWith('.mov') ||
+                                                post.media.toLowerCase().endsWith('.avi') ||
+                                                post.media.toLowerCase().endsWith('.mkv'));
+                                        final bool hasText = post.text.trim().isNotEmpty;
+
+                                        // Adjust vertical line height based on content
+                                        double verticalLineHeight;
+                                        if (hasMedia && hasText) {
+                                          verticalLineHeight = 290; // Text + media + divider
+                                        } else if (hasMedia) {
+                                          verticalLineHeight = 250; // Media + divider
+                                        } else if (hasText) {
+                                          verticalLineHeight = 180; // Text + divider
+                                        } else {
+                                          verticalLineHeight = 140; // No text, no media + divider
+                                        }
+
+                                        return GestureDetector(
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => CommentsPage(
+                                                  post: comment.post,
+                                                  parentScreen: 'searchedProfile',
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(vertical: 12),
+                                            child: Row(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
-                                                // --- POST PREVIEW ---
-                                                Row(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    CircleAvatar(
-                                                      radius: 18,
-                                                      backgroundImage:
-                                                          post.user.image !=
-                                                                  null
-                                                              ? NetworkImage(
-                                                                '$baseNormalURL/${post.user.image}',
-                                                              )
-                                                              : null,
-                                                      backgroundColor:
-                                                          Colors.grey[700],
-                                                      child:
-                                                          post.user.image ==
-                                                                  null
-                                                              ? const Icon(
-                                                                Icons.person,
-                                                                color:
-                                                                    Colors
-                                                                        .white70,
-                                                                size: 20,
-                                                              )
-                                                              : null,
-                                                    ),
-                                                    const SizedBox(width: 12),
-                                                    Expanded(
-                                                      child: Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
+                                                // Single vertical line for both post and comment
+                                                Container(
+                                                  width: 2,
+                                                  height: verticalLineHeight,
+                                                  margin: const EdgeInsets.only(right: 16, left: 4),
+                                                  color: Colors.white24,
+                                                ),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      // --- POST PREVIEW ---
+                                                      Row(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
                                                         children: [
-                                                          Text(
-                                                            post.user.name ??
-                                                                'Unknown',
-                                                            style:
-                                                                const TextStyle(
-                                                                  color:
-                                                                      Colors
-                                                                          .white,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w600,
-                                                                  fontSize: 16,
+                                                          CircleAvatar(
+                                                            radius: 18,
+                                                            backgroundImage: post.user.image != null
+                                                                ? NetworkImage('$baseNormalURL/${post.user.image}')
+                                                                : null,
+                                                            backgroundColor: Colors.grey[700],
+                                                            child: post.user.image == null
+                                                                ? const Icon(
+                                                                    Icons.person,
+                                                                    color: Colors.white70,
+                                                                    size: 20,
+                                                                    semanticLabel: 'User avatar',
+                                                                  )
+                                                                : null,
+                                                          ),
+                                                          const SizedBox(width: 12),
+                                                          Expanded(
+                                                            child: Row(
+                                                              children: [
+                                                                Flexible(
+                                                                  child: Text(
+                                                                    post.user.name ?? 'Unknown',
+                                                                    style: const TextStyle(
+                                                                      color: Colors.white,
+                                                                      fontWeight: FontWeight.w600,
+                                                                      fontSize: 16,
+                                                                    ),
+                                                                    overflow: TextOverflow.ellipsis,
+                                                                  ),
                                                                 ),
-                                                          ),
-                                                          const SizedBox(
-                                                            height: 4,
-                                                          ),
-                                                          Text(
-                                                            post
-                                                                    .user
-                                                                    .username ??
-                                                                'unknown',
-                                                            style: TextStyle(
-                                                              color:
-                                                                  Colors
-                                                                      .grey[400],
-                                                              fontSize: 14,
-                                                              fontStyle:
-                                                                  FontStyle
-                                                                      .italic,
+                                                                const SizedBox(width: 8),
+                                                                Flexible(
+                                                                  child: Text(
+                                                                    post.user.username ?? 'unknown',
+                                                                    style: TextStyle(
+                                                                      color: Colors.grey[400],
+                                                                      fontSize: 14,
+                                                                      fontStyle: FontStyle.italic,
+                                                                    ),
+                                                                    overflow: TextOverflow.ellipsis,
+                                                                  ),
+                                                                ),
+                                                                const SizedBox(width: 8),
+                                                                Text(
+                                                                  timeago.format(post.createdAt, locale: 'tr'),
+                                                                  style: const TextStyle(
+                                                                    color: Colors.white38,
+                                                                    fontSize: 13,
+                                                                  ),
+                                                                ),
+                                                              ],
                                                             ),
                                                           ),
                                                         ],
                                                       ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                if (hasText) ...[
-                                                  const SizedBox(height: 10),
-                                                  Text(
-                                                    post.text
-                                                            .replaceAll(
-                                                              '\n',
-                                                              ' ',
-                                                            )
-                                                            .trim()
-                                                            .substring(
-                                                              0,
-                                                              post.text.length >
-                                                                      80
-                                                                  ? 80
-                                                                  : post
-                                                                      .text
-                                                                      .length,
-                                                            ) +
-                                                        (post.text.length > 80
-                                                            ? '...'
-                                                            : ''),
-                                                    style: const TextStyle(
-                                                      color: Colors.white70,
-                                                      fontSize: 15,
-                                                      fontStyle:
-                                                          FontStyle.italic,
-                                                    ),
-                                                  ),
-                                                ],
-                                                if (hasMedia) ...[
-                                                  Padding(
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                          top: 12,
-                                                          left: 8,
+                                                      if (hasText) ...[
+                                                        const SizedBox(height: 10),
+                                                        Text(
+                                                          post.text.replaceAll('\n', ' ').trim().substring(
+                                                                0,
+                                                                post.text.length > 80 ? 80 : post.text.length,
+                                                              ) +
+                                                              (post.text.length > 80 ? '...' : ''),
+                                                          style: const TextStyle(
+                                                            color: Colors.white70,
+                                                            fontSize: 15,
+                                                            fontStyle: FontStyle.italic,
+                                                          ),
                                                         ),
-                                                    child: Builder(
-                                                      builder: (context) {
-                                                        final mediaUrl =
-                                                            '$baseNormalURL/${post.media}';
-                                                        final isImage =
-                                                            post.media
-                                                                .toLowerCase()
-                                                                .endsWith(
-                                                                  '.jpg',
-                                                                ) ||
-                                                            post.media
-                                                                .toLowerCase()
-                                                                .endsWith(
-                                                                  '.jpeg',
-                                                                ) ||
-                                                            post.media
-                                                                .toLowerCase()
-                                                                .endsWith(
-                                                                  '.png',
-                                                                ) ||
-                                                            post.media
-                                                                .toLowerCase()
-                                                                .endsWith(
-                                                                  '.gif',
-                                                                ) ||
-                                                            post.media
-                                                                .toLowerCase()
-                                                                .endsWith(
-                                                                  '.webp',
-                                                                );
-                                                        final isVideo =
-                                                            post.media
-                                                                .toLowerCase()
-                                                                .endsWith(
-                                                                  '.mp4',
-                                                                ) ||
-                                                            post.media
-                                                                .toLowerCase()
-                                                                .endsWith(
-                                                                  '.mov',
-                                                                ) ||
-                                                            post.media
-                                                                .toLowerCase()
-                                                                .endsWith(
-                                                                  '.avi',
-                                                                ) ||
-                                                            post.media
-                                                                .toLowerCase()
-                                                                .endsWith(
-                                                                  '.mkv',
-                                                                );
+                                                      ],
+                                                      if (hasMedia) ...[
+                                                        Padding(
+                                                          padding: const EdgeInsets.only(top: 12, left: 8),
+                                                          child: Builder(
+                                                            builder: (context) {
+                                                              final mediaUrl = '$baseNormalURL/${post.media}';
+                                                              final isImage = post.media.toLowerCase().endsWith('.jpg') ||
+                                                                  post.media.toLowerCase().endsWith('.jpeg') ||
+                                                                  post.media.toLowerCase().endsWith('.png') ||
+                                                                  post.media.toLowerCase().endsWith('.gif') ||
+                                                                  post.media.toLowerCase().endsWith('.webp');
+                                                              final isVideo = post.media.toLowerCase().endsWith('.mp4') ||
+                                                                  post.media.toLowerCase().endsWith('.mov') ||
+                                                                  post.media.toLowerCase().endsWith('.avi') ||
+                                                                  post.media.toLowerCase().endsWith('.mkv');
 
-                                                        if (isImage) {
-                                                          return ClipRRect(
-                                                            borderRadius:
-                                                                BorderRadius.circular(
-                                                                  8,
-                                                                ),
-                                                            child: Image.network(
-                                                              mediaUrl,
-                                                              height: 140,
-                                                              width:
-                                                                  double
-                                                                      .infinity,
-                                                              fit: BoxFit.cover,
-                                                              errorBuilder:
-                                                                  (
-                                                                    context,
-                                                                    error,
-                                                                    stackTrace,
-                                                                  ) => Container(
+                                                              if (isImage) {
+                                                                return ClipRRect(
+                                                                  borderRadius: BorderRadius.circular(8),
+                                                                  child: Image.network(
+                                                                    mediaUrl,
                                                                     height: 140,
-                                                                    color:
-                                                                        Colors
-                                                                            .grey[800],
-                                                                    child: const Center(
-                                                                      child: Icon(
-                                                                        Icons
-                                                                            .broken_image,
-                                                                        color:
-                                                                            Colors.white54,
-                                                                        size:
-                                                                            30,
+                                                                    width: double.infinity,
+                                                                    fit: BoxFit.cover,
+                                                                    errorBuilder: (context, error, stackTrace) => Container(
+                                                                      height: 140,
+                                                                      color: Colors.grey[800],
+                                                                      child: const Center(
+                                                                        child: Icon(
+                                                                          Icons.broken_image,
+                                                                          color: Colors.white54,
+                                                                          size: 30,
+                                                                          semanticLabel: 'Broken image',
+                                                                        ),
                                                                       ),
                                                                     ),
                                                                   ),
-                                                            ),
-                                                          );
-                                                        } else if (isVideo) {
-                                                          return Container(
-                                                            height: 140,
-                                                            width:
-                                                                double.infinity,
-                                                            decoration: BoxDecoration(
-                                                              color:
-                                                                  Colors
-                                                                      .black54,
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    8,
+                                                                );
+                                                              } else if (isVideo) {
+                                                                return Container(
+                                                                  height: 140,
+                                                                  width: double.infinity,
+                                                                  decoration: BoxDecoration(
+                                                                    color: Colors.black54,
+                                                                    borderRadius: BorderRadius.circular(8),
                                                                   ),
-                                                            ),
-                                                            child: const Center(
-                                                              child: Icon(
-                                                                Icons
-                                                                    .video_library,
-                                                                color:
-                                                                    Colors
-                                                                        .white70,
-                                                                size: 48,
-                                                              ),
-                                                            ),
-                                                          );
-                                                        } else {
-                                                          return const SizedBox.shrink();
-                                                        }
-                                                      },
-                                                    ),
-                                                  ),
-                                                ],
-                                                // Separator between post preview and comment
-                                                const SizedBox(height: 12),
-                                                const Divider(
-                                                  color: Colors.white24,
-                                                  thickness: 0.5,
-                                                  height: 16,
-                                                  indent: 8,
-                                                ),
-                                                const SizedBox(height: 12),
-                                                // --- COMMENT ---
-                                                Row(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    CircleAvatar(
-                                                      radius: 22,
-                                                      backgroundImage:
-                                                          comment.user.image !=
-                                                                  null
-                                                              ? NetworkImage(
-                                                                '$baseNormalURL/${comment.user.image}',
-                                                              )
-                                                              : null,
-                                                      backgroundColor:
-                                                          Colors.grey[800],
-                                                      child:
-                                                          comment.user.image ==
-                                                                  null
-                                                              ? const Icon(
-                                                                Icons.person,
-                                                                color:
-                                                                    Colors
-                                                                        .white70,
-                                                                size: 26,
-                                                              )
-                                                              : null,
-                                                    ),
-                                                    const SizedBox(width: 16),
-                                                    Expanded(
-                                                      child: Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
+                                                                  child: const Center(
+                                                                    child: Icon(
+                                                                      Icons.video_library,
+                                                                      color: Colors.white70,
+                                                                      size: 48,
+                                                                      semanticLabel: 'Video',
+                                                                    ),
+                                                                  ),
+                                                                );
+                                                              } else {
+                                                                return const SizedBox.shrink();
+                                                              }
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
+                                                      // Separator between post preview and comment
+                                                      const SizedBox(height: 12),
+                                                      const Divider(
+                                                        color: Colors.white24,
+                                                        thickness: 0.5,
+                                                        height: 16,
+                                                        indent: 8,
+                                                      ),
+                                                      const SizedBox(height: 12),
+                                                      // --- COMMENT ---
+                                                      Row(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
                                                         children: [
-                                                          Text(
-                                                            comment.user.name ??
-                                                                'Unknown',
-                                                            style:
-                                                                const TextStyle(
-                                                                  color:
-                                                                      Colors
-                                                                          .white,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w600,
-                                                                  fontSize: 16,
+                                                          CircleAvatar(
+                                                            radius: 22,
+                                                            backgroundImage: comment.user.image != null
+                                                                ? NetworkImage('$baseNormalURL/${comment.user.image}')
+                                                                : null,
+                                                            backgroundColor: Colors.grey[800],
+                                                            child: comment.user.image == null
+                                                                ? const Icon(
+                                                                    Icons.person,
+                                                                    color: Colors.white70,
+                                                                    size: 26,
+                                                                    semanticLabel: 'User avatar',
+                                                                  )
+                                                                : null,
+                                                          ),
+                                                          const SizedBox(width: 16),
+                                                          Expanded(
+                                                            child: Column(
+                                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                                              children: [
+                                                                Row(
+                                                                  children: [
+                                                                    Flexible(
+                                                                      child: Text(
+                                                                        comment.user.name ?? 'Unknown',
+                                                                        style: const TextStyle(
+                                                                          color: Colors.white,
+                                                                          fontWeight: FontWeight.w600,
+                                                                          fontSize: 16,
+                                                                        ),
+                                                                        overflow: TextOverflow.ellipsis,
+                                                                      ),
+                                                                    ),
+                                                                    const SizedBox(width: 8),
+                                                                    Flexible(
+                                                                      child: Text(
+                                                                        comment.user.username ?? 'unknown',
+                                                                        style: TextStyle(
+                                                                          color: Colors.grey[400],
+                                                                          fontSize: 14,
+                                                                          fontStyle: FontStyle.italic,
+                                                                        ),
+                                                                        overflow: TextOverflow.ellipsis,
+                                                                      ),
+                                                                    ),
+                                                                    const SizedBox(width: 8),
+                                                                    Text(
+                                                                      timeago.format(comment.createdAt, locale: 'tr'),
+                                                                      style: const TextStyle(
+                                                                        color: Colors.white38,
+                                                                        fontSize: 13,
+                                                                      ),
+                                                                    ),
+                                                                  ],
                                                                 ),
-                                                          ),
-                                                          const SizedBox(
-                                                            height: 4,
-                                                          ),
-                                                          Text(
-                                                            comment
-                                                                    .user
-                                                                    .username ??
-                                                                'unknown',
-                                                            style: TextStyle(
-                                                              color:
-                                                                  Colors
-                                                                      .grey[400],
-                                                              fontSize: 14,
-                                                              fontStyle:
-                                                                  FontStyle
-                                                                      .italic,
-                                                            ),
-                                                          ),
-                                                          const SizedBox(
-                                                            height: 8,
-                                                          ),
-                                                          Text(
-                                                            comment.comment,
-                                                            style:
-                                                                const TextStyle(
-                                                                  color:
-                                                                      Colors
-                                                                          .white,
-                                                                  fontSize: 15,
-                                                                  height: 1.4,
+                                                                const SizedBox(height: 8),
+                                                                Text(
+                                                                  comment.comment,
+                                                                  style: const TextStyle(
+                                                                    color: Colors.white,
+                                                                    fontSize: 15,
+                                                                    height: 1.4,
+                                                                  ),
                                                                 ),
-                                                          ),
-                                                          const SizedBox(
-                                                            height: 10,
-                                                          ),
-                                                          Text(
-                                                            DateFormat(
-                                                              'MMM d, yyyy • HH:mm',
-                                                            ).format(
-                                                              comment.createdAt,
-                                                            ),
-                                                            style: const TextStyle(
-                                                              color:
-                                                                  Colors
-                                                                      .white38,
-                                                              fontSize: 13,
+                                                              ],
                                                             ),
                                                           ),
                                                         ],
                                                       ),
-                                                    ),
-                                                  ],
+                                                    ],
+                                                  ),
                                                 ),
                                               ],
                                             ),
                                           ),
-                                        ],
-                                      ),
+                                        );
+                                      },
                                     ),
-                                  );
-                                },
-                              ),
                         ],
                       ),
                     ),

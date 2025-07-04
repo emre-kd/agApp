@@ -10,8 +10,8 @@ import 'package:agapp/screens/post.dart';
 import 'package:agapp/screens/searched_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class CommentsPage extends StatefulWidget {
   final post_model.Post post;
@@ -254,14 +254,13 @@ class _CommentsPageState extends State<CommentsPage> {
                       currentUserId: widget.currentUserId,
                       parentScreen: widget.parentScreen,
                     ),
-                    Divider(color: Colors.grey[800], height: 1),
                     Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Yorumlar',
+                            ' Yorumlar',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -302,111 +301,122 @@ class _CommentsPageState extends State<CommentsPage> {
     }
 
     return Column(
-      children:
-          _comments.map((comment) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (_) => SearchedProfile(
-                                userId: comment.user.id!,
-                                userName: comment.user.username!,
-                              ),
-                        ),
-                      );
-                    },
-                    child: CircleAvatar(
-                      radius: 18,
-                      backgroundImage:
-                          comment.user.image != null
-                              ? NetworkImage(
-                                '$baseNormalURL/${comment.user.image}',
-                              )
-                              : null,
-                      backgroundColor: Colors.grey[900],
-                      child:
-                          comment.user.image == null
-                              ? Icon(
-                                Icons.person,
-                                color: Colors.grey[400],
-                                size: 20,
-                              )
-                              : null,
-                    ),
+  children: _comments.map((comment) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        border: const Border(
+          bottom: BorderSide(color: Colors.white12),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => SearchedProfile(
+                    userId: comment.user.id!,
+                    userName: comment.user.username!,
                   ),
-
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            GestureDetector(
+                ),
+              );
+            },
+            child: CircleAvatar(
+              radius: 18,
+              backgroundImage: comment.user.image != null
+                  ? NetworkImage('$baseNormalURL/${comment.user.image}')
+                  : null,
+              backgroundColor: Colors.grey[900],
+              child: comment.user.image == null
+                  ? Icon(
+                      Icons.person,
+                      color: Colors.grey[400],
+                      size: 20,
+                    )
+                  : null,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: GestureDetector(
                               onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder:
-                                        (_) => SearchedProfile(
-                                          userId: comment.user.id!,
-                                          userName: comment.user.username!,
-                                        ),
+                                    builder: (_) => SearchedProfile(
+                                      userId: comment.user.id!,
+                                      userName: comment.user.username!,
+                                    ),
                                   ),
                                 );
                               },
                               child: Text(
-                                '${comment.user.name}',
+                                comment.user.name ?? 'Unknown',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 14,
                                 ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Text(
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
                               '@${comment.user.username}',
-                              style: TextStyle(
-                                color: Colors.grey[400],
+                              style: const TextStyle(
+                                color: Colors.grey,
                                 fontSize: 12,
                               ),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          comment.comment,
-                          style: TextStyle(
-                            color: Colors.grey[300],
-                            fontSize: 14,
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          DateFormat(
-                            'dd.MM.yyyy HH:mm',
-                          ).format(comment.createdAt),
-                          style: TextStyle(
-                            color: Colors.grey[500],
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+                    Text(
+                      timeago.format(comment.createdAt, locale: 'tr'),
+                      style: TextStyle(
+                        color: Colors.grey[500],
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  comment.comment,
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14,
                   ),
-                ],
-              ),
-            );
-          }).toList(),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
+  }).toList(),
+);
+
   }
 
   Widget _buildCommentInput() {
