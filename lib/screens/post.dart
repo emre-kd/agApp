@@ -228,6 +228,12 @@ class _PostWidgetState extends State<PostWidget> {
             MaterialPageRoute(builder: (context) => const Leaderboard()),
           );
         }
+         else if (widget.parentScreen == 'searchedProfile') {
+            Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const Home()),
+          );
+        }
       } else {
         final error = jsonDecode(response.body)['error'] ?? 'Bir hata oluştu';
         showTopPopUp(
