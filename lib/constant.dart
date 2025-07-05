@@ -1,7 +1,7 @@
 
 
-const baseURL = 'http://192.168.1.103:8000/api';
-const baseNormalURL = 'http://192.168.1.103:8000';
+const baseURL = 'http://192.168.1.102:8000/api';
+const baseNormalURL = 'http://192.168.1.102:8000';
 
 const loginURL = '$baseURL/login';
 const registerURL = '$baseURL/register';
@@ -36,6 +36,7 @@ const  addCommentURL = '$baseURL/comments';
 const  fetchMostLikedPostsURL = '$baseURL/posts/most-liked';
 const  fetchMostCommentedPostsURL = '$baseURL/posts/most-commented';
 
+const  firebaseCommentURL = '$baseURL/update-fcm-token';
 
 
 

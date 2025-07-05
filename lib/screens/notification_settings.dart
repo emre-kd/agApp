@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationSettings extends StatefulWidget {
   const NotificationSettings({super.key});
@@ -8,24 +9,48 @@ class NotificationSettings extends StatefulWidget {
 }
 
 class _NotificationSettingsState extends State<NotificationSettings> {
-  bool _allNotifications = true;
-  bool _chatNotifications = true;
-  bool _likeNotifications = true;
-  bool _commentNotifications = true;
-  bool _newUserNotifications = true;
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
-  // Function to handle toggling "All" switch
-  void _toggleAllNotifications(bool value) {
-    setState(() {
-      _allNotifications = value;
-      _chatNotifications = value;
-      _likeNotifications = value;
-      _commentNotifications = value;
-      _newUserNotifications = value;
-    });
+  bool _chatNotifications = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeNotifications();
   }
 
-  // Helper method to build each switch tile with improved UI
+  Future<void> _initializeNotifications() async {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
+
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+
+  Future<void> _sendNotification(String title) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'toggle_channel',
+      'Toggle Notifications',
+      channelDescription: 'Channel for toggle switches',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+
+    const NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      'Bildirim Açıldı',
+      title,
+      platformChannelSpecifics,
+    );
+  }
+
   Widget _buildSwitchTile({
     required String title,
     required String subtitle,
@@ -90,89 +115,17 @@ class _NotificationSettingsState extends State<NotificationSettings> {
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text(
-                'Bildirimlerinizi özelleştirin',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            // All Notifications
-            _buildSwitchTile(
-              title: 'Tüm Bildirimler',
-              subtitle: 'Tüm bildirim türlerini aç/kapat',
-              value: _allNotifications,
-              onChanged: _toggleAllNotifications,
-            ),
-            const SizedBox(height: 8),
-            // Chat Notifications
             _buildSwitchTile(
               title: 'Sohbet',
-              subtitle: 'Size meesaj gelirse bildirim alın',
+              subtitle: 'Size mesaj gelirse bildirim alın',
               value: _chatNotifications,
               onChanged: (value) {
                 setState(() {
                   _chatNotifications = value;
-                  _allNotifications = _chatNotifications &&
-                      _likeNotifications &&
-                      _commentNotifications &&
-                      _newUserNotifications;
-                });
-              },
-            ),
-            // Like Notifications
-            _buildSwitchTile(
-              title: 'Beğeni',
-              subtitle: 'Postunuza beğeni gelirse bildirim alın',
-              value: _likeNotifications,
-              onChanged: (value) {
-                setState(() {
-                  _likeNotifications = value;
-                  _allNotifications = _chatNotifications &&
-                      _likeNotifications &&
-                      _commentNotifications &&
-                      _newUserNotifications;
-                });
-              },
-            ),
-            // Comment Notifications
-            _buildSwitchTile(
-              title: 'Yorum',
-              subtitle: 'Postunuza yorum gelirse bildirim alın',
-              value: _commentNotifications,
-              onChanged: (value) {
-                setState(() {
-                  _commentNotifications = value;
-                  _allNotifications = _chatNotifications &&
-                      _likeNotifications &&
-                      _commentNotifications &&
-                      _newUserNotifications;
-                });
-              },
-            ),
-            // New User Notifications
-            _buildSwitchTile(
-              title: 'Yeni Kullanıcı',
-              subtitle: 'Topluluğa yeni kullanıcı kayıt olunca bildirim alın',
-              value: _newUserNotifications,
-              onChanged: (value) {
-                setState(() {
-                  _newUserNotifications = value;
-                  _allNotifications = _chatNotifications &&
-                      _likeNotifications &&
-                      _commentNotifications &&
-                      _newUserNotifications;
+                  if (value) {
+                    _sendNotification('Sohbet bildirimi açıldı');
+                  }
                 });
               },
             ),

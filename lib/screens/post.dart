@@ -229,8 +229,14 @@ class _PostWidgetState extends State<PostWidget> {
             context,
             MaterialPageRoute(builder: (context) => const Leaderboard()),
           );
-        }
+        } 
          else if (widget.parentScreen == 'searchedProfile') {
+            Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const Home()),
+          );
+        }
+        else if (widget.parentScreen == 'notification') {
             Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const Home()),

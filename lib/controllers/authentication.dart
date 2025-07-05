@@ -7,6 +7,7 @@ import 'package:agapp/models/user.dart';
 import 'package:agapp/screens/home.dart';
 import 'package:agapp/screens/login.dart';
 import 'package:agapp/screens/verification_screen.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -186,6 +187,8 @@ class AuthenticationController extends GetxController {
 
       if (response.statusCode == 200 && responseData['requires_verification'] == true) {
         // Navigate to verification screen
+              // 🔥 Buraya FCM token alma ve backend'e gönderme ekliyoruz
+
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -248,6 +251,11 @@ class AuthenticationController extends GetxController {
         String token = responseData['token'];
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
+
+        String? fcmToken = await FirebaseMessaging.instance.getToken();
+        if (fcmToken != null) {
+          await sendFcmTokenToBackend(fcmToken);
+        }
         
         Navigator.pushAndRemoveUntil(
           context,
@@ -335,11 +343,18 @@ class AuthenticationController extends GetxController {
       if (response.statusCode == 200) {
         debugPrint("Login Successful: $responseData");
 
-        String token = responseData['token']; // Ensure your API returns a token
+        String token = responseData['token']; // API'dan gelen token
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
 
+        // Kullanıcı detaylarını al
         await getUserDetails();
+
+        // 🔥 Buraya FCM token alma ve backend'e gönderme ekliyoruz
+        String? fcmToken = await FirebaseMessaging.instance.getToken();
+        if (fcmToken != null) {
+          await sendFcmTokenToBackend(fcmToken);
+        }
 
         Navigator.push(
           context,
@@ -378,6 +393,7 @@ class AuthenticationController extends GetxController {
       isLoading.value = false;
     }
   }
+
 
   Future<void> logout(BuildContext context) async {
     try {
@@ -638,5 +654,28 @@ Future<bool> resendResetCode(String email, BuildContext context) async {
     } finally {
       isLoading.value = false;
     }
+  }
+}
+
+
+Future<void> sendFcmTokenToBackend(String token) async {
+  final prefs = await SharedPreferences.getInstance();
+  final authToken = prefs.getString('token');
+  if (authToken == null) return;
+
+  final response = await http.post(
+    Uri.parse(firebaseCommentURL), // veya backend'deki FCM token update URL'si
+    headers: {
+      'Authorization': 'Bearer $authToken',
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: jsonEncode({'fcm_token': token}),
+  );
+
+  if (response.statusCode == 200) {
+    debugPrint("✅ FCM token başarıyla gönderildi");
+  } else {
+    debugPrint("❌ FCM token gönderilemedi: ${response.statusCode}");
   }
 }

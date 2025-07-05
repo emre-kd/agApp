@@ -13,6 +13,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
+
 class CommentsPage extends StatefulWidget {
   final post_model.Post post;
   final int? currentUserId;
@@ -51,6 +52,8 @@ class _CommentsPageState extends State<CommentsPage> {
     _scrollController.dispose();
     super.dispose();
   }
+
+ 
 
   Future<void> _fetchComments({bool isLoadMore = false}) async {
     if (_isLoading || (!_hasMore && isLoadMore)) return;
@@ -188,6 +191,9 @@ class _CommentsPageState extends State<CommentsPage> {
         FocusManager.instance.primaryFocus?.unfocus();
         // Scroll to the top to show the latest comment
         _scrollController.jumpTo(0);
+
+
+
         showTopPopUp(
           context,
           message: 'Yorum eklendi',

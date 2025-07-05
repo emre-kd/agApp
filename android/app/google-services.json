@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "482407955732",
+    "project_id": "agapp-7983f",
+    "storage_bucket": "agapp-7983f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:482407955732:android:9fda45e8c351b4488cd601",
+        "android_client_info": {
+          "package_name": "com.example.agapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_qhNF5voCiglfwjVxaqz30RHD98_ELUs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
