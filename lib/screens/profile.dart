@@ -815,7 +815,7 @@ class _ProfileState extends State<Profile> {
                                                       CrossAxisAlignment.start,
                                                   children: [
                                                     CircleAvatar(
-                                                      radius: 18,
+                                                      radius: 22,
                                                       backgroundImage:
                                                           post.user.image !=
                                                                   null
@@ -1090,7 +1090,7 @@ class _ProfileState extends State<Profile> {
                                                       CrossAxisAlignment.start,
                                                   children: [
                                                     CircleAvatar(
-                                                      radius: 22,
+                                                      radius: 18,
                                                       backgroundImage:
                                                           comment.user.image !=
                                                                   null

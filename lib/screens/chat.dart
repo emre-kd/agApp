@@ -319,7 +319,7 @@ class _ChatState extends State<Chat> {
                                 Text(
                                   DateFormat(
                                     'HH:mm',
-                                  ).format(DateTime.parse(message.createdAt)),
+                                  ).format(DateTime.parse(message.createdAt).toLocal()),
                                   style: const TextStyle(
                                     fontSize: 10,
                                     color: Colors.white38,

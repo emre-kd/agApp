@@ -501,8 +501,8 @@ class _UpdateProfileState extends State<UpdateProfile> {
                         cursorColor: Colors.white,
                         style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
-                          labelText: 'Hakkında (max 200 karakter)',
-                          hintText: 'Kendiniz hakkında birkaç cümle yazın...',
+                          labelText: 'Açıklama',
+                          hintText: 'Nasıl çılgın biri olduğunu yaz...',
                           labelStyle: const TextStyle(color: Colors.white),
                           hintStyle: const TextStyle(color: Colors.white70),
                           alignLabelWithHint: true,

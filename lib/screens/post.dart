@@ -84,48 +84,54 @@ class _PostWidgetState extends State<PostWidget> {
     }
   }
 
-  Future<void> _checkLikeStatus() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
+ Future<void> _checkLikeStatus() async {
+  if (!mounted) return; // Early exit if widget is unmounted
 
-    if (token == null) {
-      print('No token found in SharedPreferences');
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? token = prefs.getString('token');
+
+  if (token == null) {
+    print('No token found in SharedPreferences');
+    if (mounted) { // Check mounted before showing popup
       showTopPopUp(
         context,
         message: 'Oturum açmanız gerekiyor',
         backgroundColor: Colors.red,
         duration: const Duration(seconds: 2),
       );
-      return;
     }
+    return;
+  }
 
-    try {
-      final response = await http.get(
-        Uri.parse('$likePostURL/${widget.post.id}/like-status'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+  try {
+    final response = await http.get(
+      Uri.parse('$likePostURL/${widget.post.id}/like-status'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200 && mounted) { // Check mounted before setState
+      final data = jsonDecode(response.body);
+      setState(() {
+        _isLiked = data['is_liked'] == true;
+        _likeCount = data['like_count'] ?? widget.post.likesCount ?? 0;
+      });
+    } else if (mounted) { // Check mounted before showing popup
+      print('Failed to fetch like status: ${response.statusCode} - ${response.body}');
+     /* showTopPopUp(
+        context,
+        message: 'Hata: Like durumu alınamadı (${response.statusCode})',
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 2),
       );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          _isLiked = data['is_liked'] == true;
-          _likeCount = data['like_count'] ?? widget.post.likesCount ?? 0;
-        });
-      } else {
-        print('Failed to fetch like status: ${response.statusCode} - ${response.body}');
-        showTopPopUp(
-          context,
-          message: 'Hata: Like durumu alınamadı (${response.statusCode})',
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 2),
-        );
-      }
-    } catch (e) {
-      print('Error checking like status: $e');
+      */
+    }
+  } catch (e) {
+    print('Error checking like status: $e');
+    if (mounted) { // Check mounted before showing popup
       showTopPopUp(
         context,
         message: 'Ağ hatası oluştu',
@@ -134,64 +140,73 @@ class _PostWidgetState extends State<PostWidget> {
       );
     }
   }
+}
 
-  Future<void> _toggleLike() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
+Future<void> _toggleLike() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? token = prefs.getString('token');
 
-    if (token == null) {
-      print('No token found in SharedPreferences');
-      showTopPopUp(
-        context,
-        message: 'Oturum açmanız gerekiyor',
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 2),
-      );
-      return;
-    }
-
-    try {
-      final response = await http.post(
-        Uri.parse('$likePostURL/${widget.post.id}/like'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          _isLiked = data['is_liked'] == true;
-          _likeCount = data['like_count'] ?? widget.post.likesCount ?? 0;
-        });
-        showTopPopUp(
-          context,
-          message: _isLiked ? 'Gönderi beğenildi' : 'Beğeni kaldırıldı',
-          backgroundColor: const Color.fromARGB(255, 0, 145, 230),
-          duration: const Duration(seconds: 2),
-        );
-      } else {
-        print('Failed to toggle like: ${response.statusCode} - ${response.body}');
-        final error = jsonDecode(response.body)['message'] ?? 'Bir hata oluştu';
-        showTopPopUp(
-          context,
-          message: 'Hata: $error',
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 2),
-        );
-      }
-    } catch (e) {
-      print('Error toggling like: $e');
-      showTopPopUp(
-        context,
-        message: 'Ağ hatası oluştu',
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 2),
-      );
-    }
+  if (token == null) {
+    print('No token found in SharedPreferences');
+    showTopPopUp(
+      context,
+      message: 'Oturum açmanız gerekiyor',
+      backgroundColor: Colors.red,
+      duration: const Duration(seconds: 2),
+    );
+    return;
   }
+
+  try {
+    final response = await http.post(
+      Uri.parse('$likePostURL/${widget.post.id}/like'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        _isLiked = data['is_liked'] == true;
+        _likeCount = data['like_count'] ?? widget.post.likesCount ?? 0;
+      });
+      showTopPopUp(
+        context,
+        message: _isLiked ? 'Gönderi beğenildi' : 'Beğeni kaldırıldı',
+        backgroundColor: const Color.fromARGB(255, 0, 145, 230),
+        duration: const Duration(seconds: 2),
+      );
+    } else if (response.statusCode == 404) {
+      print('Failed to toggle like: Post not found - ${response.statusCode} - ${response.body}');
+      showTopPopUp(
+        context,
+        message: 'Hata: Gönderi bulunamadı. Gönderi silinmiş veya erişilemez olabilir.',
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      );
+    } else {
+      print('Failed to toggle like: ${response.statusCode} - ${response.body}');
+      final error = jsonDecode(response.body)['message'] ?? 'Bir hata oluştu';
+      showTopPopUp(
+        context,
+        message: 'Hata: $error',
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 2),
+      );
+    }
+  } catch (e) {
+    print('Error toggling like: $e');
+    showTopPopUp(
+      context,
+      message: 'Ağ hatası oluştu',
+      backgroundColor: Colors.red,
+      duration: const Duration(seconds: 2),
+    );
+  }
+}
 
   Future<void> _deletePost(int postId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

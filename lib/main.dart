@@ -106,21 +106,23 @@ Future<void> main() async {
     await sendFcmTokenToBackend(fcmToken);
   }
 
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    print("🔥 Bildirim alındı: ${message.data}");
+
+    if (message.data['type'] == 'new_post') {
+      // Yeni gönderi bildirimi
+      showNewPostButton.value = true;
+    }
+  });
+
   // Foreground'da bildirim geldiğinde local notification göster
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     final notification = message.notification;
     final android = message.notification?.android;
-    // final data = message.data;
 
-    // debugPrint('Foreground bildirim alındı:  ${data['sender_id']}   ${data['reciever_id']}');
-   /* debugPrint('Foreground bildirim alındı: $activeChatUserId'
-        ' ${data['sender_id']} ');
-
-    if (activeChatUserId != null && data['sender_id'] == activeChatUserId) {
-      debugPrint('Bildirim engellendi çünkü kullanıcı zaten bu kişiyle chat ekranında.');
-      return;
+    if (message.data['type'] == 'new_post') {
+      return; // new_post için bildirim gösterme
     }
-    */
 
     if (notification != null && android != null) {
       flutterLocalNotificationsPlugin.show(
@@ -135,7 +137,7 @@ Future<void> main() async {
             icon: '@mipmap/ic_launcher',
           ),
         ),
-        payload: jsonEncode(message.data), // Burada payload'u ekledik
+        payload: jsonEncode(message.data),
       );
     }
   });

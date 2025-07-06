@@ -266,7 +266,7 @@ class _CommentsPageState extends State<CommentsPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            ' Yorumlar',
+                            '    Yorumlar',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 16,

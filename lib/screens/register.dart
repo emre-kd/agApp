@@ -3,6 +3,7 @@
 import 'package:agapp/controllers/authentication.dart';
 import 'package:agapp/screens/login.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 class Register extends StatefulWidget {
@@ -179,44 +180,45 @@ class _RegisterState extends State<Register> {
               // Conditional Fields
               _communityChoice == 'join'
                   ? Obx(
-                      () => TextField(
-                        maxLength: 6,
-                        controller: communityCodeController,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          labelText: 'Topluluk Kodu',
-                          labelStyle: const TextStyle(color: Colors.white),
-                          helperText:
-                              _authenticationController.errors['community_code'],
-                          helperStyle: TextStyle(
-                            color: _authenticationController
-                                        .errors['community_code'] !=
-                                    null
-                                ? Colors.red
-                                : Colors.white,
-                          ),
-                          prefixIcon: const Icon(Icons.code, color: Colors.white),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: _authenticationController
-                                          .errors['community_code'] !=
-                                      null
-                                  ? Colors.red
-                                  : Colors.white,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: _authenticationController
-                                          .errors['community_code'] !=
-                                      null
-                                  ? Colors.red
-                                  : Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
+        () => TextField(
+          maxLength: 6,
+          controller: communityCodeController,
+          inputFormatters: [UpperCaseTextFormatter()], // BURAYA EKLENDİ
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            labelText: 'Topluluk Kodu',
+            labelStyle: const TextStyle(color: Colors.white),
+            helperText:
+                _authenticationController.errors['community_code'],
+            helperStyle: TextStyle(
+              color: _authenticationController
+                          .errors['community_code'] !=
+                      null
+                  ? Colors.red
+                  : Colors.white,
+            ),
+            prefixIcon: const Icon(Icons.code, color: Colors.white),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: _authenticationController
+                            .errors['community_code'] !=
+                        null
+                    ? Colors.red
+                    : Colors.white,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: _authenticationController
+                            .errors['community_code'] !=
+                        null
+                    ? Colors.red
+                    : Colors.white,
+              ),
+            ),
+          ),
+        ),
+      )
                   : Obx(
                       () => TextField(
                         maxLength: 20,
@@ -405,6 +407,19 @@ class _RegisterState extends State<Register> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    return TextEditingValue(
+      text: newValue.text.toUpperCase(),
+      selection: newValue.selection,
     );
   }
 }

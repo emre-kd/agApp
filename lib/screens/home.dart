@@ -18,6 +18,8 @@ import 'package:agapp/screens/profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
 
+final ValueNotifier<bool> showNewPostButton = ValueNotifier(false);
+
 class Home extends StatefulWidget {
   const Home({super.key});
 
@@ -33,7 +35,6 @@ class _HomeState extends State<Home> {
   bool _isLoading = true;
   bool _isLoadingMore = false;
   List<Post> posts = [];
-  List<Post> _pendingNewPosts = []; // Store new posts until user loads them
   int? currentUserId;
   String? communityName; // New state variable for community name
   int? communityId;
@@ -41,7 +42,6 @@ class _HomeState extends State<Home> {
   final int _limit = 5;
   bool _hasMore = true;
   final ScrollController _scrollController = ScrollController();
-  Timer? _pollingTimer;
 
   @override
   void initState() {
@@ -49,12 +49,7 @@ class _HomeState extends State<Home> {
     fetchUserInfo();
     fetchPosts();
 
-    // Start polling every 15 seconds
-    _pollingTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
-      if (!_isLoading && !_isLoadingMore) {
-        checkForNewPosts();
-      }
-    });
+
 
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
@@ -69,7 +64,6 @@ class _HomeState extends State<Home> {
   @override
   void dispose() {
     _scrollController.dispose();
-    _pollingTimer?.cancel();
     super.dispose();
   }
 
@@ -109,7 +103,6 @@ class _HomeState extends State<Home> {
       _isLoading = true;
       _page = 1;
       _hasMore = true;
-      _pendingNewPosts.clear(); // Clear pending posts on refresh
     });
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -143,66 +136,9 @@ class _HomeState extends State<Home> {
     }
   }
 
-  Future<void> checkForNewPosts() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
 
-    try {
-      final response = await http.get(
-        Uri.parse('$fetchPostURL?page=1&limit=$_limit'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Accept': 'application/json',
-        },
-      );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
 
-        final List<dynamic> postJson = data['posts'];
-        final newPosts = postJson.map((json) => Post.fromJson(json)).toList();
-
-        // Filter out duplicates
-        final existingPostIds = posts.map((p) => p.id).toSet();
-        final uniqueNewPosts =
-            newPosts
-                .where((newPost) => !existingPostIds.contains(newPost.id))
-                .toList();
-
-        if (uniqueNewPosts.isNotEmpty && mounted) {
-          setState(() {
-            _pendingNewPosts = uniqueNewPosts;
-          });
-        }
-      } else {
-        print('Error checking new posts: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error checking new posts: $e');
-    }
-  }
-
-  void loadNewPosts() {
-    if (_pendingNewPosts.isEmpty) return;
-
-    setState(() {
-      posts.insertAll(0, _pendingNewPosts);
-      _pendingNewPosts = [];
-    });
-
-    // Smoothly scroll to the top
-    _scrollController.animateTo(
-      0,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
-    Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => Home(),
-                              ),
-                            );
-  }
 
   Future<void> fetchMorePosts() async {
     if (_isLoadingMore || !_hasMore) return;
@@ -425,36 +361,40 @@ class _HomeState extends State<Home> {
             ),
           ),
           // "New Posts" button
-          if (_pendingNewPosts.isNotEmpty)
-            Positioned(
-              top: 16,
-              left: MediaQuery.of(context).size.width / 2 - 80,
-              child: ElevatedButton(
-                onPressed: loadNewPosts,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.arrow_upward, color: Colors.white, size: 16),
-                    SizedBox(width: 4),
-                    Text(
-                      '${_pendingNewPosts.length} yeni gönderi',
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+           ValueListenableBuilder<bool>(
+  valueListenable: showNewPostButton,
+  builder: (context, isVisible, _) {
+    if (!isVisible) return SizedBox.shrink();
+
+    return Positioned(
+      top: 16,
+      left: MediaQuery.of(context).size.width / 2 - 80,
+      child: ElevatedButton(
+        onPressed: () async {
+          await fetchPosts(); // Gönderileri yenile
+          showNewPostButton.value = false; // Butonu gizle
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Icon(Icons.arrow_upward, color: Colors.white, size: 16),
+            SizedBox(width: 4),
+            Text(' yeni gönderi', style: TextStyle(fontSize: 14)),
+          ],
+        ),
+      ),
+    );
+  },
+),
+
         ],
       ),
       floatingActionButton:

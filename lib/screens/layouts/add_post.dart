@@ -145,6 +145,7 @@ class _AddPostState extends State<AddPost> {
 
       var response = await request.send();
       final responseData = await response.stream.bytesToString();
+      print(responseData);
 
       if (response.statusCode == 200) {
         Navigator.pushReplacement(
