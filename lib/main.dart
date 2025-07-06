@@ -155,11 +155,11 @@ Future<void> main() async {
           parentScreen: 'notification',
         ),
       ));
-    } else if (data['chat_user_id'] != null) {
+    } else if (data['sender_id'] != null) {
       navigatorKey.currentState?.push(MaterialPageRoute(
         builder: (context) => Chat(
-          userId: data['chat_user_id'].toString(),
-          userName: data['chat_user_name'] ?? 'Sohbet',
+          userId: data['sender_id'].toString(),
+          userName: data['sender_name'] ?? 'Sohbet',
         ),
       ));
     }
