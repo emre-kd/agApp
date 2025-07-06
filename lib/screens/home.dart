@@ -196,6 +196,12 @@ class _HomeState extends State<Home> {
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
+    Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => Home(),
+                              ),
+                            );
   }
 
   Future<void> fetchMorePosts() async {

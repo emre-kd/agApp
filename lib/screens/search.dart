@@ -71,7 +71,7 @@ class _SearchState extends State<Search> {
   bool _isLoadingMore = false;
   String? _errorMessage;
   int _currentPage = 0;
-  final int _pageSize = 10; // Load 10 users per page
+  final int _pageSize = 15; // Load 10 users per page
 
   @override
   void initState() {

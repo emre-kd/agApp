@@ -1,4 +1,5 @@
 // ignore_for_file: avoid_print
+import 'package:agapp/screens/chat_list.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -29,9 +30,13 @@ class Message {
       id: json['id'] is String ? int.parse(json['id']) : json['id'],
       text: json['text'] ?? '',
       senderId:
-          json['sender_id'] is String ? int.parse(json['sender_id']) : json['sender_id'],
+          json['sender_id'] is String
+              ? int.parse(json['sender_id'])
+              : json['sender_id'],
       receiverId:
-          json['receiver_id'] is String ? int.parse(json['receiver_id']) : json['receiver_id'],
+          json['receiver_id'] is String
+              ? int.parse(json['receiver_id'])
+              : json['receiver_id'],
       communityId: json['community_id'],
       createdAt: json['created_at'] ?? '',
     );
@@ -115,7 +120,9 @@ class _ChatState extends State<Chat> {
 
         final existingMessageIds = messages.map((m) => m.id).toSet();
         final uniqueNewMessages =
-            newMessages.where((newMsg) => !existingMessageIds.contains(newMsg.id)).toList();
+            newMessages
+                .where((newMsg) => !existingMessageIds.contains(newMsg.id))
+                .toList();
 
         if (uniqueNewMessages.isNotEmpty && mounted) {
           setState(() {
@@ -158,7 +165,8 @@ class _ChatState extends State<Chat> {
     }
 
     try {
-      final url = '$indexMessage?receiver_id=${widget.userId}&page=$currentPage&per_page=$perPage';
+      final url =
+          '$indexMessage?receiver_id=${widget.userId}&page=$currentPage&per_page=$perPage';
       final response = await http.get(
         Uri.parse(url),
         headers: {
@@ -241,56 +249,88 @@ class _ChatState extends State<Chat> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(widget.userName, style: const TextStyle(color: Colors.white)),
+        title: Text(
+          widget.userName,
+          style: const TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.black,
         elevation: 1,
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ChatList()),
+            );
+          },
         ),
       ),
       body: Column(
         children: [
           Expanded(
-            child: messages.isEmpty && !isLoading
-                ? const Center(
-                    child: Text('Henüz mesaj yok. Konuşmayı başlat!', style: TextStyle(color: Colors.white54)))
-                : ListView.builder(
-                    controller: _scrollController,
-                    reverse: true,
-                    padding: const EdgeInsets.all(8),
-                    itemCount: messages.length + (isLoading ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == messages.length) {
-                        return const Center(child: CircularProgressIndicator(color: Colors.white));
-                      }
-                      final message = messages[index];
-                      final isSent = message.senderId.toString() != widget.userId;
-                      return Align(
-                        alignment: isSent ? Alignment.centerRight : Alignment.centerLeft,
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(vertical: 4),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: isSent ? Colors.blueAccent : Colors.grey[800],
-                            borderRadius: BorderRadius.circular(12),
+            child:
+                messages.isEmpty && !isLoading
+                    ? const Center(
+                      child: Text(
+                        'Henüz mesaj yok. Konuşmayı başlat!',
+                        style: TextStyle(color: Colors.white54),
+                      ),
+                    )
+                    : ListView.builder(
+                      controller: _scrollController,
+                      reverse: true,
+                      padding: const EdgeInsets.all(8),
+                      itemCount: messages.length + (isLoading ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == messages.length) {
+                          return const Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                            ),
+                          );
+                        }
+                        final message = messages[index];
+                        final isSent =
+                            message.senderId.toString() != widget.userId;
+                        return Align(
+                          alignment:
+                              isSent
+                                  ? Alignment.centerRight
+                                  : Alignment.centerLeft,
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color:
+                                  isSent ? Colors.blueAccent : Colors.grey[800],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              crossAxisAlignment:
+                                  isSent
+                                      ? CrossAxisAlignment.end
+                                      : CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  message.text,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                                Text(
+                                  DateFormat(
+                                    'HH:mm',
+                                  ).format(DateTime.parse(message.createdAt)),
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white38,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          child: Column(
-                            crossAxisAlignment:
-                                isSent ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                            children: [
-                              Text(message.text, style: const TextStyle(color: Colors.white)),
-                              Text(
-                                DateFormat('HH:mm').format(DateTime.parse(message.createdAt)),
-                                style: const TextStyle(fontSize: 10, color: Colors.white38),
-                              )
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    ),
           ),
           Padding(
             padding: const EdgeInsets.all(8),
@@ -322,10 +362,10 @@ class _ChatState extends State<Chat> {
                 IconButton(
                   icon: const Icon(Icons.send, color: Colors.white),
                   onPressed: _sendMessage,
-                )
+                ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );

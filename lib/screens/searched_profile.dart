@@ -51,6 +51,8 @@ class _SearchedProfileState extends State<SearchedProfile> {
   late TextEditingController _userNameController;
   late TextEditingController _emailController;
   late TextEditingController _createdAtController;
+    late TextEditingController _descriptionController;
+
 
   // Scroll Controllers
   final ScrollController _postsScrollController = ScrollController();
@@ -64,6 +66,8 @@ class _SearchedProfileState extends State<SearchedProfile> {
     _userNameController = TextEditingController();
     _emailController = TextEditingController();
     _createdAtController = TextEditingController();
+    _descriptionController = TextEditingController();
+
     fetchAuthenticatedUserId();
     fetchUserData();
     fetchUserPosts();
@@ -104,6 +108,7 @@ class _SearchedProfileState extends State<SearchedProfile> {
     _userNameController.dispose();
     _emailController.dispose();
     _createdAtController.dispose();
+    _descriptionController.dispose();
     _postsScrollController.dispose();
     _likesScrollController.dispose();
     _commentsScrollController.dispose();
@@ -193,6 +198,7 @@ class _SearchedProfileState extends State<SearchedProfile> {
           _userNameController.text = userData['username']?.toString() ?? '';
           _emailController.text = userData['email']?.toString() ?? '';
           _createdAtController.text = userData['created_at']?.toString() ?? '';
+          _descriptionController.text = userData['description']?.toString() ?? '';
           isLoading = false;
         });
       } else {
@@ -668,6 +674,21 @@ class _SearchedProfileState extends State<SearchedProfile> {
                                   fontSize: 16,
                                 ),
                               ),
+                              
+                             
+                              if(_descriptionController.text.isNotEmpty) 
+                              Text(
+                                '“${_descriptionController.text}”', // Add quotes here
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                  fontStyle: FontStyle.italic,
+                                  fontWeight: FontWeight.w400,
+                                  height:
+                                      1.4, // line height for better readability
+                                ),
+                              ),
+
                               const SizedBox(height: 10),
                               Text(
                                 formatCreatedAt(_createdAtController.text),

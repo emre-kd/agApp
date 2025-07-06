@@ -46,6 +46,7 @@ class _ProfileState extends State<Profile> {
   late TextEditingController _emailController;
   late TextEditingController _createdAtController;
   late TextEditingController _passwordController;
+  late TextEditingController _descriptionController;
 
   // Scroll Controllers
   final ScrollController _postsScrollController = ScrollController();
@@ -60,6 +61,7 @@ class _ProfileState extends State<Profile> {
     _emailController = TextEditingController();
     _createdAtController = TextEditingController();
     _passwordController = TextEditingController();
+    _descriptionController = TextEditingController();
 
     fetchUserData();
     fetchUserPosts();
@@ -100,6 +102,7 @@ class _ProfileState extends State<Profile> {
     _userNameController.dispose();
     _emailController.dispose();
     _createdAtController.dispose();
+    _descriptionController.dispose();
     _passwordController.dispose();
     _postsScrollController.dispose();
     _likesScrollController.dispose();
@@ -143,6 +146,8 @@ class _ProfileState extends State<Profile> {
           _userNameController.text = userData['username']?.toString() ?? '';
           _emailController.text = userData['email']?.toString() ?? '';
           _createdAtController.text = userData['created_at']?.toString() ?? '';
+          _descriptionController.text =
+              userData['description']?.toString() ?? '';
           currentUserId = userData['id']?.toInt();
           isLoading = false;
         });
@@ -560,6 +565,23 @@ class _ProfileState extends State<Profile> {
                                   fontSize: 16,
                                 ),
                               ),
+
+                              // TabBar moved below header
+                              const SizedBox(height: 10),
+
+                              if(_descriptionController.text.isNotEmpty) 
+                              Text(
+                                '“${_descriptionController.text}”', // Add quotes here
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                  fontStyle: FontStyle.italic,
+                                  fontWeight: FontWeight.w400,
+                                  height:
+                                      1.4, // line height for better readability
+                                ),
+                              ),
+
                               const SizedBox(height: 10),
                               Text(
                                 formatCreatedAt(_createdAtController.text),
@@ -568,7 +590,6 @@ class _ProfileState extends State<Profile> {
                                   fontSize: 14,
                                 ),
                               ),
-                              // TabBar moved below header
                             ],
                           ),
                         ),
@@ -877,7 +898,10 @@ class _ProfileState extends State<Profile> {
                                                             width: 8,
                                                           ),
                                                           Padding(
-                                                            padding: const EdgeInsets.only(right: 8),
+                                                            padding:
+                                                                const EdgeInsets.only(
+                                                                  right: 8,
+                                                                ),
                                                             child: Text(
                                                               timeago.format(
                                                                 post.createdAt,
@@ -890,7 +914,8 @@ class _ProfileState extends State<Profile> {
                                                                 fontSize: 11,
                                                               ),
                                                               textAlign:
-                                                                  TextAlign.right,
+                                                                  TextAlign
+                                                                      .right,
                                                             ),
                                                           ),
                                                         ],
@@ -1148,10 +1173,14 @@ class _ProfileState extends State<Profile> {
                                                             width: 8,
                                                           ),
                                                           Padding(
-                                                            padding: const EdgeInsets.only(right: 8),
+                                                            padding:
+                                                                const EdgeInsets.only(
+                                                                  right: 8,
+                                                                ),
                                                             child: Text(
                                                               timeago.format(
-                                                                comment.createdAt,
+                                                                comment
+                                                                    .createdAt,
                                                                 locale: 'tr',
                                                               ),
                                                               style: const TextStyle(
@@ -1160,9 +1189,10 @@ class _ProfileState extends State<Profile> {
                                                                         .white38,
                                                                 fontSize: 11,
                                                               ),
-                                                              
+
                                                               textAlign:
-                                                                  TextAlign.right,
+                                                                  TextAlign
+                                                                      .right,
                                                             ),
                                                           ),
                                                         ],

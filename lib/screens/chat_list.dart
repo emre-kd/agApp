@@ -15,7 +15,6 @@ class ChatList extends StatefulWidget {
 
 class _ChatListState extends State<ChatList> {
   List<dynamic>? conversations;
-  late Timer _pollingTimer;
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -23,14 +22,9 @@ class _ChatListState extends State<ChatList> {
   void initState() {
     super.initState();
     _fetchConversations(); // Initial fetch
-    _startPolling(); // Start polling
   }
 
-  void _startPolling() {
-    _pollingTimer = Timer.periodic(const Duration(seconds: 15), (timer) async {
-      await _fetchConversations();
-    });
-  }
+
 
   Future<void> _fetchConversations() async {
     setState(() {
@@ -96,7 +90,6 @@ class _ChatListState extends State<ChatList> {
 
   @override
   void dispose() {
-    _pollingTimer.cancel();
     super.dispose();
   }
 

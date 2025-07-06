@@ -34,6 +34,9 @@ class _UpdateProfileState extends State<UpdateProfile> {
   late TextEditingController _userNameController;
   late TextEditingController _emailController;
   late TextEditingController _passwordController;
+  late TextEditingController _descriptionController;
+
+  
 
   @override
   void initState() {
@@ -42,6 +45,8 @@ class _UpdateProfileState extends State<UpdateProfile> {
     _userNameController = TextEditingController();
     _emailController = TextEditingController();
     _passwordController = TextEditingController();
+    _descriptionController = TextEditingController();
+
     fetchUserData();
   }
 
@@ -51,6 +56,8 @@ class _UpdateProfileState extends State<UpdateProfile> {
     _userNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _descriptionController.dispose();
+
     super.dispose();
   }
 
@@ -94,6 +101,8 @@ class _UpdateProfileState extends State<UpdateProfile> {
           _nameController.text = userData['name']?.toString() ?? '';
           _userNameController.text = userData['username']?.toString() ?? '';
           _emailController.text = userData['email']?.toString() ?? '';
+          _descriptionController.text = userData['description']?.toString() ?? '';
+
           isLoading = false;
         });
       } else {
@@ -158,6 +167,8 @@ class _UpdateProfileState extends State<UpdateProfile> {
       request.fields['name'] = _nameController.text;
       request.fields['username'] = _userNameController.text;
       request.fields['email'] = _emailController.text;
+      request.fields['description'] = _descriptionController.text;
+
       if (_passwordController.text.isNotEmpty) {
         request.fields['password'] = _passwordController.text;
       }
@@ -480,6 +491,65 @@ class _UpdateProfileState extends State<UpdateProfile> {
                         ),
                       ),
                       const SizedBox(height: 10),
+
+                      // description Field (Textarea)
+                      TextFormField(
+                        controller: _descriptionController,
+                        maxLength: 200,
+                        minLines: 5,
+                        maxLines: null, // Otomatik büyür
+                        cursorColor: Colors.white,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          labelText: 'Hakkında (max 200 karakter)',
+                          hintText: 'Kendiniz hakkında birkaç cümle yazın...',
+                          labelStyle: const TextStyle(color: Colors.white),
+                          hintStyle: const TextStyle(color: Colors.white70),
+                          alignLabelWithHint: true,
+                          errorText: errors['description'],
+                          helperStyle: TextStyle(
+                            color:
+                                errors['description'] != null
+                                    ? Colors.red
+                                    : Colors.white,
+                          ),
+                          counterStyle: TextStyle(
+                            color:
+                                errors['description'] != null
+                                    ? Colors.red
+                                    : Colors.white,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color:
+                                  errors['description'] != null
+                                      ? Colors.red
+                                      : Colors.white,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color:
+                                  errors['description'] != null
+                                      ? Colors.red
+                                      : Colors.white,
+                              width: 1.5,
+                            ),
+                          ),
+                          errorBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.red),
+                          ),
+                          focusedErrorBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.red,
+                              width: 1.5,
+                            ),
+                          ),
+                          border: const OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
                       // Email Field
                       /* TextFormField(
                         maxLength: 50,
