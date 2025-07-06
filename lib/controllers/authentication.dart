@@ -220,7 +220,6 @@ class AuthenticationController extends GetxController {
     }
   }
 
-    
   Future<void> verifyRegistration({
     required String code,
     required String email,
@@ -350,10 +349,9 @@ class AuthenticationController extends GetxController {
         // Kullanıcı detaylarını al
         await getUserDetails();
 
-        // 🔥 Buraya FCM token alma ve backend'e gönderme ekliyoruz
-        String? fcmToken = await FirebaseMessaging.instance.getToken();
+            String? fcmToken = await FirebaseMessaging.instance.getToken();
         if (fcmToken != null) {
-          await sendFcmTokenToBackend(fcmToken);
+          await sendFcmTokenToBackend(fcmToken); // Ama hangi kullanıcı bu belli değil!
         }
 
         Navigator.push(
@@ -393,7 +391,6 @@ class AuthenticationController extends GetxController {
       isLoading.value = false;
     }
   }
-
 
   Future<void> logout(BuildContext context) async {
     try {
@@ -441,12 +438,6 @@ class AuthenticationController extends GetxController {
     }
   }
 
-
-
-
-
-
-    
   Future<bool> requestPasswordReset(String email, BuildContext context) async {
     try {
       isLoading.value = true;
@@ -531,7 +522,7 @@ class AuthenticationController extends GetxController {
     }
   }
 
-Future<bool> resendResetCode(String email, BuildContext context) async {
+  Future<bool> resendResetCode(String email, BuildContext context) async {
     try {
       isLoading.value = true;
       final response = await http.post(
@@ -655,27 +646,34 @@ Future<bool> resendResetCode(String email, BuildContext context) async {
       isLoading.value = false;
     }
   }
-}
-
-
-Future<void> sendFcmTokenToBackend(String token) async {
-  final prefs = await SharedPreferences.getInstance();
-  final authToken = prefs.getString('token');
-  if (authToken == null) return;
-
-  final response = await http.post(
-    Uri.parse(firebaseCommentURL), // veya backend'deki FCM token update URL'si
-    headers: {
-      'Authorization': 'Bearer $authToken',
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
-    body: jsonEncode({'fcm_token': token}),
-  );
-
-  if (response.statusCode == 200) {
-    debugPrint("✅ FCM token başarıyla gönderildi");
-  } else {
-    debugPrint("❌ FCM token gönderilemedi: ${response.statusCode}");
   }
-}
+
+
+  Future<void> sendFcmTokenToBackend(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    final authToken = prefs.getString('token');
+    if (authToken == null) return;
+
+    try {
+      final response = await http.post(
+        Uri.parse(firebaseUpdateFcmURL),
+        headers: {
+          'Authorization': 'Bearer $authToken',
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'fcm_token': token,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        debugPrint("FCM token backend'e başarıyla gönderildi.");
+      } else {
+        debugPrint("FCM token gönderilirken hata: ${response.body}");
+      }
+    } catch (e) {
+      debugPrint("FCM gönderme hatası: $e");
+    }
+  }
+

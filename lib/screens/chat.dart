@@ -29,13 +29,9 @@ class Message {
       id: json['id'] is String ? int.parse(json['id']) : json['id'],
       text: json['text'] ?? '',
       senderId:
-          json['sender_id'] is String
-              ? int.parse(json['sender_id'])
-              : json['sender_id'],
+          json['sender_id'] is String ? int.parse(json['sender_id']) : json['sender_id'],
       receiverId:
-          json['receiver_id'] is String
-              ? int.parse(json['receiver_id'])
-              : json['receiver_id'],
+          json['receiver_id'] is String ? int.parse(json['receiver_id']) : json['receiver_id'],
       communityId: json['community_id'],
       createdAt: json['created_at'] ?? '',
     );
@@ -66,12 +62,8 @@ class _ChatState extends State<Chat> {
   @override
   void initState() {
     super.initState();
-    print(
-      'Chat initialized with userId: ${widget.userId}, userName: ${widget.userName}',
-    );
+    activeChatUserId = widget.userId; // Aktif kişi set edilir
     _fetchMessages();
-
-    // Start polling every 15 seconds for new messages
     _pollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       if (!isLoading && !isLoadingNew) {
         _checkForNewMessages();
@@ -98,24 +90,15 @@ class _ChatState extends State<Chat> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
     if (token == null) {
-      print('No token found, skipping new messages check');
       setState(() {
         isLoadingNew = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No token found. Please log in.'),
-          backgroundColor: Colors.black87,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
       return;
     }
 
     try {
       final url =
           '$indexMessage?receiver_id=${widget.userId}&page=1&per_page=$perPage';
-      print('Checking for new messages: $url');
       final response = await http.get(
         Uri.parse(url),
         headers: {
@@ -124,29 +107,21 @@ class _ChatState extends State<Chat> {
         },
       );
 
-      print('New messages response: ${response.statusCode}, ${response.body}');
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         final List<dynamic> messageData = jsonData['data']['data'] ?? [];
-
         final newMessages =
             messageData.map((json) => Message.fromJson(json)).toList();
 
-        // Filter out duplicates based on message ID
         final existingMessageIds = messages.map((m) => m.id).toSet();
         final uniqueNewMessages =
-            newMessages
-                .where((newMsg) => !existingMessageIds.contains(newMsg.id))
-                .toList();
+            newMessages.where((newMsg) => !existingMessageIds.contains(newMsg.id)).toList();
 
         if (uniqueNewMessages.isNotEmpty && mounted) {
-          print('Found ${uniqueNewMessages.length} new messages');
           setState(() {
             messages.insertAll(0, uniqueNewMessages);
             isLoadingNew = false;
           });
-
-          // Scroll to the bottom to show the latest message
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _scrollController.animateTo(
               0,
@@ -155,85 +130,41 @@ class _ChatState extends State<Chat> {
             );
           });
         } else {
-          print('No new messages found');
           setState(() {
             isLoadingNew = false;
           });
         }
       } else {
-        print(
-          'Error checking new messages: ${response.statusCode}, ${response.body}',
-        );
         setState(() {
           isLoadingNew = false;
         });
       }
     } catch (e) {
-      print('Error checking new messages: $e');
       setState(() {
         isLoadingNew = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.black87,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
     }
   }
 
   Future<void> _fetchMessages() async {
     if (isLoading) return;
-
-    setState(() {
-      isLoading = true;
-    });
-
-    if (widget.userId.isEmpty || !RegExp(r'^\d+$').hasMatch(widget.userId)) {
-      setState(() {
-        isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Invalid receiver ID'),
-          backgroundColor: Colors.black87,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
+    setState(() => isLoading = true);
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
     if (token == null) {
-      print('No token found, cannot fetch messages');
-      setState(() {
-        isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Authentication error, please log in again'),
-          backgroundColor: Colors.black87,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      setState(() => isLoading = false);
       return;
     }
 
     try {
-      final url =
-          '$indexMessage?receiver_id=${widget.userId}&page=$currentPage&per_page=$perPage';
-      print('Fetching messages: $url');
+      final url = '$indexMessage?receiver_id=${widget.userId}&page=$currentPage&per_page=$perPage';
       final response = await http.get(
         Uri.parse(url),
         headers: {
           'Authorization': 'Bearer $token',
           'Accept': 'application/json',
         },
-      );
-      print(
-        'Fetch messages response: ${response.statusCode}, ${response.body}',
       );
 
       if (response.statusCode == 200) {
@@ -249,47 +180,11 @@ class _ChatState extends State<Chat> {
           hasMore = currentPage <= totalPages && messageData.isNotEmpty;
           isLoading = false;
         });
-
-       
-      } else if (response.statusCode == 422) {
-        final jsonData = jsonDecode(response.body);
-        final errors =
-            jsonData['errors']?['receiver_id']?.join(', ') ??
-            'Invalid receiver ID';
-        setState(() {
-          isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Validation error: $errors'),
-            backgroundColor: Colors.black87,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
       } else {
-        setState(() {
-          isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to load messages: ${response.statusCode}'),
-            backgroundColor: Colors.black87,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        setState(() => isLoading = false);
       }
     } catch (e) {
-      print('Error fetching messages: $e');
-      setState(() {
-        isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.black87,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      setState(() => isLoading = false);
     }
   }
 
@@ -298,16 +193,7 @@ class _ChatState extends State<Chat> {
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
-    if (token == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Authentication error, please log in again'),
-          backgroundColor: Colors.black87,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
+    if (token == null) return;
 
     try {
       final response = await http.post(
@@ -324,14 +210,12 @@ class _ChatState extends State<Chat> {
         }),
       );
 
-      print('Send message response: ${response.statusCode}, ${response.body}');
       if (response.statusCode == 201) {
         final jsonData = jsonDecode(response.body);
         setState(() {
           messages.insert(0, Message.fromJson(jsonData['data']));
           _controller.clear();
         });
-        // Scroll to the bottom after sending
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _scrollController.animateTo(
             0,
@@ -339,33 +223,16 @@ class _ChatState extends State<Chat> {
             curve: Curves.easeInOut,
           );
         });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to send message: ${response.statusCode}'),
-            backgroundColor: Colors.black87,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
       }
-    } catch (e) {
-      print('Error sending message: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.black87,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
+    } catch (e) {}
   }
 
   @override
   void dispose() {
-    print('Disposing Chat widget');
     _controller.dispose();
     _scrollController.dispose();
     _pollingTimer?.cancel();
+    activeChatUserId = null; // Chat kapanınca null'a çek
     super.dispose();
   }
 
@@ -374,117 +241,74 @@ class _ChatState extends State<Chat> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(
-          widget.userName,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        title: Text(widget.userName, style: const TextStyle(color: Colors.white)),
         backgroundColor: Colors.black,
         elevation: 1,
-        shadowColor: Colors.grey[800],
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Column(
         children: [
           Expanded(
-            child:
-                messages.isEmpty && !isLoading
-                    ? const Center(
-                      child: Text(
-                        'Henüz mesaj yok. Konuşmaya başla!',
-                        style: TextStyle(fontSize: 16, color: Colors.white54),
-                      ),
-                    )
-                    : ListView.builder(
-                      controller: _scrollController,
-                      reverse: true,
-                      padding: const EdgeInsets.all(8.0),
-                      itemCount: messages.length + (isLoading ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index == messages.length) {
-                          return const Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          );
-                        }
-                        final message = messages[index];
-                        final isSent =
-                            message.senderId.toString() != widget.userId;
-                        return Align(
-                          alignment:
-                              isSent
-                                  ? Alignment.centerRight
-                                  : Alignment.centerLeft,
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(vertical: 4.0),
-                            padding: const EdgeInsets.all(12.0),
-                            decoration: BoxDecoration(
-                              color:
-                                  isSent ? Colors.blueAccent : Colors.grey[800],
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                            child: Column(
-                              crossAxisAlignment:
-                                  isSent
-                                      ? CrossAxisAlignment.end
-                                      : CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  message.text,
-                                  
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    
-                                  ),
-                                ),
-                                Text(
-                                  DateFormat(
-                                    'HH:mm',
-                                  ).format(DateTime.parse(message.createdAt)),
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.white38,
-                                  ),
-                                ),
-                              ],
-                            ),
+            child: messages.isEmpty && !isLoading
+                ? const Center(
+                    child: Text('Henüz mesaj yok. Konuşmayı başlat!', style: TextStyle(color: Colors.white54)))
+                : ListView.builder(
+                    controller: _scrollController,
+                    reverse: true,
+                    padding: const EdgeInsets.all(8),
+                    itemCount: messages.length + (isLoading ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == messages.length) {
+                        return const Center(child: CircularProgressIndicator(color: Colors.white));
+                      }
+                      final message = messages[index];
+                      final isSent = message.senderId.toString() != widget.userId;
+                      return Align(
+                        alignment: isSent ? Alignment.centerRight : Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isSent ? Colors.blueAccent : Colors.grey[800],
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        );
-                      },
-                    ),
+                          child: Column(
+                            crossAxisAlignment:
+                                isSent ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                            children: [
+                              Text(message.text, style: const TextStyle(color: Colors.white)),
+                              Text(
+                                DateFormat('HH:mm').format(DateTime.parse(message.createdAt)),
+                                style: const TextStyle(fontSize: 10, color: Colors.white38),
+                              )
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
           ),
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(8),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
-                    maxLength: 250,
                     controller: _controller,
+                    maxLength: 250,
                     decoration: InputDecoration(
-                      hintText: 'Bir mesaj yazın',
+                      hintText: 'Bir mesaj yaz...',
                       hintStyle: const TextStyle(color: Colors.white54),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20.0),
-                        borderSide: const BorderSide(color: Colors.white),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20.0),
+                        borderRadius: BorderRadius.circular(20),
                         borderSide: const BorderSide(color: Colors.white54),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20.0),
+                        borderRadius: BorderRadius.circular(20),
                         borderSide: const BorderSide(color: Colors.white),
                       ),
                       filled: true,
@@ -498,12 +322,15 @@ class _ChatState extends State<Chat> {
                 IconButton(
                   icon: const Icon(Icons.send, color: Colors.white),
                   onPressed: _sendMessage,
-                ),
+                )
               ],
             ),
-          ),
+          )
         ],
       ),
     );
   }
 }
+
+// Chat ekranında aktif kişi ID'sini global olarak tutmak
+String? activeChatUserId;

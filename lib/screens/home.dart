@@ -7,7 +7,6 @@ import 'package:agapp/controllers/authentication.dart';
 import 'package:agapp/screens/chat_list.dart';
 import 'package:agapp/screens/community_details.dart';
 import 'package:agapp/screens/leaderboard.dart';
-import 'package:agapp/screens/notification_settings.dart';
 import 'package:agapp/screens/post.dart' show PostWidget;
 import 'package:agapp/screens/search.dart';
 import 'package:flutter/material.dart';
@@ -293,28 +292,7 @@ class _HomeState extends State<Home> {
                     padding: const EdgeInsets.all(16),
                     child: Wrap(
                       children: [
-                        ListTile(
-                          leading: const Icon(
-                            Icons
-                                .notifications_active, // Icon for community details
-                            color: Colors.white,
-                          ),
-                          title: const Text(
-                            'Bildirim Ayarları',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16, // Readable text size
-                            ),
-                          ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => NotificationSettings(),
-                              ),
-                            );
-                          },
-                        ),
+                        
                         ListTile(
                           leading: const Icon(
                             Icons.info_outline, // Icon for community details

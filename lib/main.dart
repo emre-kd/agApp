@@ -11,6 +11,7 @@ import 'package:agapp/screens/home.dart';
 import 'package:agapp/screens/login.dart';
 import 'package:agapp/screens/profile.dart';
 import 'package:agapp/screens/comments_page.dart'; // Yönlendirme için gerekli
+import 'package:agapp/screens/chat.dart'; // Chat sayfası için import ekle
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 // Flutter Local Notifications setup
@@ -27,6 +28,9 @@ const AndroidNotificationChannel channel = AndroidNotificationChannel(
   importance: Importance.high,
 );
 
+// 🔥 Aktif chat ekranındaki kullanıcı ID'sini tutacak global değişken
+String? activeChatUserId;
+
 Future<void> setupFlutterNotifications() async {
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -41,7 +45,10 @@ Future<void> setupFlutterNotifications() async {
       if (payload != null && payload.isNotEmpty) {
         try {
           final data = jsonDecode(payload);
+          debugPrint('Bildirim tıklama payload a:  $activeChatUserId');
+
           if (data['post'] != null) {
+            // Yorum bildirimi
             final postJson = jsonDecode(data['post']);
             final post = Post.fromJson(postJson);
 
@@ -50,6 +57,14 @@ Future<void> setupFlutterNotifications() async {
                 post: post,
                 currentUserId: post.userId,
                 parentScreen: 'notification',
+              ),
+            ));
+          } else if (data['sender_id'] != null) {
+            // Chat bildirimi
+            navigatorKey.currentState?.push(MaterialPageRoute(
+              builder: (context) => Chat(
+                userId: data['sender_id'].toString(),
+                userName: data['sender_name'] ?? 'Sohbet',
               ),
             ));
           }
@@ -95,6 +110,17 @@ Future<void> main() async {
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     final notification = message.notification;
     final android = message.notification?.android;
+    // final data = message.data;
+
+    // debugPrint('Foreground bildirim alındı:  ${data['sender_id']}   ${data['reciever_id']}');
+   /* debugPrint('Foreground bildirim alındı: $activeChatUserId'
+        ' ${data['sender_id']} ');
+
+    if (activeChatUserId != null && data['sender_id'] == activeChatUserId) {
+      debugPrint('Bildirim engellendi çünkü kullanıcı zaten bu kişiyle chat ekranında.');
+      return;
+    }
+    */
 
     if (notification != null && android != null) {
       flutterLocalNotificationsPlugin.show(
@@ -127,6 +153,13 @@ Future<void> main() async {
           post: post,
           currentUserId: post.userId,
           parentScreen: 'notification',
+        ),
+      ));
+    } else if (data['chat_user_id'] != null) {
+      navigatorKey.currentState?.push(MaterialPageRoute(
+        builder: (context) => Chat(
+          userId: data['chat_user_id'].toString(),
+          userName: data['chat_user_name'] ?? 'Sohbet',
         ),
       ));
     }

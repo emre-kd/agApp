@@ -36,7 +36,7 @@ const  addCommentURL = '$baseURL/comments';
 const  fetchMostLikedPostsURL = '$baseURL/posts/most-liked';
 const  fetchMostCommentedPostsURL = '$baseURL/posts/most-commented';
 
-const  firebaseCommentURL = '$baseURL/update-fcm-token';
+const  firebaseUpdateFcmURL = '$baseURL/update-fcm-token';
 
 
 
