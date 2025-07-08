@@ -25,9 +25,7 @@ const AndroidNotificationChannel channel = AndroidNotificationChannel(
   importance: Importance.high,
 );
 
-String? activeChatUserId;
-
-// 📌 Bildirim izni isteme (iOS ve Android 13+)
+// 🔔 Bildirim izni isteme (iOS ve Android 13+)
 Future<void> requestNotificationPermission() async {
   NotificationSettings settings =
       await FirebaseMessaging.instance.requestPermission(
@@ -35,11 +33,37 @@ Future<void> requestNotificationPermission() async {
     badge: true,
     sound: true,
   );
-
   print('🔔 Kullanıcı izin durumu: ${settings.authorizationStatus}');
 }
 
-// 📌 Local notification kurulumu
+// 🧭 Bildirim tıklama işlemleri
+void handleNotificationTap(Map<String, dynamic> data) {
+  if (data['type'] == 'new_post') {
+    navigatorKey.currentState?.push(MaterialPageRoute(
+      builder: (context) => const Home(),
+    ));
+  } else if (data['post'] != null) {
+    final postJson = jsonDecode(data['post']);
+    final post = Post.fromJson(postJson);
+
+    navigatorKey.currentState?.push(MaterialPageRoute(
+      builder: (context) => CommentsPage(
+        post: post,
+        currentUserId: post.userId,
+        parentScreen: 'notification',
+      ),
+    ));
+  } else if (data['sender_id'] != null) {
+    navigatorKey.currentState?.push(MaterialPageRoute(
+      builder: (context) => Chat(
+        userId: data['sender_id'].toString(),
+        userName: data['sender_name'] ?? 'Sohbet',
+      ),
+    ));
+  }
+}
+
+// 🔧 Local notification kurulumu
 Future<void> setupFlutterNotifications() async {
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('@drawable/ic_notification');
@@ -54,25 +78,7 @@ Future<void> setupFlutterNotifications() async {
       if (payload != null && payload.isNotEmpty) {
         try {
           final data = jsonDecode(payload);
-          if (data['post'] != null) {
-            final postJson = jsonDecode(data['post']);
-            final post = Post.fromJson(postJson);
-
-            navigatorKey.currentState?.push(MaterialPageRoute(
-              builder: (context) => CommentsPage(
-                post: post,
-                currentUserId: post.userId,
-                parentScreen: 'notification',
-              ),
-            ));
-          } else if (data['sender_id'] != null) {
-            navigatorKey.currentState?.push(MaterialPageRoute(
-              builder: (context) => Chat(
-                userId: data['sender_id'].toString(),
-                userName: data['sender_name'] ?? 'Sohbet',
-              ),
-            ));
-          }
+          handleNotificationTap(data);
         } catch (e) {
           debugPrint('Bildirim tıklama payload hatası: $e');
         }
@@ -86,20 +92,21 @@ Future<void> setupFlutterNotifications() async {
       ?.createNotificationChannel(channel);
 }
 
-// 📌 Backend'e FCM token gönderme (opsiyonel)
+// ✅ Backend'e FCM token gönderme (opsiyonel)
 Future<void> sendFcmTokenToBackend(String token) async {
   final prefs = await SharedPreferences.getInstance();
   final authToken = prefs.getString('token');
   if (authToken == null) return;
 
-  // TODO: Backend'e token gönderme işlemi burada yapılmalı
+  print('✅ Backend\'e gönderilecek token: $token');
+  // TODO: Backend'e gönderme işlemi burada yapılabilir
 }
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  await requestNotificationPermission(); // 🆕 Bildirim izni iste
+  await requestNotificationPermission();
   await setupFlutterNotifications();
 
   final fcmToken = await FirebaseMessaging.instance.getToken();
@@ -114,7 +121,7 @@ Future<void> main() async {
 
     if (message.data['type'] == 'new_post') {
       showNewPostButton.value = true;
-      return; // new_post için local notification gösterme
+      return; // Bildirim gösterme, sadece buton
     }
 
     final notification = message.notification;
@@ -138,29 +145,9 @@ Future<void> main() async {
     }
   });
 
-  // 🔔 Bildirime tıklanarak uygulama açıldığında
+  // 🔔 Uygulama bildirime tıklanarak açıldığında
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-    final data = message.data;
-
-    if (data['post'] != null) {
-      final postJson = jsonDecode(data['post']);
-      final post = Post.fromJson(postJson);
-
-      navigatorKey.currentState?.push(MaterialPageRoute(
-        builder: (context) => CommentsPage(
-          post: post,
-          currentUserId: post.userId,
-          parentScreen: 'notification',
-        ),
-      ));
-    } else if (data['sender_id'] != null) {
-      navigatorKey.currentState?.push(MaterialPageRoute(
-        builder: (context) => Chat(
-          userId: data['sender_id'].toString(),
-          userName: data['sender_name'] ?? 'Sohbet',
-        ),
-      ));
-    }
+    handleNotificationTap(message.data);
   });
 
   runApp(const MyApp());

@@ -228,7 +228,6 @@ Future<void> _toggleLike() async {
           duration: const Duration(seconds: 2),
         );
 
-        await Future.delayed(const Duration(seconds: 2));
         if (widget.parentScreen == 'home') {
           Navigator.pushReplacement(
             context,

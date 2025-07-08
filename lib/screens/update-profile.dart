@@ -663,7 +663,7 @@ class _UpdateProfileState extends State<UpdateProfile> {
                           border: const OutlineInputBorder(),
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 10),
                       // Update Button
                       ElevatedButton(
                         onPressed: isUpdating ? null : _updateProfile,
@@ -700,6 +700,7 @@ class _UpdateProfileState extends State<UpdateProfile> {
                                   ),
                                 ),
                       ),
+                       const SizedBox(height: 24),
                     ],
                   ),
                 ),
