@@ -1,7 +1,7 @@
 
 
-const baseURL = 'http://192.168.1.102:8000/api';
-const baseNormalURL = 'http://192.168.1.102:8000';
+const baseURL = 'https://agalarnediyor.com/api';
+const baseNormalURL = 'https://agalarnediyor.com';
 
 const loginURL = '$baseURL/login';
 const registerURL = '$baseURL/register';

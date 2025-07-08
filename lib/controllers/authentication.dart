@@ -282,14 +282,14 @@ class AuthenticationController extends GetxController {
     }
   }
 
-  Future<void> resendVerificationCode(String email, BuildContext context, String username) async {
+  Future<void> resendVerificationCode(String email, BuildContext context, String loginUsername) async {
     try {
       isLoading.value = true;
       
       var response = await http.post(
         Uri.parse('$baseURL/resend-verification'),
         headers: {'Accept': 'application/json'},
-        body: {'email': email, 'username': username},
+        body: {'email': email, 'loginUsername': loginUsername},
       );
 
       var responseData = json.decode(response.body);
@@ -323,15 +323,15 @@ class AuthenticationController extends GetxController {
   }
 
   Future login({
-    required String username,
-    required String password,
+    required String loginUsername,
+    required String loginPassword,
     required BuildContext context,
   }) async {
     try {
       isLoading.value = true;
       errors.clear();
 
-      var data = {'username': username, 'password': password};
+      var data = {'loginUsername': loginUsername, 'loginPassword': loginPassword};
       var response = await http.post(
         Uri.parse(loginURL),
         headers: {'Accept': 'application/json'},
@@ -339,6 +339,7 @@ class AuthenticationController extends GetxController {
       );
       var responseData = json.decode(response.body);
 
+          print(response.body);
       if (response.statusCode == 200) {
         debugPrint("Login Successful: $responseData");
 
@@ -361,7 +362,7 @@ class AuthenticationController extends GetxController {
       } else if (response.statusCode == 401) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Invalid credentials. Please try again."),
+            content: Text("Geçersiz bilgiler. Lütfen tekrar deneyin."),
             backgroundColor: Colors.red,
           ),
         );
@@ -374,7 +375,7 @@ class AuthenticationController extends GetxController {
         debugPrint("Error: ${response.statusCode} - $responseData");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Server error. Please try again later."),
+            content: Text("Sunucu hatası. Lütfen daha sonra tekrar deneyin."),
             backgroundColor: Colors.red,
           ),
         );
@@ -382,7 +383,7 @@ class AuthenticationController extends GetxController {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Something went wrong. Please check your connection."),
+          content: Text("Bir şeyler ters gitti. Lütfen bağlantınızı kontrol edin."),
           backgroundColor: Colors.red,
         ),
       );
@@ -408,6 +409,8 @@ class AuthenticationController extends GetxController {
       );
       var responseData = json.decode(response.body);
 
+      print(response.body);
+
       if (response.statusCode == 200 || response.statusCode == 401) {
         debugPrint("Logout Successful");
         await prefs.remove('token');
@@ -420,7 +423,7 @@ class AuthenticationController extends GetxController {
         debugPrint("Error: ${response.statusCode} - $responseData");
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Failed to logout. Try again."),
+            content: Text("Çıkış yapılamadı. Tekrar deneyin."),
             backgroundColor: Colors.red,
           ),
         );
@@ -428,7 +431,7 @@ class AuthenticationController extends GetxController {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Something went wrong. Check your connection."),
+          content: Text("Bir şeyler ters gitti. Bağlantınızı kontrol edin."),
           backgroundColor: Colors.red,
         ),
       );

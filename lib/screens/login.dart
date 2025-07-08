@@ -12,9 +12,9 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  final TextEditingController userNameController = TextEditingController();
+  final TextEditingController loginUsernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController loginPasswordController = TextEditingController();
   final TextEditingController passwordConfirmationController =
       TextEditingController();
   final AuthenticationController _authenticationController = Get.put(
@@ -25,8 +25,8 @@ class _LoginState extends State<Login> {
   // Functions
   void loginUser() async {
     await _authenticationController.login(
-      username: userNameController.text.trim(),
-      password: passwordController.text.trim(),
+      loginUsername: loginUsernameController.text.trim(),
+      loginPassword: loginPasswordController.text.trim(),
       context: context,
     );
   }
@@ -48,17 +48,17 @@ class _LoginState extends State<Login> {
                 maxLength: 20,
                 cursorColor: Colors.white,
                 style: TextStyle(color: Colors.white),
-                controller: userNameController,
+                controller: loginUsernameController,
 
                 decoration: InputDecoration(
                   labelText: 'Kullanıcı Adı',
                   labelStyle: TextStyle(color: Colors.white),
                   helperText:
-                      _authenticationController.errors['username'] ??
-                      _authenticationController.errors['username'],
+                      _authenticationController.errors['loginUsername'] ??
+                      _authenticationController.errors['loginUsername'],
                   helperStyle: TextStyle(
                     color:
-                        _authenticationController.errors['username'] != null
+                        _authenticationController.errors['loginUsername'] != null
                             ? Colors.red
                             : Colors.white,
                   ),
@@ -67,7 +67,7 @@ class _LoginState extends State<Login> {
                   enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(
                       color:
-                          _authenticationController.errors['username'] != null
+                          _authenticationController.errors['loginUsername'] != null
                               ? Colors
                                   .red // If there's an error, set border to red
                               : Colors.white, // Otherwise, keep it white
@@ -76,7 +76,7 @@ class _LoginState extends State<Login> {
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(
                       color:
-                          _authenticationController.errors['username'] != null
+                          _authenticationController.errors['loginUsername'] != null
                               ? Colors
                                   .red // If there's an error, set border to red
                               : Colors.white, // Otherwise, keep it white
@@ -93,18 +93,18 @@ class _LoginState extends State<Login> {
                 maxLength: 20,
                 cursorColor: Colors.white,
                 style: TextStyle(color: Colors.white),
-                controller: passwordController,
+                controller: loginPasswordController,
 
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
                   labelText: 'Şifre',
                   labelStyle: TextStyle(color: Colors.white),
                   helperText:
-                      _authenticationController.errors['password'] ??
-                      _authenticationController.errors['password'],
+                      _authenticationController.errors['loginPassword'] ??
+                      _authenticationController.errors['loginPassword'],
                   helperStyle: TextStyle(
                     color:
-                        _authenticationController.errors['password'] != null
+                        _authenticationController.errors['loginPassword'] != null
                             ? Colors.red
                             : Colors.white,
                   ),
@@ -113,7 +113,7 @@ class _LoginState extends State<Login> {
                   enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(
                       color:
-                          _authenticationController.errors['password'] != null
+                          _authenticationController.errors['loginPassword'] != null
                               ? Colors
                                   .red // If there's an error, set border to red
                               : Colors.white, // Otherwise, keep it white
@@ -122,7 +122,7 @@ class _LoginState extends State<Login> {
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(
                       color:
-                          _authenticationController.errors['password'] != null
+                          _authenticationController.errors['loginPassword'] != null
                               ? Colors
                                   .red // If there's an error, set border to red
                               : Colors.white, // Otherwise, keep it white

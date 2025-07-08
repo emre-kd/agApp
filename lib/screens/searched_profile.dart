@@ -4,6 +4,7 @@ import 'package:agapp/models/comment.dart';
 import 'package:agapp/models/post.dart';
 import 'package:agapp/screens/chat.dart';
 import 'package:agapp/screens/comments_page.dart';
+import 'package:agapp/screens/home.dart';
 import 'package:agapp/screens/post.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -526,9 +527,13 @@ class _SearchedProfileState extends State<SearchedProfile> {
                             bottom: 7,
                           ),
                           child: FloatingActionButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
+                           onPressed:
+                                () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => Home(),
+                                  ),
+                                ),
                             backgroundColor: Colors.black.withOpacity(0.2),
                             elevation: 0,
                             highlightElevation: 0,

@@ -1,6 +1,6 @@
 import 'dart:convert';
-
 import 'package:agapp/models/post.dart';
+import 'package:agapp/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -8,32 +8,41 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
 import 'package:agapp/screens/home.dart';
-import 'package:agapp/screens/login.dart';
 import 'package:agapp/screens/profile.dart';
-import 'package:agapp/screens/comments_page.dart'; // Yönlendirme için gerekli
-import 'package:agapp/screens/chat.dart'; // Chat sayfası için import ekle
+import 'package:agapp/screens/comments_page.dart';
+import 'package:agapp/screens/chat.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-// Flutter Local Notifications setup
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-// Navigator için global key (context dışından navigasyon için)
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 const AndroidNotificationChannel channel = AndroidNotificationChannel(
-  'high_importance_channel', // id
-  'Yüksek Önemli Bildirimler', // name
-  description: 'Yüksek öncelikli bildirimler için kanal', // description
+  'high_importance_channel',
+  'Yüksek Önemli Bildirimler',
+  description: 'Yüksek öncelikli bildirimler için kanal',
   importance: Importance.high,
 );
 
-// 🔥 Aktif chat ekranındaki kullanıcı ID'sini tutacak global değişken
 String? activeChatUserId;
 
+// 📌 Bildirim izni isteme (iOS ve Android 13+)
+Future<void> requestNotificationPermission() async {
+  NotificationSettings settings =
+      await FirebaseMessaging.instance.requestPermission(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+
+  print('🔔 Kullanıcı izin durumu: ${settings.authorizationStatus}');
+}
+
+// 📌 Local notification kurulumu
 Future<void> setupFlutterNotifications() async {
   const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
+      AndroidInitializationSettings('@drawable/ic_notification');
 
   final InitializationSettings initializationSettings =
       InitializationSettings(android: initializationSettingsAndroid);
@@ -45,10 +54,7 @@ Future<void> setupFlutterNotifications() async {
       if (payload != null && payload.isNotEmpty) {
         try {
           final data = jsonDecode(payload);
-          debugPrint('Bildirim tıklama payload a:  $activeChatUserId');
-
           if (data['post'] != null) {
-            // Yorum bildirimi
             final postJson = jsonDecode(data['post']);
             final post = Post.fromJson(postJson);
 
@@ -60,7 +66,6 @@ Future<void> setupFlutterNotifications() async {
               ),
             ));
           } else if (data['sender_id'] != null) {
-            // Chat bildirimi
             navigatorKey.currentState?.push(MaterialPageRoute(
               builder: (context) => Chat(
                 userId: data['sender_id'].toString(),
@@ -81,48 +86,39 @@ Future<void> setupFlutterNotifications() async {
       ?.createNotificationChannel(channel);
 }
 
+// 📌 Backend'e FCM token gönderme (opsiyonel)
 Future<void> sendFcmTokenToBackend(String token) async {
   final prefs = await SharedPreferences.getInstance();
   final authToken = prefs.getString('token');
   if (authToken == null) return;
 
-  // Backend'e token gönderme işlemini burada yap
+  // TODO: Backend'e token gönderme işlemi burada yapılmalı
 }
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  final prefs = await SharedPreferences.getInstance();
-  final localToken = prefs.getString('token');
-
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  await requestNotificationPermission(); // 🆕 Bildirim izni iste
   await setupFlutterNotifications();
 
-  // FCM token al ve backend'e gönder
   final fcmToken = await FirebaseMessaging.instance.getToken();
   debugPrint("📱 Firebase Token: $fcmToken");
   if (fcmToken != null) {
     await sendFcmTokenToBackend(fcmToken);
   }
 
+  // 🔔 Foreground bildirim alma
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     print("🔥 Bildirim alındı: ${message.data}");
 
     if (message.data['type'] == 'new_post') {
-      // Yeni gönderi bildirimi
       showNewPostButton.value = true;
+      return; // new_post için local notification gösterme
     }
-  });
 
-  // Foreground'da bildirim geldiğinde local notification göster
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     final notification = message.notification;
     final android = message.notification?.android;
-
-    if (message.data['type'] == 'new_post') {
-      return; // new_post için bildirim gösterme
-    }
 
     if (notification != null && android != null) {
       flutterLocalNotificationsPlugin.show(
@@ -134,7 +130,7 @@ Future<void> main() async {
             channel.id,
             channel.name,
             channelDescription: channel.description,
-            icon: '@mipmap/ic_launcher',
+            icon: '@drawable/ic_notification',
           ),
         ),
         payload: jsonEncode(message.data),
@@ -142,7 +138,7 @@ Future<void> main() async {
     }
   });
 
-  // Uygulama background'da veya kapalıyken bildirime tıklama ile açılırsa:
+  // 🔔 Bildirime tıklanarak uygulama açıldığında
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
     final data = message.data;
 
@@ -167,22 +163,18 @@ Future<void> main() async {
     }
   });
 
-  runApp(
-    MyApp(initialScreen: localToken != null ? const Home() : const Login()),
-  );
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final Widget initialScreen;
-
-  const MyApp({super.key, required this.initialScreen});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      navigatorKey: navigatorKey, // Navigator key'i ekledik
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
-      home: initialScreen,
+      home: const SplashScreen(),
       routes: {
         '/home': (context) => const Home(),
         '/profile': (context) => const Profile(),

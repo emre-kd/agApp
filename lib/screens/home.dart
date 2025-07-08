@@ -80,6 +80,7 @@ class _HomeState extends State<Home> {
         },
       );
 
+    print(response.body);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         prefs.setInt('id', data['id']);

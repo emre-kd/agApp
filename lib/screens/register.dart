@@ -186,7 +186,9 @@ class _RegisterState extends State<Register> {
           inputFormatters: [UpperCaseTextFormatter()], // BURAYA EKLENDİ
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
-            labelText: 'Topluluk Kodu',
+              hintText: 'Örnek: ANTK41',
+
+            labelText: 'Topluluk Kodu ',
             labelStyle: const TextStyle(color: Colors.white),
             helperText:
                 _authenticationController.errors['community_code'],
@@ -309,7 +311,7 @@ class _RegisterState extends State<Register> {
                   ),
                 ),
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 10),
               // Password confirmation field
               Obx(
                 () => TextField(
