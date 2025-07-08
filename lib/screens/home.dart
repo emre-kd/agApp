@@ -7,7 +7,6 @@ import 'package:agapp/controllers/authentication.dart';
 import 'package:agapp/screens/chat_list.dart';
 import 'package:agapp/screens/community_details.dart';
 import 'package:agapp/screens/leaderboard.dart';
-import 'package:agapp/screens/notifications.dart';
 import 'package:agapp/screens/post.dart' show PostWidget;
 import 'package:agapp/screens/search.dart';
 import 'package:flutter/material.dart';
@@ -50,6 +49,8 @@ class _HomeState extends State<Home> {
     fetchUserInfo();
     fetchPosts();
 
+
+
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
               _scrollController.position.maxScrollExtent - 200 &&
@@ -79,7 +80,7 @@ class _HomeState extends State<Home> {
         },
       );
 
-      print(response.body);
+    print(response.body);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         prefs.setInt('id', data['id']);
@@ -136,6 +137,10 @@ class _HomeState extends State<Home> {
     }
   }
 
+
+
+
+
   Future<void> fetchMorePosts() async {
     if (_isLoadingMore || !_hasMore) return;
 
@@ -182,20 +187,26 @@ class _HomeState extends State<Home> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.black87,
-        elevation: 8,
-        shadowColor: Colors.white.withOpacity(0.1),
+        backgroundColor: Colors.black87, // Slightly lighter black for depth
+        elevation: 8, // Slightly increased for better shadow definition
+        shadowColor: Colors.white.withOpacity(
+          0.1,
+        ), // Softer shadow for elegance
         toolbarHeight: 60,
-        automaticallyImplyLeading: false,
+
+        automaticallyImplyLeading: false, // Prevent default back button
         title: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
               height: 40,
-              child: Image.asset('assets/logo.png', fit: BoxFit.contain),
+              child: Image.asset(
+                'assets/logo.png',
+                fit: BoxFit.contain, // Ensure logo scales properly
+              ),
             ),
             Text(
-              communityName ?? 'Yükleniyor...',
+              communityName ?? 'Yükleniyor...', // Dynamic community name
               style: const TextStyle(
                 color: Colors.white70,
                 fontSize: 10,
@@ -208,18 +219,25 @@ class _HomeState extends State<Home> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.white, size: 28),
-            tooltip: 'Daha fazla seçenek',
+            icon: const Icon(
+              Icons.more_vert,
+              color: Colors.white,
+              size: 28, // Larger icon for consistency
+            ),
+            tooltip: 'Daha fazla seçenek', // Accessibility improvement
             onPressed: () {
               showModalBottomSheet(
                 context: context,
                 backgroundColor: Colors.grey[900],
+
                 builder: (BuildContext context) {
                   return Padding(
                     padding: const EdgeInsets.all(16),
                     child: Wrap(
                       children: [
-                        ListTile(
+
+                        /*
+                           ListTile(
                           leading: const Icon(
                             Icons.leaderboard,
                             color: Colors.white,
@@ -237,14 +255,20 @@ class _HomeState extends State<Home> {
                             );
                           },
                         ),
+
+                        */
+                        
                         ListTile(
                           leading: const Icon(
-                            Icons.info_outline,
+                            Icons.info_outline, // Icon for community details
                             color: Colors.white,
                           ),
                           title: const Text(
                             'Topluluk Detayları',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16, // Readable text size
+                            ),
                           ),
                           onTap: () {
                             Navigator.push(
@@ -274,7 +298,9 @@ class _HomeState extends State<Home> {
                                 ),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(12),
-                                  color: Colors.red.withOpacity(0.1),
+                                  color: Colors.red.withOpacity(
+                                    0.1,
+                                  ), // subtle red background
                                 ),
                                 child: Row(
                                   children: const [
@@ -304,6 +330,7 @@ class _HomeState extends State<Home> {
         ],
       ),
       body: Stack(
+        
         children: [
           NotificationListener<UserScrollNotification>(
             onNotification: (notification) {
@@ -356,42 +383,41 @@ class _HomeState extends State<Home> {
                       ),
             ),
           ),
-          ValueListenableBuilder<bool>(
-            valueListenable: showNewPostButton,
-            builder: (context, isVisible, _) {
-              if (!isVisible) return SizedBox.shrink();
+          // "New Posts" button
+           ValueListenableBuilder<bool>(
+  valueListenable: showNewPostButton,
+  builder: (context, isVisible, _) {
+    if (!isVisible) return SizedBox.shrink();
 
-              return Positioned(
-                top: 16,
-                left: MediaQuery.of(context).size.width / 2 - 80,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    await fetchPosts();
-                    showNewPostButton.value = false;
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(Icons.arrow_upward, color: Colors.white, size: 16),
-                      SizedBox(width: 4),
-                      Text(' yeni gönderi', style: TextStyle(fontSize: 14)),
-                    ],
-                  ),
-                ),
-              );
-            },
+    return Positioned(
+      top: 16,
+      left: MediaQuery.of(context).size.width / 2 - 80,
+      child: ElevatedButton(
+        onPressed: () async {
+          await fetchPosts(); // Gönderileri yenile
+          showNewPostButton.value = false; // Butonu gizle
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Icon(Icons.arrow_upward, color: Colors.white, size: 16),
+            SizedBox(width: 4),
+            Text(' yeni gönderi', style: TextStyle(fontSize: 14)),
+          ],
+        ),
+      ),
+    );
+  },
+),
+
         ],
       ),
       floatingActionButton:
@@ -455,7 +481,7 @@ class _HomeState extends State<Home> {
                         },
                         icon: Icon(Icons.search_rounded, color: Colors.white),
                       ),
-                      SizedBox(width: 20),
+                      /* SizedBox(width: 20),
                       Stack(
                         children: [
                           IconButton(
@@ -486,7 +512,18 @@ class _HomeState extends State<Home> {
                           ),
                         ],
                       ),
+                      */
 
+                      SizedBox(width: 20),
+                      IconButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => Leaderboard()),
+                          );
+                        },
+                        icon: Icon(Icons.leaderboard, color: Colors.white),
+                      ),
                       SizedBox(width: 20),
                       IconButton(
                         onPressed: () {
