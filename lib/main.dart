@@ -115,13 +115,13 @@ Future<void> main() async {
     await sendFcmTokenToBackend(fcmToken);
   }
 
-  // 🔔 Foreground bildirim alma
+  // 🔥 Foreground bildirimi dinleme
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     print("🔥 Bildirim alındı: ${message.data}");
 
     if (message.data['type'] == 'new_post') {
       showNewPostButton.value = true;
-      return; // Bildirim gösterme, sadece buton
+      return; // Sadece buton göster
     }
 
     final notification = message.notification;
@@ -145,13 +145,20 @@ Future<void> main() async {
     }
   });
 
-  // 🔔 Uygulama bildirime tıklanarak açıldığında
+  // 🧭 Uygulama arka plandayken bildirim tıklanırsa
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
     handleNotificationTap(message.data);
   });
 
+  // ✅ Uygulama tamamen kapalıyken açıldığında bildirimle açıldıysa
+  final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+  if (initialMessage != null) {
+    handleNotificationTap(initialMessage.data);
+  }
+
   runApp(const MyApp());
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
