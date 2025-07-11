@@ -28,7 +28,7 @@ factory Comment.fromJson(Map<String, dynamic> json) {
     userId: json['user_id'] as int? ?? 0,
     postId: json['post_id'] as int? ?? 0,
     comment: json['comment'] as String? ?? '',
-    createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+    createdAt: DateTime.tryParse(json['created_at'] ?? 'N/A') ?? DateTime.now(),
 
     // User objesi json['user'] içinde olmadığı için post içinden manuel kuruyoruz
     user: User.fromJson(json['user']),

@@ -41,7 +41,7 @@ class Post {
     id: json['id'] is int ? json['id'] : int.parse(json['id']?.toString() ?? '0'), // Convert to int
     text: json['text']?.toString() ?? '',
     media: json['media']?.toString() ?? '',
-    createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+    createdAt: DateTime.tryParse(json['created_at'] ?? 'N/A') ?? DateTime.now(),
     name: user['name']?.toString() ?? '',
     username: user['username']?.toString() ?? '',
     profileImage: user['image']?.toString() ?? '',

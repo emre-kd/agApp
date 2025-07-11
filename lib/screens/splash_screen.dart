@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:agapp/main.dart';
 import 'package:agapp/screens/home.dart';
 import 'package:agapp/screens/login.dart';
 import 'package:flutter/material.dart';
@@ -36,8 +39,16 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(seconds: 3));
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
+    final initialData = prefs.getString('initial_notification_data');
 
     if (!mounted) return;
+
+    if (initialData != null) {
+      final data = jsonDecode(initialData);
+      prefs.remove('initial_notification_data');
+      handleNotificationTap(data); // Zaten pushReplacement var
+      return;
+    }
 
     Navigator.pushReplacement(
       context,
@@ -46,6 +57,8 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
   }
+
+
 
   @override
   void dispose() {

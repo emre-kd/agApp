@@ -25,7 +25,7 @@ const AndroidNotificationChannel channel = AndroidNotificationChannel(
   importance: Importance.high,
 );
 
-// 🔔 Bildirim izni isteme (iOS ve Android 13+)
+// 🔔 Bildirim izni isteme
 Future<void> requestNotificationPermission() async {
   NotificationSettings settings =
       await FirebaseMessaging.instance.requestPermission(
@@ -39,23 +39,23 @@ Future<void> requestNotificationPermission() async {
 // 🧭 Bildirim tıklama işlemleri
 void handleNotificationTap(Map<String, dynamic> data) {
   if (data['type'] == 'new_post') {
-    navigatorKey.currentState?.push(MaterialPageRoute(
-      builder: (context) => const Home(),
+    navigatorKey.currentState?.pushReplacement(MaterialPageRoute(
+      builder: (_) => const Home(),
     ));
   } else if (data['post'] != null) {
     final postJson = jsonDecode(data['post']);
     final post = Post.fromJson(postJson);
 
-    navigatorKey.currentState?.push(MaterialPageRoute(
-      builder: (context) => CommentsPage(
+    navigatorKey.currentState?.pushReplacement(MaterialPageRoute(
+      builder: (_) => CommentsPage(
         post: post,
         currentUserId: post.userId,
         parentScreen: 'notification',
       ),
     ));
   } else if (data['sender_id'] != null) {
-    navigatorKey.currentState?.push(MaterialPageRoute(
-      builder: (context) => Chat(
+    navigatorKey.currentState?.pushReplacement(MaterialPageRoute(
+      builder: (_) => Chat(
         userId: data['sender_id'].toString(),
         userName: data['sender_name'] ?? 'Sohbet',
       ),
@@ -80,7 +80,7 @@ Future<void> setupFlutterNotifications() async {
           final data = jsonDecode(payload);
           handleNotificationTap(data);
         } catch (e) {
-          debugPrint('Bildirim tıklama payload hatası: $e');
+          debugPrint('Payload JSON parse hatası: $e');
         }
       }
     },
@@ -92,14 +92,14 @@ Future<void> setupFlutterNotifications() async {
       ?.createNotificationChannel(channel);
 }
 
-// ✅ Backend'e FCM token gönderme (opsiyonel)
+// ✅ Backend'e FCM token gönderme
 Future<void> sendFcmTokenToBackend(String token) async {
   final prefs = await SharedPreferences.getInstance();
   final authToken = prefs.getString('token');
   if (authToken == null) return;
 
   print('✅ Backend\'e gönderilecek token: $token');
-  // TODO: Backend'e gönderme işlemi burada yapılabilir
+  // TODO: API isteği buraya
 }
 
 Future<void> main() async {
@@ -115,13 +115,13 @@ Future<void> main() async {
     await sendFcmTokenToBackend(fcmToken);
   }
 
-  // 🔥 Foreground bildirimi dinleme
+  // 🔥 Uygulama açıkken gelen bildirim
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    print("🔥 Bildirim alındı: ${message.data}");
+    print("🔥 Foreground bildirimi alındı: ${message.data}");
 
     if (message.data['type'] == 'new_post') {
       showNewPostButton.value = true;
-      return; // Sadece buton göster
+      return;
     }
 
     final notification = message.notification;
@@ -145,20 +145,21 @@ Future<void> main() async {
     }
   });
 
-  // 🧭 Uygulama arka plandayken bildirim tıklanırsa
+  // 🧭 Arka planda bildirime tıklama
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
     handleNotificationTap(message.data);
   });
 
-  // ✅ Uygulama tamamen kapalıyken açıldığında bildirimle açıldıysa
+  // 🚀 Tamamen kapalıyken bildirime tıklayıp açma
   final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
   if (initialMessage != null) {
-    handleNotificationTap(initialMessage.data);
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString(
+        'initial_notification_data', jsonEncode(initialMessage.data));
   }
 
   runApp(const MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
