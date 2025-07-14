@@ -7,16 +7,14 @@ class Notifications extends StatelessWidget {
       'body': 'Gönderine birisi yorum yaptı.',
       'time': '5 dk önce',
     },
+
     {
-      'title': 'Yeni takipçi',
-      'body': 'Emre seni takip etmeye başladı.',
-      'time': '30 dk önce',
+      'title': 'Yeni mesaj',
+      'body': 'Kullanıcıdan yeni bir mesaj aldın.',
+      'time': '5 dk önce',
     },
-    {
-      'title': 'Gönderin beğenildi',
-      'body': 'Gönderin 10 kişi tarafından beğenildi.',
-      'time': '1 saat önce',
-    },
+    
+  
   ];
 
   @override
